@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Личная доска задач в стиле Trello">
+  <title>Моя доска</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="teams-calendar.css">
+  <link rel="stylesheet" href="people-directory.css">
+  <link rel="stylesheet" href="board-tools.css">
+  <link rel="stylesheet" href="admin-teams.css">
+</head>
+<body>
+  <section class="auth-screen" id="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="auth-logo">☼</div><h1 data-i18n="welcome">Моя дошка</h1><p id="auth-description" data-i18n="loginHint">Увійдіть у свій простір.</p>
+      <form id="setup-form" hidden><label><span data-i18n="login">Логін</span><input name="login" required autocomplete="username" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, admin"></label><label><span data-i18n="password">Пароль</span><input name="password" required minlength="4" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 4 символи"></label><label><span data-i18n="repeatPassword">Повторіть пароль</span><input name="repeat" required minlength="4" type="password" autocomplete="new-password"></label><button type="submit" data-i18n="createAdmin">Створити адміністратора</button></form>
+      <form id="login-form" hidden><label><span data-i18n="login">Логін</span><input name="login" required autocomplete="username" data-i18n-placeholder="loginPlaceholder" placeholder="Логін"></label><label><span data-i18n="password">Пароль</span><input name="password" required type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"></label><button type="submit" data-i18n="signIn">Увійти</button></form>
+      <p class="auth-message" id="auth-message" aria-live="polite"></p>
+    </div>
+  </section>
+  <main class="app" id="app-shell" hidden>
+    <header class="appbar">
+      <div class="brand"><span>☼</span><strong data-i18n="brand">моя доска</strong></div>
+      <nav aria-label="Разделы">
+        <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
+        <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
+        <button class="tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
+        <button class="tab" id="admin-tab" data-tab="admin"><span data-i18n="admin">Адмін</span></button>
+        <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
+        <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
+      </nav>
+      <div class="user-menu"><span id="current-user"></span><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div>
+      <span class="save-status" id="save-status" role="status"></span>
+      <select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select>
+    </header>
+
+    <section class="screen active" id="board-screen">
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="personalPlan">ЛИЧНЫЙ ПЛАН</p><h1 data-i18n="myTasks">Мои задачи</h1><p data-i18n="boardHint">Добавляй карточки и перетаскивай их между колонками.</p></div>
+        <div class="heading-actions"><span class="task-count" id="task-count">0 задач</span><button type="button" class="new-task" id="new-task">＋ <span data-i18n="newTask">Новая задача</span></button></div>
+      </div>
+      <datalist id="responsible-list"><option value="Я"><option value="Аня"><option value="Иван"><option value="Лена"></datalist>
+      <section class="task-filters" aria-label="Фильтры задач"><div class="filter-search"><span>⌕</span><input id="task-search" autocomplete="off" data-i18n-placeholder="taskSearchPlaceholder" placeholder="Поиск по названию или описанию"></div><select id="status-filter"><option value="" data-i18n="allColumns">Все статусы</option><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select><select id="responsible-filter"><option value="" data-i18n="allTasks">Все задачи</option><option value="__none__" data-i18n="noResponsible">Без ответственного</option></select><select id="priority-filter"><option value="" data-i18n="allPriorities">Все приоритеты</option><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-task-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-task-period="today" data-i18n="today">Сьогодні</button><button type="button" data-task-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-task-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-task-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="task-custom-range" hidden><input id="task-date-from" type="date"><span>—</span><input id="task-date-to" type="date"></div></div><button type="button" id="clear-filters" data-i18n="clearFilters">Сбросить</button></section>
+      <section class="board" id="board" aria-label="Личная доска задач"></section>
+    </section>
+
+    <section class="screen" id="calendar-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="myMeetings">МОИ ВСТРЕЧИ</p><h1 data-i18n="calendar">Календарь</h1><p data-i18n="calendarHint">Добавляй встречи с датой и временем — они сразу появятся в календаре.</p></div>
+        <span class="task-count" id="calendar-total">0 встреч</span>
+      </div>
+      <section class="teams-calendar" aria-label="Календарь встреч">
+        <header class="teams-toolbar">
+          <div class="calendar-nav"><button type="button" id="previous-week" aria-label="Previous week">‹</button><button type="button" id="today-button" class="today-button" data-i18n="today">Сегодня</button><button type="button" id="next-week" aria-label="Next week">›</button></div>
+          <div class="calendar-period"><h2 id="calendar-title"></h2><span class="system-time"><span data-i18n="systemTime">Системное время</span>: <b id="system-clock"></b></span></div>
+          <button type="button" class="new-meeting" id="new-meeting">＋ <span data-i18n="newMeeting">Новая встреча</span></button>
+        </header>
+        <div class="teams-calendar-layout">
+          <aside class="mini-calendar" aria-label="Мини-календарь"><h3 id="mini-calendar-title"></h3><div class="mini-weekdays" id="calendar-weekdays"></div><div class="mini-calendar-grid" id="mini-calendar-grid"></div></aside>
+          <section class="week-calendar" aria-label="Расписание на неделю"><div class="week-header" id="week-header"></div><div class="week-body"><div class="time-axis" id="time-axis"></div><div class="week-scroll"><div class="week-grid" id="week-grid"></div></div></div></section>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen" id="meetings-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="personalNotes">ЛИЧНЫЕ ЗАМЕТКИ</p><h1 data-i18n="afterMeeting">После встречи</h1><p data-i18n="notesHint">Сохраняй главное сразу после созвона или встречи.</p></div>
+        <div class="heading-actions"><span class="task-count" id="notes-count">0 заметок</span><button type="button" class="new-task" id="new-note">＋ <span data-i18n="newNote">Новая заметка</span></button></div>
+      </div>
+      <section class="note-list" id="note-list" aria-label="Все заметки после встреч"></section>
+    </section>
+
+    <section class="screen" id="people-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="peopleDirectory">БАЗА УЧАСТНИКОВ</p><h1 data-i18n="people">Участники</h1><p data-i18n="peopleHint">Сохраняй контакты команды и быстро находи их по имени, почте, роли или телефону.</p></div>
+        <span class="task-count" id="people-total">0 участников</span>
+      </div>
+      <form class="add-person" id="people-form">
+        <input name="name" required autocomplete="off" data-i18n-placeholder="personNamePlaceholder" placeholder="Имя и фамилия">
+        <input name="email" required type="email" autocomplete="off" data-i18n-placeholder="emailPlaceholder" placeholder="Почта">
+        <input name="role" autocomplete="off" data-i18n-placeholder="rolePlaceholder" placeholder="Роль или должность">
+        <button type="submit" id="save-person">＋ <span data-i18n="addPerson">Добавить участника</span></button>
+        <button type="button" id="cancel-person-edit" class="cancel-person-edit" hidden data-i18n="cancel">Отмена</button>
+      </form>
+      <div class="people-search"><span>⌕</span><input id="people-search" autocomplete="off" data-i18n-placeholder="peopleSearchPlaceholder" placeholder="Поиск по имени, почте, роли или телефону"></div>
+      <section class="people-list" id="people-list" aria-label="База участников"></section>
+    </section>
+
+    <section class="screen" id="admin-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="adminArea">АДМІН-ПАНЕЛЬ</p><h1 data-i18n="teamManagement">Управління командами</h1><p data-i18n="teamManagementHint">Створюй команди та додавай до них учасників із бази.</p></div>
+        <span class="task-count" id="teams-total">0 команд</span>
+      </div>
+      <form class="add-team" id="team-form"><input name="name" required autocomplete="off" data-i18n-placeholder="teamNamePlaceholder" placeholder="Назва команди"><button type="submit">＋ <span data-i18n="addTeam">Створити команду</span></button></form>
+      <section class="teams-list" id="teams-list" aria-label="Команди"></section>
+      <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Акаунти</h2></div></header><form class="add-account" id="account-form"><input name="login" required autocomplete="off" data-i18n-placeholder="loginPlaceholder" placeholder="Логін"><input name="password" required minlength="4" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"><select name="personId" id="account-person"><option value="" data-i18n="noLinkedPerson">Без привʼязки</option></select><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Створити акаунт</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
+    </section>
+
+    <section class="screen" id="summary-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="workOverview">СВОДКА РАБОТЫ</p><h1 data-i18n="summaryHeading">Кто что сделал</h1><p data-i18n="summaryHint">Смотри прогресс команды и список выполненных задач.</p></div>
+        <span class="task-count" id="summary-total">0 задач</span>
+      </div>
+      <section class="summary-filters"><select id="summary-date-mode"><option value="created" data-i18n="createdDate">По дате создания</option><option value="completed" data-i18n="completedDate">По дате выполнения</option></select><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-summary-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-summary-period="today" data-i18n="today">Сьогодні</button><button type="button" data-summary-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-summary-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-summary-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="summary-custom-range" hidden><input id="summary-date-from" type="date"><span>—</span><input id="summary-date-to" type="date"></div></div><button type="button" id="clear-summary-filters" data-i18n="clearFilters">Сбросить</button></section>
+      <section class="summary-stats" id="summary-stats"></section>
+      <section class="summary-panel"><header><h2 data-i18n="byPerson">По участникам</h2><span data-i18n="doneTasks">Выполненные задачи</span></header><div class="summary-table-wrap"><table class="summary-table"><thead><tr><th data-i18n="person">Участник</th><th data-i18n="todo">Нужно сделать</th><th data-i18n="doing">В процессе</th><th data-i18n="done">Готово</th><th data-i18n="total">Всего</th></tr></thead><tbody id="summary-by-person"></tbody></table></div></section>
+      <section class="completed-panel"><header><h2 data-i18n="completedList">Что уже сделано</h2></header><div id="completed-tasks"></div></section>
+    </section>
+  </main>
+  <div class="detail-backdrop" id="task-detail" hidden>
+    <form class="task-detail" id="task-editor">
+      <header class="detail-head"><div><p class="eyebrow" data-i18n="taskCard">КАРТОЧКА ЗАДАЧИ</p><h2 id="task-editor-title">Редактирование</h2></div><button type="button" class="close-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
+      <label><span data-i18n="taskName">Название задачи</span><input name="title" required autocomplete="off"></label>
+      <label><span data-i18n="description">Описание</span><textarea name="description" data-i18n-placeholder="taskDescPlaceholder" placeholder="Что именно нужно сделать?"></textarea></label>
+      <div class="detail-fields">
+        <label><span data-i18n="responsible">Ответственный</span><input name="responsible" list="responsible-list" autocomplete="off" data-i18n-placeholder="notAssigned" placeholder="Не назначен"></label>
+        <label><span data-i18n="column">Колонка</span><select name="column"><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select></label>
+        <label><span data-i18n="priority">Приоритет</span><select name="priority"><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select></label>
+      </div>
+      <footer class="detail-actions"><button type="button" class="delete-task" id="delete-open-task" data-i18n="delete">Удалить</button><div><button type="button" class="cancel-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" id="save-task-detail">Сохранить изменения</button></div></footer>
+    </form>
+  </div>
+  <div class="detail-backdrop" id="event-detail" hidden>
+    <form class="task-detail event-detail" id="event-editor">
+      <header class="detail-head"><div><p class="eyebrow" data-i18n="meetingCard">ВСТРЕЧА</p><h2 id="event-editor-title">Детали встречи</h2></div><button type="button" class="close-event-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
+      <label><span data-i18n="meetingTitle">Название встречи</span><input name="title" required autocomplete="off"></label>
+      <div class="detail-fields meeting-times"><label><span data-i18n="startTime">Начало</span><input name="date" required type="datetime-local"></label><label><span data-i18n="endTime">Окончание</span><input name="end" required type="datetime-local"></label></div>
+      <label><span data-i18n="participants">Участники</span><div class="participant-picker" id="participant-picker"><div class="participant-tags" id="participant-tags"></div><input id="participant-search" autocomplete="off" data-i18n-placeholder="participantsPlaceholder" placeholder="Найти по имени или почте"><div class="participant-suggestions" id="participant-suggestions" hidden></div></div><input name="participantIds" type="hidden"></label>
+      <label><span data-i18n="meetingNotes">Заметки встречи</span><textarea name="notes" data-i18n-placeholder="eventNotesPlaceholder" placeholder="Пиши всё важное: решения, идеи, договорённости, следующие шаги."></textarea></label>
+      <p class="event-hint" data-i18n="meetingHint">После сохранения заметка сразу появится во вкладке «После встречи».</p>
+      <footer class="detail-actions"><button type="button" class="delete-task" id="delete-open-event" data-i18n="delete" hidden>Удалить</button><div><button type="button" class="cancel-event-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" data-i18n="saveNotes">Сохранить заметки</button></div></footer>
+    </form>
+  </div>
+  <div class="detail-backdrop" id="note-detail" hidden>
+    <form class="task-detail" id="note-editor">
+      <header class="detail-head"><div><p class="eyebrow" data-i18n="personalNotes">ЛИЧНЫЕ ЗАМЕТКИ</p><h2 id="note-editor-title">Новая заметка</h2></div><button type="button" class="close-note-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
+      <label><span data-i18n="noteTitle">Название заметки</span><input name="title" required autocomplete="off" data-i18n-placeholder="meetingTitlePlaceholder" placeholder="Например, разговор с клиентом"></label>
+      <label><span data-i18n="whatImportant">Что важно запомнить</span><textarea name="text" required data-i18n-placeholder="notePlaceholder" placeholder="Решения, идеи, следующие шаги — пиши как удобно"></textarea></label>
+      <footer class="detail-actions"><button type="button" class="delete-task" id="delete-open-note" data-i18n="delete">Удалить</button><div><button type="button" class="cancel-note-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" id="save-note-detail">Сохранить заметку</button></div></footer>
+    </form>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

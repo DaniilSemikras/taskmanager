@@ -1,0 +1,38 @@
+.add-person { display:grid; grid-template-columns:1.1fr 1.15fr .9fr auto auto; gap:9px; width:100%; margin:0 0 18px; padding:10px; border:1px solid #e2defb; border-radius:13px; background:#fff; box-shadow:0 5px 20px rgba(36,30,72,.04); }
+.add-person input,.people-search input { width:100%; padding:10px 11px; outline:0; border:1px solid #e4e2ea; border-radius:8px; color:#484657; background:#fcfcfe; font-size:12px; }
+.add-person input:focus,.people-search input:focus { border-color:#a39aef; box-shadow:0 0 0 3px #f0efff; }
+.add-person button { min-height:38px; padding:0 13px; border:0; border-radius:8px; color:#fff; background:#6657dc; font-size:12px; font-weight:700; white-space:nowrap; }
+.add-person .cancel-person-edit { color:#706c7d; background:#f3f2f6; }
+.people-search { display:flex; align-items:center; gap:7px; width:min(520px,100%); margin:0 0 14px; padding:0 10px; border:1px solid #e4e2ea; border-radius:9px; background:#fff; }
+.people-search span { color:#7a70d7; font-size:21px; line-height:1; }
+.people-search input { border:0; background:transparent; box-shadow:none !important; }
+.people-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:12px; }
+.person-card { display:grid; gap:10px; padding:15px; border:1px solid #e6e4ec; border-radius:12px; background:#fff; }
+.person-card header { display:flex; align-items:flex-start; gap:9px; }
+.person-avatar { display:grid; place-items:center; width:35px; height:35px; flex:0 0 auto; border-radius:50%; color:#5648c8; background:#e9e6ff; font-size:12px; font-weight:800; }
+.person-card h3 { margin:1px 0 0; color:#464354; font-size:13px; }
+.person-card .person-role { display:block; margin-top:3px; color:#918e9d; font-size:10px; }
+.person-data { display:grid; gap:5px; margin:0; color:#676474; font-size:11px; }
+.person-data span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.person-data b { display:inline-block; width:45px; color:#a09dac; font-size:9px; text-transform:uppercase; }
+.person-actions { display:flex; justify-content:flex-end; gap:6px; padding-top:9px; border-top:1px solid #f0eff3; }
+.person-actions button { padding:5px 7px; border:0; border-radius:6px; color:#6153c8; background:#eeecff; font-size:10px; font-weight:800; }
+.person-actions .delete-person { color:#bf625e; background:#fff3f2; }
+.participant-picker { position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:5px; min-height:42px; padding:5px; border:1px solid #e4e2ea; border-radius:8px; background:#fcfcfe; }
+.participant-picker:focus-within { border-color:#a39aef; box-shadow:0 0 0 3px #f0efff; }
+.participant-picker input { width:auto; min-width:145px; flex:1; padding:5px; border:0; outline:0; color:#484657; background:transparent; font-size:12px; }
+.participant-tags { display:contents; }
+.participant-tag { display:inline-flex; align-items:center; gap:5px; max-width:100%; padding:5px 6px 5px 7px; border-radius:6px; color:#5547c7; background:#e9e6ff; font-size:10px; font-weight:700; }
+.participant-tag button { width:15px; height:15px; padding:0; border:0; border-radius:4px; color:#6559ae; background:transparent; font-size:14px; line-height:1; }
+.participant-suggestions { position:absolute; z-index:3; top:calc(100% + 5px); right:0; left:0; overflow:auto; max-height:185px; padding:5px; border:1px solid #dedbea; border-radius:8px; background:#fff; box-shadow:0 12px 28px rgba(33,28,58,.15); }
+.participant-suggestion { display:block; width:100%; padding:8px; border:0; border-radius:6px; color:#514e5e; background:#fff; text-align:left; }
+.participant-suggestion:hover { background:#f1efff; }
+.participant-suggestion strong,.participant-suggestion span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.participant-suggestion strong { font-size:11px; }.participant-suggestion span { margin-top:2px; color:#908d9b; font-size:10px; }
+@media (max-width:1000px) { .add-person { grid-template-columns:1fr 1fr; }.add-person button { justify-self:start; } }
+@media (max-width:500px) { .add-person { grid-template-columns:1fr; }.people-list { grid-template-columns:1fr; } }
+
+/* Compact task assignee area so an empty assignee never stretches the card. */
+.task-card { align-content:start; min-height:0 !important; height:auto !important; }
+.task-card .card-meta { display:block; align-self:start; height:21px; min-height:0 !important; overflow:hidden; }
+.task-card .assignee { width:fit-content; max-width:100%; height:20px; min-height:0; border:0; outline:0; }
