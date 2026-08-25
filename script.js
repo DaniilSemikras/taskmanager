@@ -30,10 +30,10 @@ const translations = {
   }
 };
 Object.assign(translations.uk, {
-  login: 'Логін', loginPlaceholder: 'Наприклад, danylo', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт', register: 'Реєстрація', registerHint: 'Створіть свій акаунт.'
+  login: 'Логін', loginPlaceholder: 'Наприклад, danylo', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт', register: 'Реєстрація', registerHint: 'Створіть свій акаунт.', noMeetingsDay: 'На цей день зустрічей немає.'
 });
 Object.assign(translations.en, {
-  login: 'Login', loginPlaceholder: 'For example, danylo', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.'
+  login: 'Login', loginPlaceholder: 'For example, danylo', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.', noMeetingsDay: 'There are no meetings on this day.'
 });
 const columns = [
   { id: 'todo', titleKey: 'todo' },
@@ -73,6 +73,7 @@ const miniCalendarGrid = document.getElementById('mini-calendar-grid');
 const weekHeader = document.getElementById('week-header');
 const timeAxis = document.getElementById('time-axis');
 const weekGrid = document.getElementById('week-grid');
+const mobileTeamsCalendar = document.getElementById('mobile-teams-calendar');
 const participantSearch = document.getElementById('participant-search');
 const participantTags = document.getElementById('participant-tags');
 const participantSuggestions = document.getElementById('participant-suggestions');
@@ -102,6 +103,7 @@ let currentUser = null;
 let saveStatusKey = 'dataBrowser';
 let databaseSaveTimer = null;
 let calendarCursor = startOfWeek(new Date());
+let selectedCalendarDay = dateKey(new Date());
 let authMode = 'login';
 
 function t(key) {
@@ -516,6 +518,25 @@ function renderMiniCalendar() {
     return '<button type="button" class="mini-day ' + classes + '" data-jump-date="' + key + '">' + day.getDate() + '</button>';
   }).join('');
 }
+function renderMobileCalendar(days) {
+  if (!mobileTeamsCalendar) return;
+  const availableDays = days.map(dateKey);
+  if (!availableDays.includes(selectedCalendarDay)) selectedCalendarDay = availableDays[0];
+  const selectedDate = dateFromKey(selectedCalendarDay);
+  const weekdayFormat = new Intl.DateTimeFormat(t('locale'), { weekday: 'short' });
+  const agendaTitle = new Intl.DateTimeFormat(t('locale'), { weekday: 'long', day: 'numeric', month: 'short' }).format(selectedDate);
+  const events = state.events.filter(function (event) { return event.date && event.date.slice(0, 10) === selectedCalendarDay; }).sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+  const eventList = events.length ? events.map(function (event) {
+    const people = participantsFor(event);
+    const details = people.length ? people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : eventDateInputValue(meetingEnd(event)).slice(11, 16);
+    return '<button type="button" class="mobile-agenda-event" data-open-event="' + event.id + '"><time>' + escapeHtml(event.date.slice(11, 16)) + '</time><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(details) + '</small></span></button>';
+  }).join('') : '<p class="mobile-agenda-empty">' + t('noMeetingsDay') + '</p>';
+  mobileTeamsCalendar.innerHTML = '<div class="mobile-week-strip">' + days.map(function (day) {
+    const key = dateKey(day);
+    const classes = [key === selectedCalendarDay ? 'selected' : '', key === dateKey(new Date()) ? 'today' : '', state.events.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
+    return '<button type="button" class="mobile-week-day ' + classes + '" data-mobile-day="' + key + '"><span class="mobile-weekday">' + weekdayFormat.format(day) + '</span><span class="mobile-date">' + day.getDate() + '</span></button>';
+  }).join('') + '</div><div class="mobile-agenda"><header class="mobile-agenda-head"><h3>' + escapeHtml(agendaTitle) + '</h3><span>' + events.length + plural(events.length, t('eventOne'), t('eventFew'), t('eventMany')) + '</span></header><div class="mobile-agenda-list">' + eventList + '</div><button type="button" class="mobile-new-meeting" data-new-event-day="' + selectedCalendarDay + '" aria-label="' + t('newMeeting') + '">＋</button></div>';
+}
 function renderCalendar() {
   const days = Array.from({ length: 7 }, function (_, index) {
     return new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + index);
@@ -527,6 +548,7 @@ function renderCalendar() {
   document.getElementById('event-count').textContent = state.events.length;
   document.getElementById('calendar-total').textContent = state.events.length + plural(state.events.length, t('eventOne'), t('eventFew'), t('eventMany'));
   renderMiniCalendar();
+  renderMobileCalendar(days);
   weekHeader.innerHTML = '<div class="week-time-corner"></div>' + days.map(function (day) {
     const key = dateKey(day);
     return '<button type="button" class="week-day-head' + (key === today ? ' today' : '') + '" data-new-event-day="' + key + '"><span class="weekday-name">' + weekdayFormat.format(day) + '</span><span class="date-number">' + day.getDate() + '</span></button>';
@@ -630,6 +652,53 @@ function bindDragAndDrop() {
       document.body.classList.remove('is-dragging-task');
       clearTargets();
     });
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let swipeOffset = 0;
+    let isSwipeGesture = false;
+    function resetSwipe() {
+      card.classList.remove('swiping-next');
+      card.style.removeProperty('--swipe-x');
+      delete card.dataset.swipeLabel;
+      swipeOffset = 0;
+      isSwipeGesture = false;
+    }
+    card.addEventListener('touchstart', function (event) {
+      if (!event.touches[0] || (event.target.closest && event.target.closest('button, select'))) return;
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+      swipeOffset = 0;
+      isSwipeGesture = false;
+    }, { passive: true });
+    card.addEventListener('touchmove', function (event) {
+      if (!event.touches[0]) return;
+      const deltaX = event.touches[0].clientX - touchStartX;
+      const deltaY = event.touches[0].clientY - touchStartY;
+      const task = state.tasks.find(function (item) { return item.id === Number(card.dataset.task); });
+      const columnIndex = task ? columns.findIndex(function (column) { return column.id === task.column; }) : -1;
+      const nextColumn = columns[columnIndex + 1];
+      if (!nextColumn || deltaX >= -16 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+        if (isSwipeGesture) resetSwipe();
+        return;
+      }
+      isSwipeGesture = true;
+      swipeOffset = Math.max(-92, deltaX);
+      card.dataset.swipeLabel = t(nextColumn.titleKey);
+      card.style.setProperty('--swipe-x', swipeOffset + 'px');
+      card.classList.add('swiping-next');
+    }, { passive: true });
+    card.addEventListener('touchend', function () {
+      const task = state.tasks.find(function (item) { return item.id === Number(card.dataset.task); });
+      const columnIndex = task ? columns.findIndex(function (column) { return column.id === task.column; }) : -1;
+      const nextColumn = columns[columnIndex + 1];
+      if (isSwipeGesture && swipeOffset <= -72 && nextColumn) {
+        card.dataset.swipeHandled = 'true';
+        moveTask(card.dataset.task, nextColumn.id);
+        return;
+      }
+      resetSwipe();
+    }, { passive: true });
+    card.addEventListener('touchcancel', resetSwipe, { passive: true });
   });
   document.querySelectorAll('.column').forEach(function (column) {
     column.addEventListener('dragenter', function (event) {
@@ -942,6 +1011,7 @@ document.addEventListener('click', async function (event) {
   if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
   const card = event.target.closest('.task-card');
   if (card && !event.target.closest('button, select')) {
+    if (card.dataset.swipeHandled) return;
     openTask(card.dataset.task);
     return;
   }
@@ -1076,6 +1146,7 @@ document.addEventListener('click', async function (event) {
     }
   }
   if (button.id === 'new-meeting') openNewEvent();
+  if (button.dataset.mobileDay) { selectedCalendarDay = button.dataset.mobileDay; renderCalendar(); return; }
   if (button.dataset.newEventTime) openNewEvent(button.dataset.newEventTime);
   if (button.dataset.newEventDay) openNewEvent(dateInputFor(dateFromKey(button.dataset.newEventDay), 9));
   if (button.dataset.jumpDate) { calendarCursor = startOfWeek(dateFromKey(button.dataset.jumpDate)); renderCalendar(); }
