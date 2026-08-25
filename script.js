@@ -30,10 +30,10 @@ const translations = {
   }
 };
 Object.assign(translations.uk, {
-  login: 'Пошта', loginPlaceholder: 'you@example.com', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт'
+  login: 'Логін', loginPlaceholder: 'Наприклад, danylo', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт', register: 'Реєстрація', registerHint: 'Створіть свій акаунт.'
 });
 Object.assign(translations.en, {
-  login: 'Email', loginPlaceholder: 'you@example.com', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account'
+  login: 'Login', loginPlaceholder: 'For example, danylo', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.'
 });
 const columns = [
   { id: 'todo', titleKey: 'todo' },
@@ -100,6 +100,7 @@ let currentUser = null;
 let saveStatusKey = 'dataBrowser';
 let databaseSaveTimer = null;
 let calendarCursor = startOfWeek(new Date());
+let authMode = 'login';
 
 function t(key) {
   return translations[language][key] || key;
@@ -218,13 +219,16 @@ async function refreshAccounts() {
   const response = await supabaseClient.from('profiles').select('id, email, display_name, role, created_at').order('created_at');
   if (response.error) return [];
   accounts = response.data.map(function (profile) {
-    return { id: profile.id, login: profile.display_name || profile.email, email: profile.email, role: profile.role, personId: '' };
+    return { id: profile.id, login: profile.display_name || profile.email.split('@')[0], email: profile.email, role: profile.role, personId: '' };
   });
   return accounts;
 }
 function accountForUser(user) {
   const account = accounts.find(function (item) { return item.id === user.id; });
-  return account || { id: user.id, login: user.user_metadata && user.user_metadata.display_name || user.email, email: user.email, role: 'member', personId: '' };
+  return account || { id: user.id, login: user.user_metadata && user.user_metadata.display_name || user.email.split('@')[0], email: user.email, role: 'member', personId: '' };
+}
+function internalEmailForLogin(login) {
+  return login.trim().toLocaleLowerCase() + '@taskmanager.local';
 }
 function isAdmin() {
   return Boolean(currentUser && currentUser.role === 'admin');
@@ -233,10 +237,18 @@ function showAuth() {
   appShell.hidden = true;
   authScreen.hidden = false;
   authMessage.textContent = '';
-  setupForm.hidden = false;
-  loginForm.hidden = false;
-  authDescription.textContent = t('loginHint');
-  setTimeout(function () { loginForm.elements.login.focus(); }, 0);
+  setAuthMode('login');
+}
+function setAuthMode(mode) {
+  authMode = mode === 'register' ? 'register' : 'login';
+  const registering = authMode === 'register';
+  setupForm.hidden = !registering;
+  loginForm.hidden = registering;
+  authMessage.textContent = '';
+  authDescription.textContent = t(registering ? 'registerHint' : 'loginHint');
+  document.querySelectorAll('[data-auth-mode]').forEach(function (button) { button.classList.toggle('active', button.dataset.authMode === authMode); });
+  const form = registering ? setupForm : loginForm;
+  setTimeout(function () { form.elements.login.focus(); }, 0);
 }
 function startSession(account) {
   currentUser = account;
@@ -419,7 +431,7 @@ function renderAccounts() {
   }
   accountsList.innerHTML = accounts.map(function (account) {
     const roleKey = account.role === 'admin' ? 'administrator' : 'member';
-    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span></div><div><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div></article>';
+    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + t(roleKey) + '</span></div><div><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div></article>';
   }).join('');
 }
 function selectedPeople() {
@@ -771,7 +783,7 @@ document.querySelectorAll('.close-note-detail, .cancel-note-detail').forEach(fun
 setupForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   const form = new FormData(setupForm);
-  const email = form.get('login').trim();
+  const login = form.get('login').trim();
   const password = form.get('password');
   if (password !== form.get('repeat')) {
     authMessage.textContent = t('passwordMismatch');
@@ -779,14 +791,15 @@ setupForm.addEventListener('submit', async function (event) {
   }
   if (!supabaseClient) return;
   authMessage.textContent = '';
-  const response = await supabaseClient.auth.signUp({ email: email, password: password, options: { data: { display_name: email.split('@')[0] } } });
+  const response = await supabaseClient.auth.signUp({ email: internalEmailForLogin(login), password: password, options: { data: { display_name: login } } });
   if (response.error) {
     authMessage.textContent = response.error.message;
     return;
   }
   if (!response.data.session) {
-    authMessage.textContent = 'Перевірте пошту та підтвердьте реєстрацію, потім увійдіть.';
+    authMessage.textContent = 'Акаунт створено. Тепер увійдіть за логіном і паролем.';
     setupForm.reset();
+    setAuthMode('login');
     return;
   }
   await refreshAccounts();
@@ -799,7 +812,7 @@ loginForm.addEventListener('submit', async function (event) {
   const form = new FormData(loginForm);
   if (!supabaseClient) return;
   authMessage.textContent = '';
-  const response = await supabaseClient.auth.signInWithPassword({ email: form.get('login').trim(), password: form.get('password') });
+  const response = await supabaseClient.auth.signInWithPassword({ email: internalEmailForLogin(form.get('login')), password: form.get('password') });
   if (response.error || !response.data.user) {
     authMessage.textContent = response.error ? response.error.message : t('invalidCredentials');
     return;
@@ -854,9 +867,9 @@ accountForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   if (!isAdmin() || !supabaseClient) return;
   const form = new FormData(accountForm);
-  const email = form.get('login').trim();
+  const login = form.get('login').trim();
   const previousSession = (await supabaseClient.auth.getSession()).data.session;
-  const response = await supabaseClient.auth.signUp({ email: email, password: form.get('password'), options: { data: { display_name: email.split('@')[0] } } });
+  const response = await supabaseClient.auth.signUp({ email: internalEmailForLogin(login), password: form.get('password'), options: { data: { display_name: login } } });
   if (response.error || !response.data.user) {
     accountForm.elements.login.setCustomValidity(response.error ? response.error.message : t('loginTaken'));
     accountForm.elements.login.reportValidity();
@@ -929,6 +942,10 @@ document.addEventListener('click', async function (event) {
   }
   const button = event.target.closest('button');
   if (!button) return;
+  if (button.dataset.authMode) {
+    setAuthMode(button.dataset.authMode);
+    return;
+  }
   if (button.dataset.tab) showTab(button.dataset.tab);
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
