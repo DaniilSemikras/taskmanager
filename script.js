@@ -158,12 +158,14 @@ function saveAccounts() {
 }
 function normalizeState(saved) {
   const source = saved && typeof saved === 'object' ? saved : {};
+  const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
       return Object.assign({}, task, { completedAt: task.completedAt || (task.column === 'done' ? task.createdAt || null : null), archivedAt: task.archivedAt || null });
     }),
-    notes: Array.isArray(source.notes) ? source.notes : [],
-    events: Array.isArray(source.events) ? source.events : [],
+    notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
+    events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
+    deletedEventIds: deletedEventIds,
     people: (Array.isArray(source.people) ? source.people : []).map(function (person) {
       return { id: person.id, name: person.name || '', email: person.email || '', role: person.role || '' };
     }),
@@ -189,6 +191,14 @@ function setSaveStatus(key) {
 function hasStoredContent() {
   return Boolean(accounts.length || state.tasks.length || state.notes.length || state.events.length || state.people.length || state.teams.length);
 }
+function mergeDeletedEventTombstones(snapshot, remoteSaved) {
+  const remote = normalizeState(remoteSaved);
+  const deletedEventIds = Array.from(new Set((snapshot.deletedEventIds || []).concat(remote.deletedEventIds || []).map(String)));
+  snapshot.deletedEventIds = deletedEventIds;
+  snapshot.events = (snapshot.events || []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); });
+  snapshot.notes = (snapshot.notes || []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); });
+  return snapshot;
+}
 async function saveDatabaseNow(snapshot) {
   if (!supabaseClient || !currentUser) {
     setSaveStatus('dataUnavailable');
@@ -196,11 +206,15 @@ async function saveDatabaseNow(snapshot) {
   }
   setSaveStatus('dataSaving');
   try {
-    const response = await supabaseClient.from('workspace_state').update({ state: snapshot }).eq('id', 'main').select('id').single();
+    const current = await supabaseClient.from('workspace_state').select('state').eq('id', 'main').single();
+    if (current.error) throw current.error;
+    const response = await supabaseClient.from('workspace_state').update({ state: mergeDeletedEventTombstones(snapshot, current.data.state) }).eq('id', 'main').select('id').single();
     if (response.error) throw response.error;
     setSaveStatus('dataSaved');
+    return true;
   } catch {
     setSaveStatus('dataUnavailable');
+    return false;
   }
 }
 function queueDatabaseSave() {
@@ -269,8 +283,6 @@ function setAuthMode(mode) {
   authMessage.textContent = '';
   authDescription.textContent = t(registering ? 'registerHint' : 'loginHint');
   document.querySelectorAll('[data-auth-mode]').forEach(function (button) { button.classList.toggle('active', button.dataset.authMode === authMode); });
-  const form = registering ? setupForm : loginForm;
-  setTimeout(function () { form.elements.login.focus(); }, 0);
 }
 function startSession(account) {
   currentUser = account;
@@ -807,7 +819,6 @@ function openTask(id) {
   taskEditor.elements.priority.value = taskPriority(task);
   updateTaskEditorUi();
   taskDetail.hidden = false;
-  taskEditor.elements.title.focus();
 }
 function openNewTask(column) {
   openTaskId = null;
@@ -816,7 +827,6 @@ function openNewTask(column) {
   taskEditor.elements.priority.value = 'medium';
   updateTaskEditorUi();
   taskDetail.hidden = false;
-  taskEditor.elements.title.focus();
 }
 function updateTaskEditorUi() {
   const creating = !openTaskId;
@@ -833,7 +843,6 @@ function openNewNote() {
   noteEditor.reset();
   updateNoteEditorUi();
   noteDetail.hidden = false;
-  noteEditor.elements.title.focus();
 }
 function openNote(id) {
   const note = state.notes.find(function (item) { return item.id === Number(id); });
@@ -843,7 +852,6 @@ function openNote(id) {
   noteEditor.elements.text.value = note.text || '';
   updateNoteEditorUi();
   noteDetail.hidden = false;
-  noteEditor.elements.title.focus();
 }
 function updateNoteEditorUi() {
   document.getElementById('note-editor-title').textContent = openNoteId ? t('edit') : t('newNote');
@@ -871,7 +879,6 @@ function openNewEvent(startValue) {
   setSelectedParticipants([]);
   document.getElementById('delete-open-event').hidden = true;
   eventDetail.hidden = false;
-  eventEditor.elements.title.focus();
 }
 function openEvent(id) {
   const event = state.events.find(function (item) { return item.id === Number(id); });
@@ -889,7 +896,6 @@ function openEvent(id) {
   eventEditor.elements.notes.value = event.notes || '';
   document.getElementById('delete-open-event').hidden = false;
   eventDetail.hidden = false;
-  eventEditor.elements.title.focus();
 }
 function closeEventDetail() {
   openEventId = null;
@@ -976,7 +982,6 @@ peopleForm.addEventListener('submit', function (event) {
   peopleForm.reset();
   saveState();
   render();
-  peopleForm.elements.name.focus();
 });
 teamForm.addEventListener('submit', function (event) {
   event.preventDefault();
@@ -985,7 +990,6 @@ teamForm.addEventListener('submit', function (event) {
   teamForm.reset();
   saveState();
   renderTeams();
-  teamForm.elements.name.focus();
 });
 accountForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -1140,7 +1144,6 @@ document.addEventListener('click', async function (event) {
     selectedParticipantIds.push(Number(button.dataset.addParticipant));
     participantSearch.value = '';
     setSelectedParticipants(selectedParticipantIds);
-    participantSearch.focus();
     return;
   }
   if (button.dataset.removeParticipant) {
@@ -1207,6 +1210,7 @@ document.addEventListener('click', async function (event) {
     render();
   }
   if (button.id === 'delete-open-event' && openEventId) {
+    state.deletedEventIds = Array.from(new Set((state.deletedEventIds || []).concat(String(openEventId))));
     state.events = state.events.filter(function (meeting) { return meeting.id !== openEventId; });
     state.notes = state.notes.filter(function (note) { return note.eventId !== openEventId; });
     await saveState(true);
