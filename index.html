@@ -24,17 +24,18 @@
   <main class="app" id="app-shell" hidden>
     <header class="appbar">
       <div class="brand"><span>☼</span><strong data-i18n="brand">моя доска</strong></div>
-      <nav aria-label="Разделы">
-        <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
-        <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
-        <button class="tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
-        <button class="tab" id="admin-tab" data-tab="admin"><span data-i18n="admin">Адмін</span></button>
-        <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
-        <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
-      </nav>
-      <div class="user-menu"><span id="current-user"></span><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div>
-      <span class="save-status" id="save-status" role="status"></span>
-      <select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select>
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="appbar-menu"><span></span><span></span><span></span></button>
+      <div class="appbar-menu" id="appbar-menu">
+        <nav aria-label="Разделы">
+          <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
+          <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
+          <button class="tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
+          <button class="tab" id="admin-tab" data-tab="admin"><span data-i18n="admin">Адмін</span></button>
+          <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
+          <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
+        </nav>
+        <div class="menu-controls"><div class="user-menu"><span id="current-user"></span><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div><span class="save-status" id="save-status" role="status"></span><select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select></div>
+      </div>
     </header>
 
     <section class="screen active" id="board-screen">

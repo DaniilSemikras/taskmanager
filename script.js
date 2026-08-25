@@ -85,6 +85,8 @@ const summaryDateTo = document.getElementById('summary-date-to');
 const summaryCustomRange = document.getElementById('summary-custom-range');
 const languageSwitch = document.getElementById('language-switch');
 const saveStatus = document.getElementById('save-status');
+const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+const appbarMenu = document.getElementById('appbar-menu');
 let dragId = null;
 let openTaskId = null;
 let openEventId = null;
@@ -261,6 +263,13 @@ function updateAccessUi() {
   document.getElementById('current-user').textContent = currentUser ? currentUser.login : '';
   document.getElementById('admin-tab').hidden = !isAdmin();
   if (!isAdmin() && !document.getElementById('admin-screen').hidden) showTab('board');
+}
+function setMobileMenu(open) {
+  if (!mobileMenuToggle || !appbarMenu) return;
+  const isOpen = Boolean(open);
+  appbarMenu.classList.toggle('open', isOpen);
+  mobileMenuToggle.classList.toggle('is-open', isOpen);
+  mobileMenuToggle.setAttribute('aria-expanded', String(isOpen));
 }
 async function initializeAuth() {
   if (!supabaseClient) {
@@ -930,6 +939,7 @@ eventEditor.addEventListener('submit', function (event) {
   if (changedEvent.notes) showTab('meetings');
 });
 document.addEventListener('click', async function (event) {
+  if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
   const card = event.target.closest('.task-card');
   if (card && !event.target.closest('button, select')) {
     openTask(card.dataset.task);
@@ -942,11 +952,18 @@ document.addEventListener('click', async function (event) {
   }
   const button = event.target.closest('button');
   if (!button) return;
+  if (button.id === 'mobile-menu-toggle') {
+    setMobileMenu(!appbarMenu.classList.contains('open'));
+    return;
+  }
   if (button.dataset.authMode) {
     setAuthMode(button.dataset.authMode);
     return;
   }
-  if (button.dataset.tab) showTab(button.dataset.tab);
+  if (button.dataset.tab) {
+    showTab(button.dataset.tab);
+    setMobileMenu(false);
+  }
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
     currentUser = null;
@@ -1115,7 +1132,7 @@ participantSearch.addEventListener('blur', function () {
 taskDetail.addEventListener('click', function (event) { if (event.target === taskDetail) closeTaskDetail(); });
 eventDetail.addEventListener('click', function (event) { if (event.target === eventDetail) closeEventDetail(); });
 noteDetail.addEventListener('click', function (event) { if (event.target === noteDetail) closeNoteDetail(); });
-document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
+document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { setMobileMenu(false); if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
 applyLanguage();
 setInterval(updateSystemClock, 1000);
 initializeAuth();
