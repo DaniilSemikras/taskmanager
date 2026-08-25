@@ -15,8 +15,8 @@
   <section class="auth-screen" id="auth-screen" hidden>
     <div class="auth-card">
       <div class="auth-logo">☼</div><h1 data-i18n="welcome">Моя дошка</h1><p id="auth-description" data-i18n="loginHint">Увійдіть у свій простір.</p>
-      <form id="setup-form" hidden><label><span data-i18n="login">Логін</span><input name="login" required autocomplete="username" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, admin"></label><label><span data-i18n="password">Пароль</span><input name="password" required minlength="4" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 4 символи"></label><label><span data-i18n="repeatPassword">Повторіть пароль</span><input name="repeat" required minlength="4" type="password" autocomplete="new-password"></label><button type="submit" data-i18n="createAdmin">Створити адміністратора</button></form>
-      <form id="login-form" hidden><label><span data-i18n="login">Логін</span><input name="login" required autocomplete="username" data-i18n-placeholder="loginPlaceholder" placeholder="Логін"></label><label><span data-i18n="password">Пароль</span><input name="password" required type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"></label><button type="submit" data-i18n="signIn">Увійти</button></form>
+      <form id="setup-form" hidden><label><span data-i18n="login">Пошта</span><input name="login" required type="email" autocomplete="email" data-i18n-placeholder="loginPlaceholder" placeholder="you@example.com"></label><label><span data-i18n="password">Пароль</span><input name="password" required minlength="8" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 8 символів"></label><label><span data-i18n="repeatPassword">Повторіть пароль</span><input name="repeat" required minlength="8" type="password" autocomplete="new-password"></label><button type="submit" data-i18n="createAdmin">Створити акаунт</button></form>
+      <form id="login-form" hidden><label><span data-i18n="login">Пошта</span><input name="login" required type="email" autocomplete="email" data-i18n-placeholder="loginPlaceholder" placeholder="you@example.com"></label><label><span data-i18n="password">Пароль</span><input name="password" required type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"></label><button type="submit" data-i18n="signIn">Увійти</button></form>
       <p class="auth-message" id="auth-message" aria-live="polite"></p>
     </div>
   </section>
@@ -95,7 +95,7 @@
       </div>
       <form class="add-team" id="team-form"><input name="name" required autocomplete="off" data-i18n-placeholder="teamNamePlaceholder" placeholder="Назва команди"><button type="submit">＋ <span data-i18n="addTeam">Створити команду</span></button></form>
       <section class="teams-list" id="teams-list" aria-label="Команди"></section>
-      <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Акаунти</h2></div></header><form class="add-account" id="account-form"><input name="login" required autocomplete="off" data-i18n-placeholder="loginPlaceholder" placeholder="Логін"><input name="password" required minlength="4" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"><select name="personId" id="account-person"><option value="" data-i18n="noLinkedPerson">Без привʼязки</option></select><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Створити акаунт</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
+      <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Користувачі</h2></div></header><form class="add-account" id="account-form"><input name="login" required type="email" autocomplete="off" data-i18n-placeholder="loginPlaceholder" placeholder="you@example.com"><input name="password" required minlength="8" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 8 символів"><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Додати користувача</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
     </section>
 
     <section class="screen" id="summary-screen" hidden>
@@ -141,6 +141,7 @@
       <footer class="detail-actions"><button type="button" class="delete-task" id="delete-open-note" data-i18n="delete">Удалить</button><div><button type="button" class="cancel-note-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" id="save-note-detail">Сохранить заметку</button></div></footer>
     </form>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
 </html>

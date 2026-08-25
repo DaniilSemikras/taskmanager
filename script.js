@@ -2,7 +2,9 @@ const STORAGE_KEY = 'personal-trello-board-v1';
 const LANGUAGE_KEY = 'personal-trello-language-v1';
 const ACCOUNTS_KEY = 'personal-trello-accounts-v1';
 const SESSION_KEY = 'personal-trello-session-v1';
-const DATABASE_API = window.location.protocol === 'file:' ? 'http://127.0.0.1:3000/api/data' : '/api/data';
+const SUPABASE_URL = 'https://nwannsutuahqvoptnlro.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Ny1CR7Kj7M4GEmJ_oTcEIA_Gjvn2FM_';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
 const translations = {
   uk: {
     locale: 'uk-UA', pageTitle: 'Моя дошка', brand: 'моя дошка', board: 'Дошка', calendar: 'Календар', afterMeeting: 'Нотатки',
@@ -27,6 +29,12 @@ const translations = {
     taskOne: 'task', taskFew: 'tasks', taskMany: 'tasks', noteOne: 'note', noteFew: 'notes', noteMany: 'notes', eventOne: 'meeting', eventFew: 'meetings', eventMany: 'meetings', of: 'of', from: 'From', to: 'To', period: 'Period', allTime: 'All time', last7Days: '7 days', thisMonth: 'This month', customPeriod: 'Custom', createdDate: 'Created date', completedDate: 'Completed date', emptyColumn: 'Nothing here yet', noNotes: 'No notes yet. Save your first one after a meeting.', createTask: 'Create task', newTask: 'New task', taskSearchPlaceholder: 'Search by title or description', allColumns: 'All statuses', allColors: 'All colors', clearFilters: 'Clear', dropTaskHere: 'Release to move here', summary: 'Summary', workOverview: 'WORK SUMMARY', summaryHeading: 'Who did what', summaryHint: 'See team progress and completed tasks.', byPerson: 'By person', doneTasks: 'Completed tasks', person: 'Person', total: 'Total', completedList: 'What is already done', noCompletedTasks: 'No completed tasks yet.', moveTask: 'Move task', deleteTask: 'Delete task', deleteNote: 'Delete note', weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   }
 };
+Object.assign(translations.uk, {
+  login: 'Пошта', loginPlaceholder: 'you@example.com', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт'
+});
+Object.assign(translations.en, {
+  login: 'Email', loginPlaceholder: 'you@example.com', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account'
+});
 const columns = [
   { id: 'todo', titleKey: 'todo' },
   { id: 'doing', titleKey: 'doing' },
@@ -87,7 +95,7 @@ let peopleEditId = null;
 let selectedParticipantIds = [];
 let language = localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'uk';
 let state = normalizeState(loadState());
-let accounts = normalizeAccounts(loadAccounts());
+let accounts = [];
 let currentUser = null;
 let saveStatusKey = 'dataBrowser';
 let databaseSaveTimer = null;
@@ -134,8 +142,7 @@ function loadAccounts() {
   }
 }
 function saveAccounts() {
-  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-  scheduleDatabaseSave();
+  // Accounts are held in Supabase Auth. Passwords are never stored in the browser.
 }
 function normalizeState(saved) {
   const source = saved && typeof saved === 'object' ? saved : {};
@@ -156,12 +163,6 @@ function normalizeAccounts(saved) {
     return { id: account.id, login: account.login, password: account.password || '', role: account.role === 'admin' ? 'admin' : 'member', personId: account.personId || '' };
   });
 }
-function canUseDatabase() {
-  return window.location.protocol === 'http:' || window.location.protocol === 'https:' || window.location.protocol === 'file:';
-}
-function openDatabaseApp() {
-  if (window.location.protocol === 'file:') window.location.replace('http://127.0.0.1:3000/');
-}
 function updateSaveStatus() {
   if (!saveStatus) return;
   saveStatus.textContent = t(saveStatusKey);
@@ -175,26 +176,22 @@ function hasStoredContent() {
   return Boolean(accounts.length || state.tasks.length || state.notes.length || state.events.length || state.people.length || state.teams.length);
 }
 async function saveDatabaseNow() {
-  if (!canUseDatabase()) {
-    setSaveStatus('dataBrowser');
+  if (!supabaseClient || !currentUser) {
+    setSaveStatus('dataUnavailable');
     return;
   }
   setSaveStatus('dataSaving');
   try {
-    const response = await fetch(DATABASE_API, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state: state, accounts: accounts })
-    });
-    if (!response.ok) throw new Error('Database save failed');
+    const response = await supabaseClient.from('workspace_state').update({ state: state }).eq('id', 'main');
+    if (response.error) throw response.error;
     setSaveStatus('dataSaved');
   } catch {
-    setSaveStatus(window.location.protocol === 'file:' ? 'dataBrowser' : 'dataUnavailable');
+    setSaveStatus('dataUnavailable');
   }
 }
 function scheduleDatabaseSave() {
-  if (!canUseDatabase()) {
-    setSaveStatus('dataBrowser');
+  if (!supabaseClient || !currentUser) {
+    setSaveStatus('dataUnavailable');
     return;
   }
   clearTimeout(databaseSaveTimer);
@@ -202,31 +199,32 @@ function scheduleDatabaseSave() {
   databaseSaveTimer = setTimeout(function () { saveDatabaseNow(); }, 250);
 }
 async function hydrateDatabase() {
-  if (!canUseDatabase()) {
-    setSaveStatus('dataBrowser');
-    return;
-  }
+  if (!supabaseClient) return false;
   setSaveStatus('dataSaving');
   try {
-    const response = await fetch(DATABASE_API, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Database load failed');
-    const saved = await response.json();
-    const remoteState = normalizeState(saved.state);
-    const remoteAccounts = normalizeAccounts(saved.accounts);
-    const remoteHasContent = Boolean(remoteAccounts.length || remoteState.tasks.length || remoteState.notes.length || remoteState.events.length || remoteState.people.length || remoteState.teams.length);
-    if (saved.exists && remoteHasContent) {
-      state = remoteState;
-      accounts = remoteAccounts;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-      setSaveStatus('dataSaved');
-    } else {
-      await saveDatabaseNow();
-    }
-    openDatabaseApp();
+    const response = await supabaseClient.from('workspace_state').select('state').eq('id', 'main').single();
+    if (response.error) throw response.error;
+    state = normalizeState(response.data.state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    setSaveStatus('dataSaved');
+    return true;
   } catch {
-    setSaveStatus(window.location.protocol === 'file:' ? 'dataBrowser' : 'dataUnavailable');
+    setSaveStatus('dataUnavailable');
+    return false;
   }
+}
+async function refreshAccounts() {
+  if (!supabaseClient) return [];
+  const response = await supabaseClient.from('profiles').select('id, email, display_name, role, created_at').order('created_at');
+  if (response.error) return [];
+  accounts = response.data.map(function (profile) {
+    return { id: profile.id, login: profile.display_name || profile.email, email: profile.email, role: profile.role, personId: '' };
+  });
+  return accounts;
+}
+function accountForUser(user) {
+  const account = accounts.find(function (item) { return item.id === user.id; });
+  return account || { id: user.id, login: user.user_metadata && user.user_metadata.display_name || user.email, email: user.email, role: 'member', personId: '' };
 }
 function isAdmin() {
   return Boolean(currentUser && currentUser.role === 'admin');
@@ -235,16 +233,13 @@ function showAuth() {
   appShell.hidden = true;
   authScreen.hidden = false;
   authMessage.textContent = '';
-  const needsSetup = !accounts.length;
-  setupForm.hidden = !needsSetup;
-  loginForm.hidden = needsSetup;
-  authDescription.textContent = t(needsSetup ? 'createAdmin' : 'loginHint');
-  const form = needsSetup ? setupForm : loginForm;
-  setTimeout(function () { form.elements.login.focus(); }, 0);
+  setupForm.hidden = false;
+  loginForm.hidden = false;
+  authDescription.textContent = t('loginHint');
+  setTimeout(function () { loginForm.elements.login.focus(); }, 0);
 }
 function startSession(account) {
   currentUser = account;
-  localStorage.setItem(SESSION_KEY, String(account.id));
   authScreen.hidden = true;
   appShell.hidden = false;
   updateAccessUi();
@@ -256,10 +251,21 @@ function updateAccessUi() {
   if (!isAdmin() && !document.getElementById('admin-screen').hidden) showTab('board');
 }
 async function initializeAuth() {
+  if (!supabaseClient) {
+    showAuth();
+    authMessage.textContent = 'Не вдалося підключитися до сервісу входу.';
+    return;
+  }
+  const sessionResponse = await supabaseClient.auth.getSession();
+  const user = sessionResponse.data.session && sessionResponse.data.session.user;
+  if (!user) {
+    showAuth();
+    return;
+  }
+  await refreshAccounts();
+  startSession(accountForUser(user));
   await hydrateDatabase();
-  const savedId = localStorage.getItem(SESSION_KEY);
-  currentUser = accounts.find(function (account) { return String(account.id) === savedId; }) || null;
-  if (currentUser) startSession(currentUser); else showAuth();
+  render();
 }
 function escapeHtml(value) {
   const element = document.createElement('span');
@@ -407,18 +413,13 @@ function renderTeams() {
   }).join('');
 }
 function renderAccounts() {
-  const accountPerson = document.getElementById('account-person');
-  accountPerson.innerHTML = '<option value="">' + t('noLinkedPerson') + '</option>' + state.people.map(function (person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + '</option>'; }).join('');
   if (!accounts.length) {
     accountsList.innerHTML = '<div class="accounts-empty">' + t('emptyColumn') + '</div>';
     return;
   }
   accountsList.innerHTML = accounts.map(function (account) {
-    const person = state.people.find(function (item) { return item.id === Number(account.personId); });
-    const linked = person ? person.name : t('noLinkedPerson');
     const roleKey = account.role === 'admin' ? 'administrator' : 'member';
-    const remove = currentUser && account.id !== currentUser.id ? '<button type="button" class="delete-account" data-delete-account="' + account.id + '">' + t('delete') + '</button>' : '';
-    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(linked) + '</span></div><div><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span>' + remove + '</div></article>';
+    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span></div><div><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div></article>';
   }).join('');
 }
 function selectedPeople() {
@@ -767,30 +768,46 @@ document.querySelectorAll('.close-event-detail, .cancel-event-detail').forEach(f
 document.querySelectorAll('.close-note-detail, .cancel-note-detail').forEach(function (button) {
   button.addEventListener('click', closeNoteDetail);
 });
-setupForm.addEventListener('submit', function (event) {
+setupForm.addEventListener('submit', async function (event) {
   event.preventDefault();
   const form = new FormData(setupForm);
-  const login = form.get('login').trim();
+  const email = form.get('login').trim();
   const password = form.get('password');
   if (password !== form.get('repeat')) {
     authMessage.textContent = t('passwordMismatch');
     return;
   }
-  const account = { id: Date.now(), login: login, password: password, role: 'admin', personId: '' };
-  accounts = [account];
-  saveAccounts();
-  startSession(account);
-});
-loginForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  const form = new FormData(loginForm);
-  const login = form.get('login').trim().toLocaleLowerCase();
-  const account = accounts.find(function (item) { return item.login.toLocaleLowerCase() === login && item.password === form.get('password'); });
-  if (!account) {
-    authMessage.textContent = t('invalidCredentials');
+  if (!supabaseClient) return;
+  authMessage.textContent = '';
+  const response = await supabaseClient.auth.signUp({ email: email, password: password, options: { data: { display_name: email.split('@')[0] } } });
+  if (response.error) {
+    authMessage.textContent = response.error.message;
     return;
   }
-  startSession(account);
+  if (!response.data.session) {
+    authMessage.textContent = 'Перевірте пошту та підтвердьте реєстрацію, потім увійдіть.';
+    setupForm.reset();
+    return;
+  }
+  await refreshAccounts();
+  startSession(accountForUser(response.data.user));
+  await hydrateDatabase();
+  render();
+});
+loginForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const form = new FormData(loginForm);
+  if (!supabaseClient) return;
+  authMessage.textContent = '';
+  const response = await supabaseClient.auth.signInWithPassword({ email: form.get('login').trim(), password: form.get('password') });
+  if (response.error || !response.data.user) {
+    authMessage.textContent = response.error ? response.error.message : t('invalidCredentials');
+    return;
+  }
+  await refreshAccounts();
+  startSession(accountForUser(response.data.user));
+  await hydrateDatabase();
+  render();
 });
 noteEditor.addEventListener('submit', function (event) {
   event.preventDefault();
@@ -833,20 +850,29 @@ teamForm.addEventListener('submit', function (event) {
   renderTeams();
   teamForm.elements.name.focus();
 });
-accountForm.addEventListener('submit', function (event) {
+accountForm.addEventListener('submit', async function (event) {
   event.preventDefault();
-  if (!isAdmin()) return;
+  if (!isAdmin() || !supabaseClient) return;
   const form = new FormData(accountForm);
-  const login = form.get('login').trim();
-  if (accounts.some(function (account) { return account.login.toLocaleLowerCase() === login.toLocaleLowerCase(); })) {
-    accountForm.elements.login.setCustomValidity(t('loginTaken'));
+  const email = form.get('login').trim();
+  const previousSession = (await supabaseClient.auth.getSession()).data.session;
+  const response = await supabaseClient.auth.signUp({ email: email, password: form.get('password'), options: { data: { display_name: email.split('@')[0] } } });
+  if (response.error || !response.data.user) {
+    accountForm.elements.login.setCustomValidity(response.error ? response.error.message : t('loginTaken'));
     accountForm.elements.login.reportValidity();
     accountForm.elements.login.setCustomValidity('');
     return;
   }
-  accounts.push({ id: Date.now(), login: login, password: form.get('password'), role: form.get('role'), personId: form.get('personId') || '' });
-  saveAccounts();
+  if (previousSession) await supabaseClient.auth.setSession({ access_token: previousSession.access_token, refresh_token: previousSession.refresh_token });
+  const roleResponse = await supabaseClient.from('profiles').update({ role: form.get('role') }).eq('id', response.data.user.id);
+  if (roleResponse.error) {
+    accountForm.elements.login.setCustomValidity(roleResponse.error.message);
+    accountForm.elements.login.reportValidity();
+    accountForm.elements.login.setCustomValidity('');
+    return;
+  }
   accountForm.reset();
+  await refreshAccounts();
   renderAccounts();
 });
 taskEditor.addEventListener('submit', function (event) {
@@ -890,7 +916,7 @@ eventEditor.addEventListener('submit', function (event) {
   render();
   if (changedEvent.notes) showTab('meetings');
 });
-document.addEventListener('click', function (event) {
+document.addEventListener('click', async function (event) {
   const card = event.target.closest('.task-card');
   if (card && !event.target.closest('button, select')) {
     openTask(card.dataset.task);
@@ -905,19 +931,9 @@ document.addEventListener('click', function (event) {
   if (!button) return;
   if (button.dataset.tab) showTab(button.dataset.tab);
   if (button.id === 'logout-button') {
+    if (supabaseClient) await supabaseClient.auth.signOut();
     currentUser = null;
-    localStorage.removeItem(SESSION_KEY);
     showAuth();
-    return;
-  }
-  if (button.dataset.deleteAccount && isAdmin()) {
-    const id = Number(button.dataset.deleteAccount);
-    const account = accounts.find(function (item) { return item.id === id; });
-    const adminCount = accounts.filter(function (item) { return item.role === 'admin'; }).length;
-    if (account && account.role === 'admin' && adminCount === 1) return;
-    accounts = accounts.filter(function (item) { return item.id !== id; });
-    saveAccounts();
-    renderAccounts();
     return;
   }
   if (button.dataset.editPerson) {
