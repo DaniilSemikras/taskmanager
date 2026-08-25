@@ -10,3 +10,4 @@
 @media (max-width:500px) { .auth-card { padding:23px; }.user-menu { gap:3px; }.user-menu button { padding:0 5px; font-size:9px; } }
 .auth-card form + form { margin-top:15px; padding-top:15px; border-top:1px solid #efedf2; }
 .auth-mode-switch { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin:0 0 15px; padding:4px; border-radius:10px; background:#f2f1f6; }.auth-mode-switch button { min-height:34px; border:0; border-radius:7px; color:#777283; background:transparent; font-size:11px; font-weight:800; }.auth-mode-switch button.active { color:#5d4eca; background:#fff; box-shadow:0 2px 6px rgba(53,47,94,.11); }.auth-card form + form { margin-top:0; padding-top:0; border-top:0; }
+@media (max-width:700px) { .appbar-menu .user-menu span { display:block; } }
