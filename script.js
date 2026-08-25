@@ -102,6 +102,8 @@ let accounts = [];
 let currentUser = null;
 let saveStatusKey = 'dataBrowser';
 let databaseSaveTimer = null;
+let databaseWriteQueue = Promise.resolve();
+let archiveCheckTimer = null;
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
 let authMode = 'login';
@@ -134,9 +136,14 @@ function loadState() {
     return { tasks: [], notes: [], events: [], people: [], teams: [] };
   }
 }
-function saveState() {
+function saveState(immediately) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (immediately) {
+    clearTimeout(databaseSaveTimer);
+    return queueDatabaseSave();
+  }
   scheduleDatabaseSave();
+  return Promise.resolve();
 }
 function loadAccounts() {
   try {
@@ -152,7 +159,9 @@ function saveAccounts() {
 function normalizeState(saved) {
   const source = saved && typeof saved === 'object' ? saved : {};
   return {
-    tasks: Array.isArray(source.tasks) ? source.tasks : [],
+    tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
+      return Object.assign({}, task, { completedAt: task.completedAt || (task.column === 'done' ? task.createdAt || null : null), archivedAt: task.archivedAt || null });
+    }),
     notes: Array.isArray(source.notes) ? source.notes : [],
     events: Array.isArray(source.events) ? source.events : [],
     people: (Array.isArray(source.people) ? source.people : []).map(function (person) {
@@ -180,19 +189,28 @@ function setSaveStatus(key) {
 function hasStoredContent() {
   return Boolean(accounts.length || state.tasks.length || state.notes.length || state.events.length || state.people.length || state.teams.length);
 }
-async function saveDatabaseNow() {
+async function saveDatabaseNow(snapshot) {
   if (!supabaseClient || !currentUser) {
     setSaveStatus('dataUnavailable');
     return;
   }
   setSaveStatus('dataSaving');
   try {
-    const response = await supabaseClient.from('workspace_state').update({ state: state }).eq('id', 'main');
+    const response = await supabaseClient.from('workspace_state').update({ state: snapshot }).eq('id', 'main').select('id').single();
     if (response.error) throw response.error;
     setSaveStatus('dataSaved');
   } catch {
     setSaveStatus('dataUnavailable');
   }
+}
+function queueDatabaseSave() {
+  if (!supabaseClient || !currentUser) {
+    setSaveStatus('dataUnavailable');
+    return Promise.resolve();
+  }
+  const snapshot = JSON.parse(JSON.stringify(state));
+  databaseWriteQueue = databaseWriteQueue.catch(function () {}).then(function () { return saveDatabaseNow(snapshot); });
+  return databaseWriteQueue;
 }
 function scheduleDatabaseSave() {
   if (!supabaseClient || !currentUser) {
@@ -201,7 +219,7 @@ function scheduleDatabaseSave() {
   }
   clearTimeout(databaseSaveTimer);
   setSaveStatus('dataSaving');
-  databaseSaveTimer = setTimeout(function () { saveDatabaseNow(); }, 250);
+  databaseSaveTimer = setTimeout(function () { queueDatabaseSave(); }, 250);
 }
 async function hydrateDatabase() {
   if (!supabaseClient) return false;
@@ -363,7 +381,9 @@ function renderBoard() {
   const search = taskSearch.value.trim().toLocaleLowerCase();
   const from = taskDateFrom.value;
   const to = taskDateTo.value;
+  const activeTaskCount = state.tasks.filter(function (task) { return !task.archivedAt; }).length;
   const filteredTasks = state.tasks.filter(function (task) {
+    if (task.archivedAt) return false;
     const matchesResponsible = !responsible || (responsible === '__none__' ? !task.responsible : task.responsible === responsible);
     const matchesStatus = !status || task.column === status;
     const matchesPriority = !priority || taskPriority(task) === priority;
@@ -377,12 +397,12 @@ function renderBoard() {
   }).join('');
   const shown = filteredTasks.length;
   const hasFilters = responsible || status || priority || search || from || to;
-  document.getElementById('task-count').textContent = hasFilters ? shown + ' ' + t('of') + ' ' + state.tasks.length : state.tasks.length + plural(state.tasks.length, t('taskOne'), t('taskFew'), t('taskMany'));
+  document.getElementById('task-count').textContent = hasFilters ? shown + ' ' + t('of') + ' ' + activeTaskCount : activeTaskCount + plural(activeTaskCount, t('taskOne'), t('taskFew'), t('taskMany'));
   bindDragAndDrop();
 }
 function renderResponsibleFilter() {
   const previous = responsibleFilter.value;
-  const people = Array.from(new Set(state.tasks.map(function (task) { return task.responsible; }).filter(Boolean))).sort();
+  const people = Array.from(new Set(state.tasks.filter(function (task) { return !task.archivedAt; }).map(function (task) { return task.responsible; }).filter(Boolean))).sort();
   responsibleFilter.innerHTML = '<option value="">' + t('allTasks') + '</option><option value="__none__">' + t('noResponsible') + '</option>' + people.map(function (person) { return '<option value="' + escapeHtml(person) + '">' + escapeHtml(person) + '</option>'; }).join('');
   if (people.includes(previous) || previous === '__none__') responsibleFilter.value = previous;
 }
@@ -581,6 +601,7 @@ function renderSummary() {
   const from = summaryDateFrom.value;
   const to = summaryDateTo.value;
   const reportTasks = state.tasks.filter(function (task) {
+    if (task.archivedAt) return false;
     const reportDate = mode === 'completed' ? (task.completedAt || (task.column === 'done' ? task.createdAt : '')) : task.createdAt;
     if (mode === 'completed' && !reportDate) return false;
     return isDateInRange(reportDate, from, to);
@@ -616,7 +637,31 @@ function plural(number, one, few, many) {
   if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return ' ' + few;
   return ' ' + many;
 }
+function archiveCompletedTasks() {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  let changed = false;
+  state.tasks = state.tasks.map(function (task) {
+    if (task.archivedAt || task.column !== 'done' || !task.completedAt || new Date(task.completedAt).getTime() > cutoff) return task;
+    changed = true;
+    return Object.assign({}, task, { archivedAt: new Date().toISOString() });
+  });
+  return changed;
+}
+function scheduleArchiveCheck() {
+  clearTimeout(archiveCheckTimer);
+  const nextArchiveAt = state.tasks.filter(function (task) { return task.column === 'done' && task.completedAt && !task.archivedAt; }).map(function (task) { return new Date(task.completedAt).getTime() + 24 * 60 * 60 * 1000; }).filter(Number.isFinite).sort(function (a, b) { return a - b; })[0];
+  if (!nextArchiveAt) return;
+  archiveCheckTimer = setTimeout(function () {
+    if (archiveCompletedTasks()) {
+      saveState();
+      render();
+    } else {
+      scheduleArchiveCheck();
+    }
+  }, Math.max(1000, Math.min(nextArchiveAt - Date.now(), 2147483647)));
+}
 function render() {
+  if (archiveCompletedTasks()) saveState();
   renderResponsibleFilter();
   renderBoard();
   renderNotes();
@@ -625,6 +670,7 @@ function render() {
   renderAccounts();
   renderCalendar();
   renderSummary();
+  scheduleArchiveCheck();
 }
 function moveTask(id, column) {
   state.tasks = state.tasks.map(function (task) {
@@ -1163,7 +1209,7 @@ document.addEventListener('click', async function (event) {
   if (button.id === 'delete-open-event' && openEventId) {
     state.events = state.events.filter(function (meeting) { return meeting.id !== openEventId; });
     state.notes = state.notes.filter(function (note) { return note.eventId !== openEventId; });
-    saveState();
+    await saveState(true);
     closeEventDetail();
     render();
   }
