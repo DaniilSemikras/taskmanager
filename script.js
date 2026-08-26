@@ -49,10 +49,10 @@ Object.assign(translations.en, {
   myTeam: 'My team', teamViewHint: 'Only your team members and their contacts are shown here.', teamMembers: 'team members', noTeamAssigned: 'No team assigned yet', noTeamAssignedHint: 'Ask an administrator to add you to a team.'
 });
 Object.assign(translations.uk, {
-  analyticsProgress: 'Прогрес', completionRate: 'Виконано', activeTasks: 'У роботі', highPriorityTasks: 'Високий пріоритет', statusDistribution: 'Розподіл за статусами', taskActivity: 'Активність за 7 днів', createdTasks: 'Створено', closedTasks: 'Завершено', analyticsHint: 'Дані оновлюються разом із фільтром періоду.', unassignedTasks: 'Нерозподілені завдання'
+  analyticsProgress: 'Прогрес', completionRate: 'Виконано', activeTasks: 'У роботі', highPriorityTasks: 'Високий пріоритет', statusDistribution: 'Розподіл за статусами', taskActivity: 'Активність за 7 днів', createdTasks: 'Створено', closedTasks: 'Завершено', analyticsHint: 'Дані оновлюються разом із фільтром періоду.', unassignedTasks: 'Нерозподілені завдання', archive: 'В архів'
 });
 Object.assign(translations.en, {
-  analyticsProgress: 'Progress', completionRate: 'Completed', activeTasks: 'In progress', highPriorityTasks: 'High priority', statusDistribution: 'Status distribution', taskActivity: 'Activity over 7 days', createdTasks: 'Created', closedTasks: 'Completed', analyticsHint: 'Charts update with the selected date filter.', unassignedTasks: 'Unassigned tasks'
+  analyticsProgress: 'Progress', completionRate: 'Completed', activeTasks: 'In progress', highPriorityTasks: 'High priority', statusDistribution: 'Status distribution', taskActivity: 'Activity over 7 days', createdTasks: 'Created', closedTasks: 'Completed', analyticsHint: 'Charts update with the selected date filter.', unassignedTasks: 'Unassigned tasks', archive: 'Archive'
 });
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
@@ -1355,9 +1355,11 @@ function openNewTask(column) {
 }
 function updateTaskEditorUi() {
   const creating = !openTaskId;
+  const task = state.tasks.find(function (item) { return item.id === openTaskId; });
   document.getElementById('task-editor-title').textContent = creating ? t('newTask') : t('edit');
   document.getElementById('save-task-detail').textContent = creating ? t('createTask') : t('saveChanges');
   document.getElementById('delete-open-task').hidden = creating;
+  document.getElementById('archive-open-task').hidden = creating || !task || task.column !== 'done';
 }
 function closeTaskDetail() {
   openTaskId = null;
@@ -1814,6 +1816,12 @@ document.addEventListener('click', async function (event) {
   if (button.classList.contains('close-detail') || button.classList.contains('cancel-detail')) closeTaskDetail();
   if (button.id === 'delete-open-task' && openTaskId) {
     state.tasks = state.tasks.filter(function (task) { return task.id !== openTaskId; });
+    saveState();
+    closeTaskDetail();
+    render();
+  }
+  if (button.id === 'archive-open-task' && openTaskId) {
+    state.tasks = state.tasks.map(function (task) { return task.id === openTaskId && task.column === 'done' ? Object.assign({}, task, { archivedAt: new Date().toISOString() }) : task; });
     saveState();
     closeTaskDetail();
     render();
