@@ -49,13 +49,13 @@ Object.assign(translations.en, {
   myTeam: 'My team', teamViewHint: 'Only your team members and their contacts are shown here.', teamMembers: 'team members', noTeamAssigned: 'No team assigned yet', noTeamAssignedHint: 'Ask an administrator to add you to a team.'
 });
 Object.assign(translations.uk, {
-  analyticsProgress: 'Прогрес', completionRate: 'Виконано', activeTasks: 'У роботі', highPriorityTasks: 'Високий пріоритет', statusDistribution: 'Розподіл за статусами', taskActivity: 'Активність за 7 днів', createdTasks: 'Створено', closedTasks: 'Завершено', analyticsHint: 'Дані оновлюються разом із фільтром періоду.'
+  analyticsProgress: 'Прогрес', completionRate: 'Виконано', activeTasks: 'У роботі', highPriorityTasks: 'Високий пріоритет', statusDistribution: 'Розподіл за статусами', taskActivity: 'Активність за 7 днів', createdTasks: 'Створено', closedTasks: 'Завершено', analyticsHint: 'Дані оновлюються разом із фільтром періоду.', unassignedTasks: 'Нерозподілені завдання'
 });
 Object.assign(translations.en, {
-  analyticsProgress: 'Progress', completionRate: 'Completed', activeTasks: 'In progress', highPriorityTasks: 'High priority', statusDistribution: 'Status distribution', taskActivity: 'Activity over 7 days', createdTasks: 'Created', closedTasks: 'Completed', analyticsHint: 'Charts update with the selected date filter.'
+  analyticsProgress: 'Progress', completionRate: 'Completed', activeTasks: 'In progress', highPriorityTasks: 'High priority', statusDistribution: 'Status distribution', taskActivity: 'Activity over 7 days', createdTasks: 'Created', closedTasks: 'Completed', analyticsHint: 'Charts update with the selected date filter.', unassignedTasks: 'Unassigned tasks'
 });
 const columns = [
-  { id: 'todo', titleKey: 'todo' },
+  { id: 'todo', titleKey: 'unassignedTasks' },
   { id: 'doing', titleKey: 'doing' },
   { id: 'done', titleKey: 'done' }
 ];
