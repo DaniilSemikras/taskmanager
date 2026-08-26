@@ -43,6 +43,12 @@ Object.assign(translations.en, {
   team: 'Team', noTeam: 'No team', accountRole: 'Role', accountAccessHint: 'Assign a role and team to a user.', saveAccess: 'Save access', teamCalendar: 'Team calendar', meetingTeamHint: 'Everyone on this team can see the meeting in their calendar.', accessSaved: 'Access updated', noCalendarTeam: 'Ask an administrator to assign you to a team before creating meetings.'
 });
 Object.assign(translations.uk, {
+  notificationMeetingInvite: 'Вас запросили на зустріч', meetingParticipantsHint: 'Позначені учасники отримають сповіщення.', noParticipantsFound: 'У вибраній команді нікого не знайдено.'
+});
+Object.assign(translations.en, {
+  notificationMeetingInvite: 'You were invited to a meeting', meetingParticipantsHint: 'Tagged participants will receive a notification.', noParticipantsFound: 'No one was found in the selected team.'
+});
+Object.assign(translations.uk, {
   myTeam: 'Моя команда', teamViewHint: 'Тут лише учасники вашої команди та їхні контакти.', teamMembers: 'учасники команди', noTeamAssigned: 'Команду ще не призначено', noTeamAssignedHint: 'Попросіть адміністратора додати вас до команди.'
 });
 Object.assign(translations.en, {
@@ -248,7 +254,8 @@ function normalizeState(saved) {
     completedMeetingIds: Array.from(new Set((Array.isArray(source.completedMeetingIds) ? source.completedMeetingIds : []).map(String).filter(Boolean))),
     dismissedMeetingNoteIds: dismissedMeetingNoteIds,
     notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
-      return { id: String(notification.id), recipientId: String(notification.recipientId), type: notification.type === 'mention' ? 'mention' : 'status', taskId: Number(notification.taskId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
+      const type = ['mention', 'status', 'meeting'].includes(notification.type) ? notification.type : 'status';
+      return { id: String(notification.id), recipientId: String(notification.recipientId), type: type, taskId: Number(notification.taskId) || 0, eventId: Number(notification.eventId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
     }).slice(0, 160),
     activityLog: (Array.isArray(source.activityLog) ? source.activityLog : []).filter(function (item) { return item && item.id && item.type; }).map(function (item) {
       return { id: String(item.id), actorId: String(item.actorId || ''), actorName: String(item.actorName || ''), type: String(item.type), title: String(item.title || ''), createdAt: item.createdAt || new Date().toISOString() };
@@ -441,6 +448,39 @@ function addTaskNotifications(type, task, recipientNames) {
   });
   state.notifications = additions.concat(state.notifications || []).slice(0, 160);
 }
+function normalizeMeetingParticipantId(value) {
+  const id = String(value || '').trim();
+  if (!id) return '';
+  if (id.startsWith('person:') || id.startsWith('account:')) return id;
+  return /^\d+$/.test(id) ? 'person:' + id : 'account:' + id;
+}
+function accountIdsForMeetingParticipants(participantIds) {
+  const keys = new Set((participantIds || []).map(normalizeMeetingParticipantId).filter(Boolean));
+  if (!keys.size) return [];
+  const directAccountIds = new Set(Array.from(keys).filter(function (key) { return key.startsWith('account:'); }).map(function (key) { return key.slice(8); }));
+  const personIds = new Set(Array.from(keys).filter(function (key) { return key.startsWith('person:'); }).map(function (key) { return key.slice(7); }));
+  const selectedPeople = state.people.filter(function (person) { return personIds.has(String(person.id)); });
+  const selectedEmails = selectedPeople.map(function (person) { return String(person.email || '').trim().toLocaleLowerCase(); }).filter(Boolean);
+  const selectedNames = selectedPeople.map(function (person) { return String(person.name || '').trim().toLocaleLowerCase(); }).filter(Boolean);
+  return accounts.filter(function (account) {
+    if (directAccountIds.has(String(account.id)) || personIds.has(String(account.personId || ''))) return true;
+    const email = String(account.email || '').trim().toLocaleLowerCase();
+    const login = String(account.login || '').trim().toLocaleLowerCase();
+    return Boolean((email && selectedEmails.includes(email)) || (login && selectedNames.includes(login)));
+  }).map(function (account) { return String(account.id); });
+}
+function addMeetingNotifications(calendarEvent, previousParticipantIds) {
+  if (!currentUser || !calendarEvent) return;
+  const previous = new Set((previousParticipantIds || []).map(normalizeMeetingParticipantId).filter(Boolean));
+  const newlyTagged = (calendarEvent.participantIds || []).map(normalizeMeetingParticipantId).filter(function (id) { return id && !previous.has(id); });
+  const recipients = Array.from(new Set(accountIdsForMeetingParticipants(newlyTagged))).filter(function (id) { return id !== String(currentUser.id); });
+  if (!recipients.length) return;
+  const createdAt = new Date().toISOString();
+  const additions = recipients.map(function (recipientId, index) {
+    return { id: String(Date.now()) + '-meeting-' + index + '-' + recipientId, recipientId: recipientId, type: 'meeting', eventId: Number(calendarEvent.id) || 0, taskId: 0, taskTitle: calendarEvent.title || '', fromUser: currentUser.login || '', createdAt: createdAt, read: false };
+  });
+  state.notifications = additions.concat(state.notifications || []).slice(0, 160);
+}
 function recordActivity(type, title) {
   if (!currentUser) return;
   const createdAt = new Date().toISOString();
@@ -523,6 +563,11 @@ function currentUserNotifications() {
   if (!currentUser) return [];
   return (state.notifications || []).filter(function (notification) { return notification.recipientId === String(currentUser.id); }).sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
 }
+function notificationTitle(notification) {
+  if (notification.type === 'mention') return t('notificationMention');
+  if (notification.type === 'meeting') return t('notificationMeetingInvite');
+  return t('notificationStatus');
+}
 function renderNotifications() {
   if (!notificationsList || !notificationCount) return;
   const notifications = currentUserNotifications();
@@ -533,7 +578,7 @@ function renderNotifications() {
   const markReadButton = document.getElementById('mark-notifications-read');
   if (markReadButton) markReadButton.hidden = unread === 0;
   notificationsList.innerHTML = notifications.length ? notifications.slice(0, 30).map(function (notification) {
-    const title = t(notification.type === 'mention' ? 'notificationMention' : 'notificationStatus');
+    const title = notificationTitle(notification);
     const author = notification.fromUser ? '<small>' + escapeHtml(notification.fromUser) + ' · ' + escapeHtml(dateLabel(notification.createdAt)) + '</small>' : '<small>' + escapeHtml(dateLabel(notification.createdAt)) + '</small>';
     return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"><button type="button" class="notification-delete" data-delete-notification="' + escapeHtml(notification.id) + '" aria-label="' + escapeHtml(t('deleteNotification')) + '">×</button><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
   }).join('') : '<p class="notifications-empty">' + t('noNotifications') + '</p>';
@@ -555,7 +600,7 @@ function renderAdminActivity() {
     { value: actions.length, label: t('recordedActions') }
   ].map(function (item) { return '<article class="admin-audit-stat"><b>' + item.value + '</b><span>' + escapeHtml(item.label) + '</span></article>'; }).join('');
   adminNotificationsList.innerHTML = notifications.length ? notifications.slice(0, 80).map(function (notification) {
-    const title = t(notification.type === 'mention' ? 'notificationMention' : 'notificationStatus');
+    const title = notificationTitle(notification);
     const recipient = accountNameById(notification.recipientId);
     const details = [notification.fromUser, t('notificationRecipient') + ': ' + recipient, dateLabel(notification.createdAt)].filter(Boolean).join(' · ');
     return '<article class="admin-feed-item' + (notification.read ? '' : ' unread') + '"><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p><small>' + escapeHtml(details) + '</small></article>';
@@ -662,7 +707,7 @@ function teamName(id) {
   return team ? team.name : t('noTeam');
 }
 function calendarEventFromRow(row) {
-  return { id: Number(row.id), title: row.title || '', date: String(row.starts_at || '').slice(0, 16), end: String(row.ends_at || '').slice(0, 16), notes: row.notes || '', teamId: row.team_id || '', participantIds: (Array.isArray(row.participant_ids) ? row.participant_ids : []).map(Number), createdBy: row.created_by || '' };
+  return { id: Number(row.id), title: row.title || '', date: String(row.starts_at || '').slice(0, 16), end: String(row.ends_at || '').slice(0, 16), notes: row.notes || '', teamId: row.team_id || '', participantIds: (Array.isArray(row.participant_ids) ? row.participant_ids : []).map(normalizeMeetingParticipantId).filter(Boolean), createdBy: row.created_by || '' };
 }
 function calendarEventToRow(event) {
   const stored = calendarEvents.find(function (item) { return item.id === Number(event.id); });
@@ -678,7 +723,9 @@ async function hydrateCalendarEvents() {
     setSaveStatus('dataUnavailable');
     return false;
   }
-  calendarEvents = response.data.map(calendarEventFromRow);
+  calendarEvents = response.data.filter(function (row) {
+    return isAdmin() || (currentTeamId() && String(row.team_id || '') === currentTeamId());
+  }).map(calendarEventFromRow);
   return true;
 }
 async function hydrateWorkspace() {
@@ -1249,12 +1296,21 @@ async function setLinkedAccountsTeam(personId, teamId) {
   updateAccessUi();
   return true;
 }
+function meetingParticipantPeople() {
+  const selectedTeamId = String(meetingTeam && meetingTeam.value || currentTeamId() || '');
+  if (!selectedTeamId) return [];
+  return teamMembersFor(selectedTeamId).map(function (member) {
+    return { id: normalizeMeetingParticipantId(member.key), name: member.name, email: member.email || '', role: member.role || '' };
+  });
+}
 function selectedPeople() {
-  return selectedParticipantIds.map(function (id) { return state.people.find(function (person) { return person.id === id; }); }).filter(Boolean);
+  const members = meetingParticipantPeople();
+  return selectedParticipantIds.map(function (id) { return members.find(function (member) { return member.id === normalizeMeetingParticipantId(id); }); }).filter(Boolean);
 }
 function renderParticipantPicker() {
   const query = participantSearch.value.trim().toLocaleLowerCase();
-  const matches = state.people.filter(function (person) { return !selectedParticipantIds.includes(person.id) && (!query || contactMatches(person, query)); }).slice(0, 7);
+  const availablePeople = meetingParticipantPeople();
+  const matches = availablePeople.filter(function (person) { return !selectedParticipantIds.includes(person.id) && (!query || contactMatches(person, query)); }).slice(0, 7);
   participantTags.innerHTML = selectedPeople().map(function (person) { return '<span class="participant-tag">' + escapeHtml(person.name) + '<button type="button" data-remove-participant="' + person.id + '" aria-label="' + t('delete') + '">×</button></span>'; }).join('');
   eventEditor.elements.participantIds.value = selectedParticipantIds.join(',');
   participantSuggestions.innerHTML = matches.length ? matches.map(function (person) {
@@ -1264,7 +1320,8 @@ function renderParticipantPicker() {
   participantSuggestions.hidden = !document.activeElement || document.activeElement !== participantSearch;
 }
 function setSelectedParticipants(ids) {
-  selectedParticipantIds = Array.from(new Set((ids || []).map(Number))).filter(function (id) { return state.people.some(function (person) { return person.id === id; }); });
+  const allowed = new Set(meetingParticipantPeople().map(function (person) { return person.id; }));
+  selectedParticipantIds = Array.from(new Set((ids || []).map(normalizeMeetingParticipantId).filter(Boolean))).filter(function (id) { return allowed.has(id); });
   renderParticipantPicker();
 }
 function dateKey(date) {
@@ -1322,7 +1379,12 @@ function scheduleMeetingEndCheck() {
 }
 function participantsFor(event) {
   if (Array.isArray(event.participantIds)) {
-    const selected = event.participantIds.map(function (id) { return state.people.find(function (person) { return person.id === Number(id); }); }).filter(Boolean).map(function (person) { return person.name; });
+    const selected = event.participantIds.map(function (id) {
+      const key = normalizeMeetingParticipantId(id);
+      if (key.startsWith('person:')) return state.people.find(function (person) { return String(person.id) === key.slice(7); });
+      if (key.startsWith('account:')) return accounts.find(function (account) { return String(account.id) === key.slice(8); });
+      return null;
+    }).filter(Boolean).map(function (person) { return person.name || person.login; });
     if (selected.length) return selected;
   }
   if (Array.isArray(event.participants)) return event.participants.filter(Boolean);
@@ -1830,7 +1892,7 @@ function openEvent(id) {
   renderMeetingTeamPicker(event.teamId);
   participantSearch.value = '';
   const matchingIds = Array.isArray(event.participantIds) ? event.participantIds : participantsFor(event).map(function (name) {
-    const person = state.people.find(function (item) { return item.name.toLocaleLowerCase() === name.toLocaleLowerCase(); });
+    const person = meetingParticipantPeople().find(function (item) { return item.name.toLocaleLowerCase() === name.toLocaleLowerCase(); });
     return person ? person.id : null;
   }).filter(Boolean);
   setSelectedParticipants(matchingIds);
@@ -2040,14 +2102,17 @@ eventEditor.addEventListener('submit', async function (event) {
   }
   const details = { title: form.get('title').trim(), date: start, end: end, teamId: teamId, participantIds: selectedParticipantIds.slice(), notes: form.get('notes').trim() };
   let changedEvent;
+  let previousParticipantIds = [];
   if (openEventId) {
     const current = calendarEvents.find(function (item) { return item.id === openEventId; });
     if (!current || !canEditCalendarEvent(current)) return;
+    previousParticipantIds = Array.isArray(current.participantIds) ? current.participantIds.slice() : [];
     changedEvent = Object.assign({}, current, details);
   } else {
     changedEvent = Object.assign({ id: Date.now(), createdBy: currentUser.id }, details);
   }
   if (!await saveCalendarEvent(changedEvent)) return;
+  addMeetingNotifications(changedEvent, previousParticipantIds);
   if ((changedEvent.notes || '').trim()) restoreMeetingNote(changedEvent.id);
   recordActivity('meetingSaved', changedEvent.title);
   saveState();
@@ -2151,7 +2216,7 @@ document.addEventListener('click', async function (event) {
     const person = state.people.find(function (item) { return item.id === id; });
     state.people = state.people.filter(function (person) { return person.id !== id; });
     state.teams = state.teams.map(function (team) { return Object.assign({}, team, { memberIds: (team.memberIds || []).filter(function (memberId) { return Number(memberId) !== id; }) }); });
-    selectedParticipantIds = selectedParticipantIds.filter(function (personId) { return personId !== id; });
+    selectedParticipantIds = selectedParticipantIds.filter(function (participantId) { return normalizeMeetingParticipantId(participantId) !== 'person:' + id; });
     if (person) recordActivity('personDeleted', person.name);
     saveState();
     render();
@@ -2204,13 +2269,14 @@ document.addEventListener('click', async function (event) {
     return;
   }
   if (button.dataset.addParticipant) {
-    selectedParticipantIds.push(Number(button.dataset.addParticipant));
+    selectedParticipantIds.push(normalizeMeetingParticipantId(button.dataset.addParticipant));
     participantSearch.value = '';
     setSelectedParticipants(selectedParticipantIds);
     return;
   }
   if (button.dataset.removeParticipant) {
-    setSelectedParticipants(selectedParticipantIds.filter(function (id) { return id !== Number(button.dataset.removeParticipant); }));
+    const removedId = normalizeMeetingParticipantId(button.dataset.removeParticipant);
+    setSelectedParticipants(selectedParticipantIds.filter(function (id) { return normalizeMeetingParticipantId(id) !== removedId; }));
     return;
   }
   if (button.id === 'cancel-person-edit') {
@@ -2376,6 +2442,10 @@ summaryDateTo.addEventListener('change', function () { setDatePreset('summary', 
 peopleSearch.addEventListener('input', renderPeople);
 participantSearch.addEventListener('focus', renderParticipantPicker);
 participantSearch.addEventListener('input', renderParticipantPicker);
+meetingTeam.addEventListener('change', function () {
+  participantSearch.value = '';
+  setSelectedParticipants(selectedParticipantIds);
+});
 participantSearch.addEventListener('blur', function () {
   setTimeout(function () { participantSuggestions.hidden = true; }, 120);
 });

@@ -84,10 +84,6 @@ to authenticated
 using (
   public.is_workspace_admin()
   or (team_id is not null and team_id = public.current_workspace_team_id())
-  or (
-    public.current_workspace_person_id() is not null
-    and participant_ids ? public.current_workspace_person_id()
-  )
 );
 
 drop policy if exists "Team can create calendar events" on public.calendar_events;

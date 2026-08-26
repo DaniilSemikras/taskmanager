@@ -32,6 +32,7 @@
 .participant-suggestion:hover { background:#f1efff; }
 .participant-suggestion strong,.participant-suggestion span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .participant-suggestion strong { font-size:11px; }.participant-suggestion span { margin-top:2px; color:#908d9b; font-size:10px; }
+.participant-notification-hint { color:#8a8798; font-size:10px; font-weight:500; line-height:1.4; }
 @media (max-width:1000px) { .add-person { grid-template-columns:1fr 1fr; }.add-person button { justify-self:start; } }
 @media (max-width:500px) { .add-person { grid-template-columns:1fr; }.people-list { grid-template-columns:1fr; } }
 
