@@ -235,12 +235,13 @@ function normalizeState(saved) {
   const source = saved && typeof saved === 'object' ? saved : {};
   const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
   const dismissedMeetingNoteIds = Array.from(new Set((Array.isArray(source.dismissedMeetingNoteIds) ? source.dismissedMeetingNoteIds : []).map(String).filter(Boolean)));
-  return {
+  const normalized = {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
       const responsibles = normalizeResponsibleNames(Array.isArray(task.responsibles) && task.responsibles.length ? task.responsibles : task.responsible);
       const attachments = (Array.isArray(task.attachments) ? task.attachments : []).filter(function (file) { return file && file.id && file.path; }).map(function (file) { return { id: String(file.id), name: String(file.name || 'file'), path: String(file.path), size: Number(file.size) || 0, type: String(file.type || ''), createdAt: file.createdAt || new Date().toISOString(), uploadedBy: String(file.uploadedBy || '') }; });
       const column = automaticTaskColumn(task.column, responsibles);
-      return Object.assign({}, task, { column: column, completedAt: column === 'done' ? (task.completedAt || null) : null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
+      const hasSortOrder = task.sortOrder !== null && task.sortOrder !== undefined && task.sortOrder !== '' && Number.isFinite(Number(task.sortOrder));
+      return Object.assign({}, task, { column: column, sortOrder: hasSortOrder ? Number(task.sortOrder) : null, completedAt: column === 'done' ? (task.completedAt || null) : null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -258,6 +259,10 @@ function normalizeState(saved) {
     }),
     teams: Array.isArray(source.teams) ? source.teams : []
   };
+  columns.forEach(function (column) {
+    normalized.tasks.filter(function (task) { return !task.archivedAt && task.column === column.id; }).sort(taskOrderCompare).forEach(function (task, index) { task.sortOrder = index; });
+  });
+  return normalized;
 }
 function normalizeAccounts(saved) {
   return (Array.isArray(saved) ? saved : []).filter(function (account) {
@@ -908,6 +913,32 @@ function taskPriority(task) {
 function priorityRank(task) {
   return { high: 0, medium: 1, low: 2 }[taskPriority(task)];
 }
+function taskOrderCompare(a, b) {
+  const aOrder = Number(a.sortOrder);
+  const bOrder = Number(b.sortOrder);
+  const hasAOrder = a.sortOrder !== null && a.sortOrder !== undefined && a.sortOrder !== '' && Number.isFinite(aOrder);
+  const hasBOrder = b.sortOrder !== null && b.sortOrder !== undefined && b.sortOrder !== '' && Number.isFinite(bOrder);
+  if (hasAOrder && hasBOrder && aOrder !== bOrder) return aOrder - bOrder;
+  if (hasAOrder !== hasBOrder) return hasAOrder ? -1 : 1;
+  return priorityRank(a) - priorityRank(b) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+}
+function orderedTasksInColumn(column, excludedId) {
+  return state.tasks.filter(function (task) { return !task.archivedAt && task.column === column && task.id !== Number(excludedId); }).sort(taskOrderCompare);
+}
+function placeTaskInColumn(taskId, column, beforeId) {
+  const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
+  if (!task) return;
+  const ordered = orderedTasksInColumn(column, taskId);
+  const insertionIndex = beforeId ? ordered.findIndex(function (item) { return item.id === Number(beforeId); }) : -1;
+  ordered.splice(insertionIndex < 0 ? ordered.length : insertionIndex, 0, task);
+  ordered.forEach(function (item, index) { item.sortOrder = index; });
+}
+function placeTaskByPriority(taskId) {
+  const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
+  if (!task) return;
+  const before = orderedTasksInColumn(task.column, task.id).find(function (item) { return priorityRank(item) >= priorityRank(task); });
+  placeTaskInColumn(task.id, task.column, before && before.id);
+}
 function taskDeadlineLabel(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
   const date = new Date(value + 'T00:00:00');
@@ -1015,7 +1046,7 @@ function renderBoard() {
     return matchesResponsible && matchesOnlyMine && matchesStatus && matchesPriority && isDateInRange(task.createdAt, from, to) && (!search || searchable.includes(search));
   });
   board.innerHTML = columns.map(function (column) {
-    const cards = filteredTasks.filter(function (task) { return task.column === column.id; }).sort(function (a, b) { return priorityRank(a) - priorityRank(b) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
+    const cards = filteredTasks.filter(function (task) { return task.column === column.id; }).sort(taskOrderCompare);
     const inner = cards.length ? cards.map(taskMarkup).join('') : '<div class="empty-column">' + t('emptyColumn') + '</div>';
     return '<section class="column" data-column="' + column.id + '"><header class="column-head"><h2>' + t(column.titleKey) + ' <span>' + cards.length + '</span></h2><button type="button" data-add-to="' + column.id + '" aria-label="' + t('addTask') + '">＋</button></header><div class="drop-hint">⇣ ' + t('dropTaskHere') + '</div><div class="column-cards" data-dropzone="' + column.id + '">' + inner + '</div></section>';
   }).join('');
@@ -1508,24 +1539,30 @@ function render() {
   scheduleArchiveCheck();
   scheduleMeetingEndCheck();
 }
-function moveTask(id, column) {
+function moveTask(id, column, placement) {
   const currentTask = state.tasks.find(function (task) { return task.id === Number(id); });
   if (!currentTask) return;
   const destination = automaticTaskColumn(column, taskResponsibleNames(currentTask));
-  if (currentTask.column === destination) return;
-  addTaskNotifications('status', currentTask, taskResponsibleNames(currentTask).concat(taskMentionNames(currentTask)));
+  const effectivePlacement = placement && destination === column ? placement : null;
+  const statusChanged = currentTask.column !== destination;
+  if (!statusChanged && !effectivePlacement) return;
+  if (statusChanged) addTaskNotifications('status', currentTask, taskResponsibleNames(currentTask).concat(taskMentionNames(currentTask)));
   state.tasks = state.tasks.map(function (task) {
     if (task.id !== Number(id)) return task;
     const completedAt = destination === 'done' && task.column !== 'done' ? new Date().toISOString() : (destination === 'done' ? task.completedAt : null);
     return Object.assign({}, task, { column: destination, completedAt: completedAt });
   });
-  recordActivity('taskMoved', currentTask.title);
+  if (effectivePlacement) placeTaskInColumn(id, destination, effectivePlacement.beforeId); else placeTaskByPriority(id);
+  recordActivity(statusChanged ? 'taskMoved' : 'taskUpdated', currentTask.title);
   saveState();
   render();
 }
 function bindDragAndDrop() {
+  const marker = document.createElement('div');
+  marker.className = 'task-drop-marker';
   function clearTargets() {
     document.querySelectorAll('.column').forEach(function (column) { column.classList.remove('is-drag-target'); });
+    marker.remove();
   }
   document.querySelectorAll('.task-card').forEach(function (card) {
     card.addEventListener('dragstart', function (event) {
@@ -1601,6 +1638,10 @@ function bindDragAndDrop() {
         clearTargets();
         column.classList.add('is-drag-target');
       }
+      const zone = column.querySelector('.column-cards');
+      const cards = Array.from(zone.querySelectorAll('.task-card:not(.dragging)'));
+      const before = cards.find(function (card) { return event.clientY < card.getBoundingClientRect().top + card.getBoundingClientRect().height / 2; });
+      if (before) zone.insertBefore(marker, before); else zone.appendChild(marker);
     });
     column.addEventListener('dragleave', function (event) {
       if (!column.contains(event.relatedTarget)) column.classList.remove('is-drag-target');
@@ -1608,8 +1649,10 @@ function bindDragAndDrop() {
     column.addEventListener('drop', function (event) {
       event.preventDefault();
       const targetColumn = column.dataset.column;
+      const nextCard = marker.nextElementSibling && marker.nextElementSibling.classList.contains('task-card') ? marker.nextElementSibling : null;
+      const beforeId = nextCard ? Number(nextCard.dataset.task) : null;
       clearTargets();
-      if (dragId) moveTask(dragId, targetColumn);
+      if (dragId) moveTask(dragId, targetColumn, { beforeId: beforeId });
     });
   });
 }
@@ -1914,6 +1957,7 @@ taskEditor.addEventListener('submit', async function (event) {
     savedTask = Object.assign({ id: taskId, createdAt: new Date().toISOString(), completedAt: details.column === 'done' ? new Date().toISOString() : null, attachments: uploadedFiles }, details);
     state.tasks.unshift(savedTask);
   }
+  if (!previousTask || previousTask.column !== savedTask.column || taskPriority(previousTask) !== taskPriority(savedTask)) placeTaskByPriority(savedTask.id);
   const previousMentions = previousTask ? taskMentionNames(previousTask) : [];
   const newMentions = taskMentionNames(savedTask).filter(function (name) { return !previousMentions.includes(name); });
   addTaskNotifications('mention', savedTask, newMentions);
@@ -2032,6 +2076,7 @@ document.addEventListener('click', async function (event) {
     const task = state.tasks.find(function (item) { return item.id === taskId && item.archivedAt; });
     if (!task) return;
     state.tasks = state.tasks.map(function (item) { return item.id === taskId ? Object.assign({}, item, { archivedAt: null, completedAt: new Date().toISOString() }) : item; });
+    placeTaskByPriority(taskId);
     recordActivity('taskRestored', task.title);
     saveState();
     render();
@@ -2186,6 +2231,7 @@ document.addEventListener('click', async function (event) {
     if (note) {
       const task = { id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() };
       state.tasks.unshift(task);
+      placeTaskByPriority(task.id);
       if (calendarEvent) {
         if (canEditCalendarEvent(calendarEvent)) {
           if (!await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
