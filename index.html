@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="board-tools.css?v=summary-dates-1">
   <link rel="stylesheet" href="summary-dates.css?v=manual-archive-1">
   <link rel="stylesheet" href="admin-teams.css?v=notifications-1">
+  <link rel="stylesheet" href="admin-activity.css?v=admin-activity-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -108,6 +109,7 @@
       <form class="add-team" id="team-form"><input name="name" required autocomplete="off" data-i18n-placeholder="teamNamePlaceholder" placeholder="Назва команди"><button type="submit">＋ <span data-i18n="addTeam">Створити команду</span></button></form>
       <section class="teams-list" id="teams-list" aria-label="Команди"></section>
       <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Користувачі</h2><p class="account-access-hint" data-i18n="accountAccessHint">Призначай роль та команду користувача.</p></div></header><form class="add-account" id="account-form"><input name="login" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, user123"><input name="password" required minlength="8" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 8 символів"><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Додати користувача</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
+      <section class="admin-activity"><header><div><p class="eyebrow" data-i18n="workspaceAudit">КОНТРОЛЬ ПРОСТОРУ</p><h2 data-i18n="activityOverview">Сповіщення та дії</h2><p data-i18n="activityOverviewHint">Зведення всіх подій у робочому просторі.</p></div></header><div class="admin-activity-stats" id="admin-activity-stats"></div><div class="admin-activity-grid"><section class="admin-feed-panel"><header><h3 data-i18n="allNotifications">Усі сповіщення</h3></header><div class="admin-feed" id="admin-notifications-list"></div></section><section class="admin-feed-panel"><header><h3 data-i18n="actionLog">Журнал дій</h3></header><div class="admin-feed" id="admin-actions-list"></div></section></div></section>
     </section>
 
     <section class="screen" id="summary-screen" hidden>
@@ -162,6 +164,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=manual-archive-1"></script>
+  <script src="script.js?v=admin-activity-1"></script>
 </body>
 </html>

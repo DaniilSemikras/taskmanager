@@ -54,6 +54,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   analyticsProgress: 'Progress', completionRate: 'Completed', activeTasks: 'In progress', highPriorityTasks: 'High priority', statusDistribution: 'Status distribution', taskActivity: 'Activity over 7 days', createdTasks: 'Created', closedTasks: 'Completed', analyticsHint: 'Charts update with the selected date filter.', unassignedTasks: 'Unassigned tasks', archive: 'Archive'
 });
+Object.assign(translations.uk, {
+  workspaceAudit: 'КОНТРОЛЬ ПРОСТОРУ', activityOverview: 'Сповіщення та дії', activityOverviewHint: 'Зведення всіх подій у робочому просторі.', allNotifications: 'Усі сповіщення', actionLog: 'Журнал дій', totalNotifications: 'Усього сповіщень', unreadNotifications: 'Непрочитані', recordedActions: 'Записані дії', noAdminNotifications: 'Сповіщень ще немає.', noActivity: 'Дій ще немає.', deleteNotification: 'Видалити сповіщення', notificationRecipient: 'Одержувач', systemActor: 'Система', actionTaskCreated: 'створив(ла) завдання', actionTaskUpdated: 'оновив(ла) завдання', actionTaskMoved: 'змінив(ла) статус завдання', actionTaskDeleted: 'видалив(ла) завдання', actionTaskArchived: 'перемістив(ла) завдання в архів', actionTaskAutoArchived: 'автоматично перемістила завдання в архів', actionNoteSaved: 'зберіг(ла) нотатку', actionNoteDeleted: 'видалив(ла) нотатку', actionMeetingSaved: 'зберіг(ла) зустріч', actionMeetingDeleted: 'видалив(ла) зустріч', actionMeetingCompleted: 'завершив(ла) зустріч', actionPersonSaved: 'зберіг(ла) учасника', actionPersonDeleted: 'видалив(ла) учасника', actionTeamCreated: 'створив(ла) команду', actionTeamChanged: 'змінив(ла) склад команди', actionTeamDeleted: 'видалив(ла) команду', actionAccessChanged: 'змінив(ла) доступ користувача', actionAccountCreated: 'створив(ла) користувача', actionNotificationDeleted: 'видалив(ла) сповіщення', actionNotificationsRead: 'прочитав(ла) всі сповіщення'
+});
+Object.assign(translations.en, {
+  workspaceAudit: 'WORKSPACE CONTROL', activityOverview: 'Notifications and actions', activityOverviewHint: 'A summary of everything happening in the workspace.', allNotifications: 'All notifications', actionLog: 'Action log', totalNotifications: 'Total notifications', unreadNotifications: 'Unread', recordedActions: 'Recorded actions', noAdminNotifications: 'No notifications yet.', noActivity: 'No actions yet.', deleteNotification: 'Delete notification', notificationRecipient: 'Recipient', systemActor: 'System', actionTaskCreated: 'created a task', actionTaskUpdated: 'updated a task', actionTaskMoved: 'changed a task status', actionTaskDeleted: 'deleted a task', actionTaskArchived: 'archived a task', actionTaskAutoArchived: 'automatically archived a task', actionNoteSaved: 'saved a note', actionNoteDeleted: 'deleted a note', actionMeetingSaved: 'saved a meeting', actionMeetingDeleted: 'deleted a meeting', actionMeetingCompleted: 'completed a meeting', actionPersonSaved: 'saved a person', actionPersonDeleted: 'deleted a person', actionTeamCreated: 'created a team', actionTeamChanged: 'changed team membership', actionTeamDeleted: 'deleted a team', actionAccessChanged: 'changed user access', actionAccountCreated: 'created a user', actionNotificationDeleted: 'deleted a notification', actionNotificationsRead: 'marked all notifications as read'
+});
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -67,6 +73,9 @@ const authDescription = document.getElementById('auth-description');
 const authMessage = document.getElementById('auth-message');
 const accountForm = document.getElementById('account-form');
 const accountsList = document.getElementById('accounts-list');
+const adminActivityStats = document.getElementById('admin-activity-stats');
+const adminNotificationsList = document.getElementById('admin-notifications-list');
+const adminActionsList = document.getElementById('admin-actions-list');
 const peopleForm = document.getElementById('people-form');
 const teamForm = document.getElementById('team-form');
 const board = document.getElementById('board');
@@ -212,6 +221,9 @@ function normalizeState(saved) {
     notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
       return { id: String(notification.id), recipientId: String(notification.recipientId), type: notification.type === 'mention' ? 'mention' : 'status', taskId: Number(notification.taskId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
     }).slice(0, 160),
+    activityLog: (Array.isArray(source.activityLog) ? source.activityLog : []).filter(function (item) { return item && item.id && item.type; }).map(function (item) {
+      return { id: String(item.id), actorId: String(item.actorId || ''), actorName: String(item.actorName || ''), type: String(item.type), title: String(item.title || ''), createdAt: item.createdAt || new Date().toISOString() };
+    }).slice(0, 320),
     deletedEventIds: deletedEventIds,
     people: (Array.isArray(source.people) ? source.people : []).map(function (person) {
       return { id: person.id, name: person.name || '', email: person.email || '', role: person.role || '' };
@@ -392,6 +404,28 @@ function addTaskNotifications(type, task, recipientNames) {
   });
   state.notifications = additions.concat(state.notifications || []).slice(0, 160);
 }
+function recordActivity(type, title) {
+  if (!currentUser) return;
+  const createdAt = new Date().toISOString();
+  const entry = { id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 8), actorId: String(currentUser.id || ''), actorName: currentUser.login || currentUser.email || '', type: String(type || ''), title: String(title || ''), createdAt: createdAt };
+  state.activityLog = [entry].concat(state.activityLog || []).slice(0, 320);
+}
+function recordSystemActivity(type, title) {
+  const entry = { id: String(Date.now()) + '-system-' + Math.random().toString(36).slice(2, 8), actorId: 'system', actorName: '', type: String(type || ''), title: String(title || ''), createdAt: new Date().toISOString() };
+  state.activityLog = [entry].concat(state.activityLog || []).slice(0, 320);
+}
+function activityTypeLabel(type) {
+  const labels = {
+    taskCreated: 'actionTaskCreated', taskUpdated: 'actionTaskUpdated', taskMoved: 'actionTaskMoved', taskDeleted: 'actionTaskDeleted', taskArchived: 'actionTaskArchived', taskAutoArchived: 'actionTaskAutoArchived',
+    noteSaved: 'actionNoteSaved', noteDeleted: 'actionNoteDeleted', meetingSaved: 'actionMeetingSaved', meetingDeleted: 'actionMeetingDeleted', meetingCompleted: 'actionMeetingCompleted',
+    personSaved: 'actionPersonSaved', personDeleted: 'actionPersonDeleted', teamCreated: 'actionTeamCreated', teamChanged: 'actionTeamChanged', teamDeleted: 'actionTeamDeleted', accessChanged: 'actionAccessChanged', accountCreated: 'actionAccountCreated', notificationDeleted: 'actionNotificationDeleted', notificationsRead: 'actionNotificationsRead'
+  };
+  return t(labels[type] || type);
+}
+function accountNameById(id) {
+  const account = accounts.find(function (item) { return String(item.id) === String(id); });
+  return account ? account.login : String(id || '');
+}
 function currentUserNotifications() {
   if (!currentUser) return [];
   return (state.notifications || []).filter(function (notification) { return notification.recipientId === String(currentUser.id); }).sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
@@ -407,8 +441,36 @@ function renderNotifications() {
   notificationsList.innerHTML = notifications.length ? notifications.slice(0, 30).map(function (notification) {
     const title = t(notification.type === 'mention' ? 'notificationMention' : 'notificationStatus');
     const author = notification.fromUser ? '<small>' + escapeHtml(notification.fromUser) + ' · ' + escapeHtml(dateLabel(notification.createdAt)) + '</small>' : '<small>' + escapeHtml(dateLabel(notification.createdAt)) + '</small>';
-    return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
+    return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"><button type="button" class="notification-delete" data-delete-notification="' + escapeHtml(notification.id) + '" aria-label="' + escapeHtml(t('deleteNotification')) + '">×</button><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
   }).join('') : '<p class="notifications-empty">' + t('noNotifications') + '</p>';
+}
+function renderAdminActivity() {
+  if (!adminActivityStats || !adminNotificationsList || !adminActionsList) return;
+  if (!isAdmin()) {
+    adminActivityStats.innerHTML = '';
+    adminNotificationsList.innerHTML = '';
+    adminActionsList.innerHTML = '';
+    return;
+  }
+  const notifications = (state.notifications || []).slice().sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  const actions = (state.activityLog || []).slice().sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  const unread = notifications.filter(function (item) { return !item.read; }).length;
+  adminActivityStats.innerHTML = [
+    { value: notifications.length, label: t('totalNotifications') },
+    { value: unread, label: t('unreadNotifications') },
+    { value: actions.length, label: t('recordedActions') }
+  ].map(function (item) { return '<article class="admin-audit-stat"><b>' + item.value + '</b><span>' + escapeHtml(item.label) + '</span></article>'; }).join('');
+  adminNotificationsList.innerHTML = notifications.length ? notifications.slice(0, 80).map(function (notification) {
+    const title = t(notification.type === 'mention' ? 'notificationMention' : 'notificationStatus');
+    const recipient = accountNameById(notification.recipientId);
+    const details = [notification.fromUser, t('notificationRecipient') + ': ' + recipient, dateLabel(notification.createdAt)].filter(Boolean).join(' · ');
+    return '<article class="admin-feed-item' + (notification.read ? '' : ' unread') + '"><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p><small>' + escapeHtml(details) + '</small></article>';
+  }).join('') : '<p class="admin-feed-empty">' + t('noAdminNotifications') + '</p>';
+  adminActionsList.innerHTML = actions.length ? actions.slice(0, 120).map(function (item) {
+    const actor = item.actorId === 'system' ? t('systemActor') : (item.actorName || accountNameById(item.actorId));
+    const subject = item.title ? '<p>' + escapeHtml(item.title) + '</p>' : '';
+    return '<article class="admin-feed-item"><strong>' + escapeHtml(actor) + ' — ' + escapeHtml(activityTypeLabel(item.type)) + '</strong>' + subject + '<small>' + escapeHtml(dateLabel(item.createdAt)) + '</small></article>';
+  }).join('') : '<p class="admin-feed-empty">' + t('noActivity') + '</p>';
 }
 function setNotificationsOpen(open) {
   if (!notificationsPanel || !notificationButton) return;
@@ -418,11 +480,24 @@ function setNotificationsOpen(open) {
 function markCurrentNotificationsRead() {
   if (!currentUser) return;
   const recipientId = String(currentUser.id);
+  const hadUnread = (state.notifications || []).some(function (notification) { return notification.recipientId === recipientId && !notification.read; });
   state.notifications = (state.notifications || []).map(function (notification) {
     return notification.recipientId === recipientId ? Object.assign({}, notification, { read: true }) : notification;
   });
+  if (hadUnread) recordActivity('notificationsRead', '');
   saveState();
   renderNotifications();
+  renderAdminActivity();
+}
+function deleteCurrentNotification(id) {
+  if (!currentUser) return;
+  const notification = (state.notifications || []).find(function (item) { return item.id === String(id) && item.recipientId === String(currentUser.id); });
+  if (!notification) return;
+  state.notifications = state.notifications.filter(function (item) { return item.id !== notification.id; });
+  recordActivity('notificationDeleted', notification.taskTitle);
+  saveState();
+  renderNotifications();
+  renderAdminActivity();
 }
 function renderTaskResponsibleOptions(selectedNames) {
   if (!taskResponsibleOptions) return;
@@ -881,8 +956,9 @@ async function saveAccountAccess(accountId) {
     setSaveStatus('dataUnavailable');
     return;
   }
-  const membershipChanged = syncPersonTeamMembership(update.person_id, update.team_id);
-  if (membershipChanged) await saveState(true);
+  syncPersonTeamMembership(update.person_id, update.team_id);
+  recordActivity('accessChanged', account.login);
+  await saveState(true);
   await refreshAccounts();
   if (currentUser && currentUser.id === accountId) {
     currentUser = accounts.find(function (item) { return item.id === accountId; }) || currentUser;
@@ -963,6 +1039,7 @@ function completeMeeting(id) {
   const event = calendarEvents.find(function (item) { return item.id === Number(id); });
   if (!event || !canEditCalendarEvent(event)) return;
   state.completedMeetingIds = Array.from(new Set((state.completedMeetingIds || []).concat(String(event.id))));
+  recordActivity('meetingCompleted', event.title);
   saveState();
   closeEventDetail();
   render();
@@ -1169,6 +1246,7 @@ function archiveCompletedTasks() {
     const completedAt = new Date(task.completedAt || '').getTime();
     if (task.archivedAt || task.column !== 'done' || !Number.isFinite(completedAt) || completedAt > cutoff) return task;
     changed = true;
+    recordSystemActivity('taskAutoArchived', task.title);
     return Object.assign({}, task, { archivedAt: new Date().toISOString() });
   });
   return changed;
@@ -1196,6 +1274,7 @@ function render() {
   renderTeams();
   renderAccounts();
   renderNotifications();
+  renderAdminActivity();
   renderCalendar();
   renderSummary();
   scheduleArchiveCheck();
@@ -1210,6 +1289,7 @@ function moveTask(id, column) {
     const completedAt = column === 'done' && task.column !== 'done' ? new Date().toISOString() : (column === 'done' ? task.completedAt : null);
     return Object.assign({}, task, { column: column, completedAt: completedAt });
   });
+  recordActivity('taskMoved', currentTask.title);
   saveState();
   render();
 }
@@ -1512,7 +1592,8 @@ noteEditor.addEventListener('submit', async function (event) {
   } else {
     state.notes.unshift(Object.assign({ id: Date.now(), createdAt: new Date().toISOString() }, details));
   }
-  if (!eventId) saveState();
+  recordActivity('noteSaved', details.title);
+  saveState();
   closeNoteDetail();
   render();
 });
@@ -1525,6 +1606,7 @@ peopleForm.addEventListener('submit', function (event) {
   } else {
     state.people.unshift(Object.assign({ id: Date.now() }, person));
   }
+  recordActivity('personSaved', person.name);
   peopleEditId = null;
   peopleForm.reset();
   saveState();
@@ -1534,6 +1616,7 @@ teamForm.addEventListener('submit', function (event) {
   event.preventDefault();
   const name = new FormData(teamForm).get('name').trim();
   state.teams.unshift({ id: Date.now(), name: name, memberIds: [] });
+  recordActivity('teamCreated', name);
   teamForm.reset();
   saveState();
   renderTeams();
@@ -1561,7 +1644,9 @@ accountForm.addEventListener('submit', async function (event) {
   }
   accountForm.reset();
   await refreshAccounts();
-  renderAccounts();
+  recordActivity('accountCreated', login);
+  await saveState(true);
+  render();
 });
 taskEditor.addEventListener('submit', function (event) {
   event.preventDefault();
@@ -1587,6 +1672,7 @@ taskEditor.addEventListener('submit', function (event) {
   const newMentions = taskMentionNames(savedTask).filter(function (name) { return !previousMentions.includes(name); });
   addTaskNotifications('mention', savedTask, newMentions);
   if (previousTask && previousTask.column !== savedTask.column) addTaskNotifications('status', savedTask, taskResponsibleNames(savedTask).concat(taskMentionNames(savedTask)));
+  recordActivity(previousTask ? (previousTask.column !== savedTask.column ? 'taskMoved' : 'taskUpdated') : 'taskCreated', savedTask.title);
   saveState();
   closeTaskDetail();
   render();
@@ -1623,6 +1709,8 @@ eventEditor.addEventListener('submit', async function (event) {
     changedEvent = Object.assign({ id: Date.now(), createdBy: currentUser.id }, details);
   }
   if (!await saveCalendarEvent(changedEvent)) return;
+  recordActivity('meetingSaved', changedEvent.title);
+  saveState();
   closeEventDetail();
   render();
   if (changedEvent.notes) showTab('meetings');
@@ -1653,6 +1741,10 @@ document.addEventListener('click', async function (event) {
   }
   if (button.id === 'mark-notifications-read') {
     markCurrentNotificationsRead();
+    return;
+  }
+  if (button.dataset.deleteNotification) {
+    deleteCurrentNotification(button.dataset.deleteNotification);
     return;
   }
   if (button.dataset.authMode) {
@@ -1687,9 +1779,11 @@ document.addEventListener('click', async function (event) {
   }
   if (button.dataset.deletePerson) {
     const id = Number(button.dataset.deletePerson);
+    const person = state.people.find(function (item) { return item.id === id; });
     state.people = state.people.filter(function (person) { return person.id !== id; });
     state.teams = state.teams.map(function (team) { return Object.assign({}, team, { memberIds: (team.memberIds || []).filter(function (memberId) { return Number(memberId) !== id; }) }); });
     selectedParticipantIds = selectedParticipantIds.filter(function (personId) { return personId !== id; });
+    if (person) recordActivity('personDeleted', person.name);
     saveState();
     render();
     renderParticipantPicker();
@@ -1697,6 +1791,7 @@ document.addEventListener('click', async function (event) {
   }
   if (button.dataset.deleteTeam) {
     const teamId = String(button.dataset.deleteTeam);
+    const team = teamForId(teamId);
     if (supabaseClient && isAdmin()) {
       const response = await supabaseClient.from('profiles').update({ team_id: null }).eq('team_id', teamId);
       if (response.error) {
@@ -1708,6 +1803,7 @@ document.addEventListener('click', async function (event) {
       updateAccessUi();
     }
     state.teams = state.teams.filter(function (team) { return team.id !== Number(teamId); });
+    if (team) recordActivity('teamDeleted', team.name);
     await saveState(true);
     render();
     return;
@@ -1721,6 +1817,7 @@ document.addEventListener('click', async function (event) {
     state.teams = state.teams.map(function (team) {
       return team.id === teamId ? Object.assign({}, team, { memberIds: Array.from(new Set((team.memberIds || []).map(Number).concat(personId))) }) : team;
     });
+    recordActivity('teamChanged', teamName(teamId));
     await saveState(true);
     render();
     return;
@@ -1732,6 +1829,7 @@ document.addEventListener('click', async function (event) {
     state.teams = state.teams.map(function (team) {
       return team.id === teamId ? Object.assign({}, team, { memberIds: (team.memberIds || []).filter(function (id) { return Number(id) !== personId; }) }) : team;
     });
+    recordActivity('teamChanged', teamName(teamId));
     await saveState(true);
     render();
     return;
@@ -1777,16 +1875,28 @@ document.addEventListener('click', async function (event) {
     return;
   }
   if (button.dataset.openEvent) openEvent(button.dataset.openEvent);
-  if (button.dataset.deleteTask) { state.tasks = state.tasks.filter(function (task) { return task.id !== Number(button.dataset.deleteTask); }); saveState(); render(); }
+  if (button.dataset.deleteTask) {
+    const taskId = Number(button.dataset.deleteTask);
+    const task = state.tasks.find(function (item) { return item.id === taskId; });
+    state.tasks = state.tasks.filter(function (item) { return item.id !== taskId; });
+    if (task) recordActivity('taskDeleted', task.title);
+    saveState();
+    render();
+  }
   if (button.dataset.deleteNote) {
     const eventId = calendarEventIdFromNoteId(button.dataset.deleteNote);
+    let deletedNoteTitle = '';
     if (eventId) {
       const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
       if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
+      deletedNoteTitle = calendarEvent.title;
     } else {
+      const note = state.notes.find(function (item) { return item.id === Number(button.dataset.deleteNote); });
+      deletedNoteTitle = note ? note.title : '';
       state.notes = state.notes.filter(function (item) { return item.id !== Number(button.dataset.deleteNote); });
-      saveState();
     }
+    recordActivity('noteDeleted', deletedNoteTitle);
+    saveState();
     render();
   }
   if (button.dataset.createTaskFromNote) {
@@ -1794,12 +1904,14 @@ document.addEventListener('click', async function (event) {
     const calendarEvent = eventId ? calendarEvents.find(function (item) { return item.id === eventId; }) : null;
     const note = calendarEvent ? { id: 'event-' + eventId, title: calendarEvent.title, text: calendarEvent.notes, eventId: eventId } : state.notes.find(function (item) { return item.id === Number(button.dataset.createTaskFromNote); });
     if (note) {
-      state.tasks.unshift({ id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() });
+      const task = { id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() };
+      state.tasks.unshift(task);
       if (calendarEvent) {
         if (canEditCalendarEvent(calendarEvent)) await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }));
       } else {
         state.notes = state.notes.filter(function (item) { return item.id !== note.id; });
       }
+      recordActivity('taskCreated', task.title);
       saveState();
       render();
       showTab('board');
@@ -1815,19 +1927,28 @@ document.addEventListener('click', async function (event) {
   if (button.id === 'today-button') { calendarCursor = startOfWeek(new Date()); renderCalendar(); }
   if (button.classList.contains('close-detail') || button.classList.contains('cancel-detail')) closeTaskDetail();
   if (button.id === 'delete-open-task' && openTaskId) {
+    const task = state.tasks.find(function (item) { return item.id === openTaskId; });
     state.tasks = state.tasks.filter(function (task) { return task.id !== openTaskId; });
+    if (task) recordActivity('taskDeleted', task.title);
     saveState();
     closeTaskDetail();
     render();
   }
   if (button.id === 'archive-open-task' && openTaskId) {
+    const task = state.tasks.find(function (item) { return item.id === openTaskId; });
     state.tasks = state.tasks.map(function (task) { return task.id === openTaskId && task.column === 'done' ? Object.assign({}, task, { archivedAt: new Date().toISOString() }) : task; });
+    if (task && task.column === 'done') recordActivity('taskArchived', task.title);
     saveState();
     closeTaskDetail();
     render();
   }
   if (button.id === 'delete-open-event' && openEventId) {
+    const calendarEvent = calendarEvents.find(function (item) { return item.id === openEventId; });
     if (!await removeCalendarEvent(openEventId)) return;
+    if (calendarEvent) {
+      recordActivity('meetingDeleted', calendarEvent.title);
+      saveState();
+    }
     closeEventDetail();
     render();
   }
@@ -1837,13 +1958,18 @@ document.addEventListener('click', async function (event) {
   }
   if (button.id === 'delete-open-note' && openNoteId) {
     const eventId = calendarEventIdFromNoteId(openNoteId);
+    let deletedNoteTitle = '';
     if (eventId) {
       const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
       if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
+      deletedNoteTitle = calendarEvent.title;
     } else {
+      const note = state.notes.find(function (item) { return item.id === openNoteId; });
+      deletedNoteTitle = note ? note.title : '';
       state.notes = state.notes.filter(function (item) { return item.id !== openNoteId; });
-      saveState();
     }
+    recordActivity('noteDeleted', deletedNoteTitle);
+    saveState();
     closeNoteDetail();
     render();
   }
