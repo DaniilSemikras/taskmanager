@@ -191,14 +191,6 @@ function setSaveStatus(key) {
 function hasStoredContent() {
   return Boolean(accounts.length || state.tasks.length || state.notes.length || state.events.length || state.people.length || state.teams.length);
 }
-function mergeDeletedEventTombstones(snapshot, remoteSaved) {
-  const remote = normalizeState(remoteSaved);
-  const deletedEventIds = Array.from(new Set((snapshot.deletedEventIds || []).concat(remote.deletedEventIds || []).map(String)));
-  snapshot.deletedEventIds = deletedEventIds;
-  snapshot.events = (snapshot.events || []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); });
-  snapshot.notes = (snapshot.notes || []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); });
-  return snapshot;
-}
 async function saveDatabaseNow(snapshot) {
   if (!supabaseClient || !currentUser) {
     setSaveStatus('dataUnavailable');
@@ -206,9 +198,7 @@ async function saveDatabaseNow(snapshot) {
   }
   setSaveStatus('dataSaving');
   try {
-    const current = await supabaseClient.from('workspace_state').select('state').eq('id', 'main').single();
-    if (current.error) throw current.error;
-    const response = await supabaseClient.from('workspace_state').update({ state: mergeDeletedEventTombstones(snapshot, current.data.state) }).eq('id', 'main').select('id').single();
+    const response = await supabaseClient.from('workspace_state').update({ state: snapshot }).eq('id', 'main');
     if (response.error) throw response.error;
     setSaveStatus('dataSaved');
     return true;
