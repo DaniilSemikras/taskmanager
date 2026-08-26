@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Личная доска задач в стиле Trello">
   <title>Моя доска</title>
-  <link rel="stylesheet" href="style.css?v=task-team-1">
+  <link rel="stylesheet" href="style.css?v=deadline-1">
   <link rel="stylesheet" href="teams-calendar.css?v=stability-3">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
   <link rel="stylesheet" href="board-tools.css?v=stability-3">
@@ -132,6 +132,7 @@
       <label><span data-i18n="description">Описание</span><textarea name="description" data-i18n-placeholder="taskDescPlaceholder" placeholder="Что именно нужно сделать?"></textarea></label>
       <div class="detail-fields">
         <label><span data-i18n="responsible">Ответственный</span><select name="responsible"><option value="" data-i18n="notAssigned">Не назначен</option></select></label>
+        <label><span data-i18n="deadline">Дедлайн</span><input name="dueDate" type="date"></label>
         <label><span data-i18n="column">Колонка</span><select name="column"><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select></label>
         <label><span data-i18n="priority">Приоритет</span><select name="priority"><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select></label>
       </div>
@@ -158,6 +159,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=task-team-1"></script>
+  <script src="script.js?v=deadline-1"></script>
 </body>
 </html>
