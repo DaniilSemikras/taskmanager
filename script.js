@@ -417,8 +417,9 @@ function startSession(account) {
 function updateAccessUi() {
   document.getElementById('current-user').textContent = currentUser ? currentUser.login : '';
   document.getElementById('admin-tab').hidden = !isAdmin();
-  peopleTab.hidden = !isAdmin();
+  peopleTab.hidden = true;
   teamTab.hidden = isAdmin();
+  if (isAdmin() && (!document.getElementById('people-screen').hidden || !document.getElementById('team-screen').hidden)) showTab('admin');
   if (!isAdmin() && (!document.getElementById('admin-screen').hidden || !document.getElementById('people-screen').hidden)) showTab('team');
 }
 function setMobileMenu(open) {
@@ -1072,13 +1073,13 @@ function savedTabForCurrentUser() {
   } catch {}
   if (!isAdmin() && tab === 'people') return 'team';
   if (!isAdmin() && tab === 'admin') return 'board';
-  if (isAdmin() && tab === 'team') return 'people';
+  if (isAdmin() && (tab === 'team' || tab === 'people')) return 'admin';
   return tab;
 }
 function showTab(tab) {
   if (tab === 'admin' && !isAdmin()) return;
-  if (tab === 'people' && !isAdmin()) tab = 'team';
-  if (tab === 'team' && isAdmin()) tab = 'people';
+  if (tab === 'people') tab = isAdmin() ? 'admin' : 'team';
+  if (tab === 'team' && isAdmin()) tab = 'admin';
   document.getElementById('board-screen').hidden = tab !== 'board';
   document.getElementById('calendar-screen').hidden = tab !== 'calendar';
   document.getElementById('people-screen').hidden = tab !== 'people';

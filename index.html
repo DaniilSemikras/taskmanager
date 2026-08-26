@@ -29,7 +29,7 @@
         <nav aria-label="Разделы">
           <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
           <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
-          <button class="tab" id="people-tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
+          <button class="tab" id="people-tab" data-tab="people" hidden><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
           <button class="tab" id="team-tab" data-tab="team" hidden><span data-i18n="myTeam">Моя команда</span></button>
           <button class="tab" id="admin-tab" data-tab="admin"><span data-i18n="admin">Адмін</span></button>
           <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
@@ -159,6 +159,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=analytics-1"></script>
+  <script src="script.js?v=admin-navigation-1"></script>
 </body>
 </html>
