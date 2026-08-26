@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Личная доска задач в стиле Trello">
   <title>Моя доска</title>
-  <link rel="stylesheet" href="style.css?v=multi-assignees-1">
-  <link rel="stylesheet" href="teams-calendar.css?v=stability-3">
+  <link rel="stylesheet" href="style.css?v=meeting-notes-1">
+  <link rel="stylesheet" href="teams-calendar.css?v=meeting-notes-1">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
   <link rel="stylesheet" href="board-tools.css?v=multi-assignees-1">
   <link rel="stylesheet" href="admin-teams.css?v=notifications-1">
@@ -148,8 +148,8 @@
       <div class="detail-fields meeting-times"><label><span data-i18n="startTime">Начало</span><input name="date" required type="datetime-local"></label><label><span data-i18n="endTime">Окончание</span><input name="end" required type="datetime-local"></label><label><span data-i18n="team">Команда</span><select name="teamId" id="meeting-team"></select></label></div>
       <label><span data-i18n="participants">Участники</span><div class="participant-picker" id="participant-picker"><div class="participant-tags" id="participant-tags"></div><input id="participant-search" autocomplete="off" data-i18n-placeholder="participantsPlaceholder" placeholder="Найти по имени или почте"><div class="participant-suggestions" id="participant-suggestions" hidden></div></div><input name="participantIds" type="hidden"></label>
       <label><span data-i18n="meetingNotes">Заметки встречи</span><textarea name="notes" data-i18n-placeholder="eventNotesPlaceholder" placeholder="Пиши всё важное: решения, идеи, договорённости, следующие шаги."></textarea></label>
-      <p class="event-hint" data-i18n="meetingHint">После сохранения заметка сразу появится во вкладке «После встречи».</p>
-      <footer class="detail-actions"><button type="button" class="delete-task" id="delete-open-event" data-i18n="delete" hidden>Удалить</button><div><button type="button" class="cancel-event-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" data-i18n="saveNotes">Сохранить заметки</button></div></footer>
+      <p class="event-hint" data-i18n="meetingHint">Після завершення зустрічі для неї з’явиться місце у «Нотатках».</p>
+      <footer class="detail-actions"><div><button type="button" class="delete-task" id="delete-open-event" data-i18n="delete" hidden>Удалить</button><button type="button" class="complete-meeting" id="complete-open-event" data-i18n="completeMeeting" hidden>Завершити зустріч</button></div><div><button type="button" class="cancel-event-detail" data-i18n="cancel">Отмена</button><button type="submit" class="save-detail" data-i18n="saveNotes">Сохранить заметки</button></div></footer>
     </form>
   </div>
   <div class="detail-backdrop" id="note-detail" hidden>
@@ -161,6 +161,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=notifications-1"></script>
+  <script src="script.js?v=meeting-notes-1"></script>
 </body>
 </html>

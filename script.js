@@ -15,7 +15,7 @@ const translations = {
     myMeetings: 'МОЇ ЗУСТРІЧІ', calendarHint: 'Додавай зустрічі з датою і часом — вони одразу з’являться в календарі.', meetingTitle: 'Назва зустрічі', meetingNotesPlaceholder: 'Нотатки до зустрічі (необов’язково)', addMeeting: 'Додати зустріч', systemTime: 'Системний час', people: 'Учасники', peopleDirectory: 'БАЗА УЧАСНИКІВ', peopleHint: 'Зберігай контакти команди й швидко знаходь їх за ім’ям, поштою або роллю.', personNamePlaceholder: 'Ім’я та прізвище', emailPlaceholder: 'Пошта', rolePlaceholder: 'Роль або посада', phonePlaceholder: 'Телефон', addPerson: 'Додати учасника', savePerson: 'Зберегти учасника', peopleSearchPlaceholder: 'Пошук за ім’ям, поштою або роллю', noPeople: 'База учасників поки порожня. Додай перший контакт.', editPerson: 'Редагувати', deletePerson: 'Видалити', personOne: 'учасник', personFew: 'учасники', personMany: 'учасників', admin: 'Адмін', adminArea: 'АДМІН-ПАНЕЛЬ', teamManagement: 'Керування командами', teamManagementHint: 'Створюй команди та додавай до них учасників із бази.', teamNamePlaceholder: 'Назва команди', addTeam: 'Створити команду', deleteTeam: 'Видалити', addMember: 'Додати учасника', selectPerson: 'Обрати учасника', noTeams: 'Команд поки немає. Створи першу команду.', noTeamMembers: 'У цій команді поки немає учасників.', teamOne: 'команда', teamFew: 'команди', teamMany: 'команд', welcome: 'Моя дошка', loginHint: 'Увійдіть у свій простір.', login: 'Логін', password: 'Пароль', repeatPassword: 'Повторіть пароль', loginPlaceholder: 'Логін', passwordPlaceholder: 'Щонайменше 4 символи', createAdmin: 'Створити адміністратора', signIn: 'Увійти', signOut: 'Вийти', accessControl: 'КЕРУВАННЯ ДОСТУПОМ', accounts: 'Акаунти', addAccount: 'Створити акаунт', noLinkedPerson: 'Без привʼязки до учасника', member: 'Учасник', administrator: 'Адміністратор', invalidCredentials: 'Неправильний логін або пароль.', passwordMismatch: 'Паролі не збігаються.', loginTaken: 'Такий логін уже існує.', accountOne: 'акаунт', accountFew: 'акаунти', accountMany: 'акаунтів',
     personalNotes: 'ОСОБИСТІ НОТАТКИ', notesHint: 'Зберігай головне одразу після дзвінка або зустрічі.', meetingTitlePlaceholder: 'Наприклад, розмова з клієнтом', whatImportant: 'Що важливо запам’ятати', noteTitle: 'Назва нотатки', newNote: 'Нова нотатка', notePlaceholder: 'Рішення, ідеї, наступні кроки — пиши як зручно', saveNote: 'Зберегти нотатку',
     taskCard: 'КАРТКА ЗАВДАННЯ', edit: 'Редагування', close: 'Закрити', taskName: 'Назва завдання', description: 'Опис', taskDescPlaceholder: 'Що саме потрібно зробити?', deadline: 'Дедлайн', mentionPeople: 'Введіть @, щоб відмітити учасника', noMentionMatches: 'У команді нікого не знайдено', column: 'Колонка', cardColor: 'Колір картки', priority: 'Пріоритет', highPriority: 'Високий', mediumPriority: 'Середній', lowPriority: 'Низький', allPriorities: 'Усі пріоритети', notAssigned: 'Не призначено', cancel: 'Скасувати', saveChanges: 'Зберегти зміни', delete: 'Видалити',
-    meetingCard: 'ЗУСТРІЧ', meetingDetails: 'Деталі зустрічі', meetingNotes: 'Нотатки зустрічі', dateTime: 'Дата й час', startTime: 'Початок', endTime: 'Завершення', participants: 'Учасники', participantsPlaceholder: 'Знайти за ім’ям або поштою', noParticipantsFound: 'Нікого не знайдено. Додай контакт у вкладці «Учасники».', today: 'Сьогодні', newMeeting: 'Нова зустріч', eventNotesPlaceholder: 'Пиши все важливе: рішення, ідеї, домовленості, наступні кроки.', meetingHint: 'Після збереження нотатка одразу з’явиться у вкладці «Нотатки».', saveNotes: 'Зберегти зустріч',
+    meetingCard: 'ЗУСТРІЧ', meetingDetails: 'Деталі зустрічі', meetingNotes: 'Нотатки зустрічі', dateTime: 'Дата й час', startTime: 'Початок', endTime: 'Завершення', participants: 'Учасники', participantsPlaceholder: 'Знайти за ім’ям або поштою', noParticipantsFound: 'Нікого не знайдено. Додай контакт у вкладці «Учасники».', today: 'Сьогодні', newMeeting: 'Нова зустріч', eventNotesPlaceholder: 'Пиши все важливе: рішення, ідеї, домовленості, наступні кроки.', meetingHint: 'Після завершення зустрічі для неї з’явиться місце у вкладці «Нотатки».', meetingNotePending: 'Зустріч завершена. Натисніть, щоб додати підсумки.', completeMeeting: 'Завершити зустріч', saveNotes: 'Зберегти зустріч',
     taskOne: 'завдання', taskFew: 'завдання', taskMany: 'завдань', noteOne: 'нотатка', noteFew: 'нотатки', noteMany: 'нотаток', eventOne: 'зустріч', eventFew: 'зустрічі', eventMany: 'зустрічей', of: 'з', from: 'Від', to: 'До', period: 'Період', allTime: 'Увесь час', last7Days: '7 днів', thisMonth: 'Місяць', customPeriod: 'Свій', createdDate: 'За датою створення', completedDate: 'За датою виконання', emptyColumn: 'Поки порожньо', noNotes: 'Нотаток поки немає. Збережи першу після зустрічі.', createTask: 'Створити завдання', newTask: 'Нове завдання', taskSearchPlaceholder: 'Пошук за назвою або описом', allColumns: 'Усі статуси', allColors: 'Усі кольори', clearFilters: 'Скинути', dropTaskHere: 'Відпустіть, щоб перенести сюди', summary: 'Зведення', workOverview: 'ЗВЕДЕННЯ РОБОТИ', summaryHeading: 'Хто що зробив', summaryHint: 'Дивись прогрес команди та список виконаних завдань.', byPerson: 'За учасниками', doneTasks: 'Виконані завдання', person: 'Учасник', total: 'Усього', completedList: 'Що вже зроблено', noCompletedTasks: 'Виконаних завдань поки немає.', moveTask: 'Перемістити завдання', deleteTask: 'Видалити завдання', deleteNote: 'Видалити нотатку', weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
   },
   en: {
@@ -26,7 +26,7 @@ const translations = {
     myMeetings: 'MY MEETINGS', calendarHint: 'Add meetings with date and time — they will appear in the calendar right away.', meetingTitle: 'Meeting title', meetingNotesPlaceholder: 'Meeting notes (optional)', addMeeting: 'Add meeting', systemTime: 'System time', people: 'People', peopleDirectory: 'PEOPLE DIRECTORY', peopleHint: 'Store team contacts and find them quickly by name, email, or role.', personNamePlaceholder: 'Full name', emailPlaceholder: 'Email', rolePlaceholder: 'Role or job title', phonePlaceholder: 'Phone', addPerson: 'Add person', savePerson: 'Save person', peopleSearchPlaceholder: 'Search by name, email, or role', noPeople: 'The people directory is empty. Add your first contact.', editPerson: 'Edit', deletePerson: 'Delete', personOne: 'person', personFew: 'people', personMany: 'people', admin: 'Admin', adminArea: 'ADMIN AREA', teamManagement: 'Team management', teamManagementHint: 'Create teams and add people from the directory.', teamNamePlaceholder: 'Team name', addTeam: 'Create team', deleteTeam: 'Delete', addMember: 'Add person', selectPerson: 'Choose a person', noTeams: 'There are no teams yet. Create the first one.', noTeamMembers: 'There are no people in this team yet.', teamOne: 'team', teamFew: 'teams', teamMany: 'teams', welcome: 'My board', loginHint: 'Sign in to your workspace.', login: 'Login', password: 'Password', repeatPassword: 'Repeat password', loginPlaceholder: 'Login', passwordPlaceholder: 'At least 4 characters', createAdmin: 'Create administrator', signIn: 'Sign in', signOut: 'Sign out', accessControl: 'ACCESS CONTROL', accounts: 'Accounts', addAccount: 'Create account', noLinkedPerson: 'No linked person', member: 'Member', administrator: 'Administrator', invalidCredentials: 'Incorrect login or password.', passwordMismatch: 'Passwords do not match.', loginTaken: 'This login already exists.', accountOne: 'account', accountFew: 'accounts', accountMany: 'accounts',
     personalNotes: 'PERSONAL NOTES', notesHint: 'Save the key points right after a call or meeting.', meetingTitlePlaceholder: 'For example, client call', whatImportant: 'What is important to remember', noteTitle: 'Note title', newNote: 'New note', notePlaceholder: 'Decisions, ideas, next steps — write however you like', saveNote: 'Save note',
     taskCard: 'TASK CARD', edit: 'Edit', close: 'Close', taskName: 'Task title', description: 'Description', taskDescPlaceholder: 'What exactly needs to be done?', deadline: 'Due date', mentionPeople: 'Type @ to mention a team member', noMentionMatches: 'No team members found', column: 'Column', cardColor: 'Card color', priority: 'Priority', highPriority: 'High', mediumPriority: 'Medium', lowPriority: 'Low', allPriorities: 'All priorities', notAssigned: 'Not assigned', cancel: 'Cancel', saveChanges: 'Save changes', delete: 'Delete',
-    meetingCard: 'MEETING', meetingDetails: 'Meeting details', meetingNotes: 'Meeting notes', dateTime: 'Date and time', startTime: 'Starts', endTime: 'Ends', participants: 'Participants', participantsPlaceholder: 'Find by name or email', noParticipantsFound: 'No one found. Add a contact in the People tab.', today: 'Today', newMeeting: 'New meeting', eventNotesPlaceholder: 'Write down everything important: decisions, ideas, agreements, and next steps.', meetingHint: 'After saving, the note will appear in the “Notes” tab.', saveNotes: 'Save meeting',
+    meetingCard: 'MEETING', meetingDetails: 'Meeting details', meetingNotes: 'Meeting notes', dateTime: 'Date and time', startTime: 'Starts', endTime: 'Ends', participants: 'Participants', participantsPlaceholder: 'Find by name or email', noParticipantsFound: 'No one found. Add a contact in the People tab.', today: 'Today', newMeeting: 'New meeting', eventNotesPlaceholder: 'Write down everything important: decisions, ideas, agreements, and next steps.', meetingHint: 'Once the meeting is completed, a note space will appear in the “Notes” tab.', meetingNotePending: 'Meeting completed. Tap to add the summary.', completeMeeting: 'Complete meeting', saveNotes: 'Save meeting',
     taskOne: 'task', taskFew: 'tasks', taskMany: 'tasks', noteOne: 'note', noteFew: 'notes', noteMany: 'notes', eventOne: 'meeting', eventFew: 'meetings', eventMany: 'meetings', of: 'of', from: 'From', to: 'To', period: 'Period', allTime: 'All time', last7Days: '7 days', thisMonth: 'This month', customPeriod: 'Custom', createdDate: 'Created date', completedDate: 'Completed date', emptyColumn: 'Nothing here yet', noNotes: 'No notes yet. Save your first one after a meeting.', createTask: 'Create task', newTask: 'New task', taskSearchPlaceholder: 'Search by title or description', allColumns: 'All statuses', allColors: 'All colors', clearFilters: 'Clear', dropTaskHere: 'Release to move here', summary: 'Summary', workOverview: 'WORK SUMMARY', summaryHeading: 'Who did what', summaryHint: 'See team progress and completed tasks.', byPerson: 'By person', doneTasks: 'Completed tasks', person: 'Person', total: 'Total', completedList: 'What is already done', noCompletedTasks: 'No completed tasks yet.', moveTask: 'Move task', deleteTask: 'Delete task', deleteNote: 'Delete note', weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   }
 };
@@ -144,6 +144,7 @@ let databaseWriteQueue = Promise.resolve();
 let saveToastTimer = null;
 let saveNotificationsEnabled = false;
 let archiveCheckTimer = null;
+let meetingEndTimer = null;
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
 let calendarEvents = [];
@@ -207,6 +208,7 @@ function normalizeState(saved) {
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
+    completedMeetingIds: Array.from(new Set((Array.isArray(source.completedMeetingIds) ? source.completedMeetingIds : []).map(String).filter(Boolean))),
     notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
       return { id: String(notification.id), recipientId: String(notification.recipientId), type: notification.type === 'mention' ? 'mention' : 'status', taskId: Number(notification.taskId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
     }).slice(0, 160),
@@ -536,6 +538,8 @@ async function removeCalendarEvent(id) {
     return false;
   }
   calendarEvents = calendarEvents.filter(function (event) { return event.id !== Number(id); });
+  state.completedMeetingIds = (state.completedMeetingIds || []).filter(function (eventId) { return String(eventId) !== String(id); });
+  saveState();
   setSaveStatus('dataSaved');
   return true;
 }
@@ -567,6 +571,7 @@ function updateEventEditorAccess(calendarEvent) {
   });
   eventEditor.querySelector('.save-detail').disabled = !editable;
   document.getElementById('delete-open-event').hidden = !calendarEvent || !editable;
+  document.getElementById('complete-open-event').hidden = !calendarEvent || !editable || meetingHasEnded(calendarEvent);
 }
 function showAuth() {
   appShell.hidden = true;
@@ -752,7 +757,7 @@ function renderResponsibleFilter() {
 }
 function notesForView() {
   const personalNotes = state.notes.filter(function (note) { return !note.eventId; });
-  const meetingNotes = calendarEvents.filter(function (event) { return Boolean((event.notes || '').trim()); }).map(function (event) {
+  const meetingNotes = calendarEvents.filter(function (event) { return Boolean((event.notes || '').trim()) || meetingHasEnded(event); }).map(function (event) {
     return { id: 'event-' + event.id, eventId: event.id, title: event.title, text: event.notes, createdAt: event.date, calendarEvent: true };
   });
   return personalNotes.concat(meetingNotes).sort(function (a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
@@ -771,7 +776,10 @@ function renderNotes() {
   }
   noteList.innerHTML = visibleNotes.map(function (note) {
     const id = escapeHtml(String(note.id));
-    return '<article class="note" data-note="' + id + '"><header><div><h3>' + escapeHtml(note.title) + '</h3><time>' + dateLabel(note.createdAt) + '</time></div><button class="delete" data-delete-note="' + id + '" aria-label="' + t('deleteNote') + '">×</button></header><p>' + escapeHtml(note.text) + '</p><footer class="note-actions"><button class="create-task" data-create-task-from-note="' + id + '">＋ ' + t('createTask') + '</button></footer></article>';
+    const pending = note.calendarEvent && !(note.text || '').trim();
+    const content = pending ? '<p class="meeting-note-pending">' + t('meetingNotePending') + '</p>' : '<p>' + escapeHtml(note.text) + '</p>';
+    const actions = pending ? '' : '<footer class="note-actions"><button class="create-task" data-create-task-from-note="' + id + '">＋ ' + t('createTask') + '</button></footer>';
+    return '<article class="note' + (pending ? ' pending-meeting-note' : '') + '" data-note="' + id + '"><header><div><h3>' + escapeHtml(note.title) + '</h3><time>' + dateLabel(note.createdAt) + '</time></div><button class="delete" data-delete-note="' + id + '" aria-label="' + t('deleteNote') + '">×</button></header>' + content + actions + '</article>';
   }).join('');
 }
 function contactMatches(person, query) {
@@ -945,6 +953,30 @@ function meetingEnd(event) {
   if (savedEnd && !Number.isNaN(savedEnd.getTime()) && savedEnd > start) return savedEnd;
   return new Date(start.getTime() + 60 * 60000);
 }
+function meetingHasEnded(event) {
+  if (!event) return false;
+  if ((state.completedMeetingIds || []).includes(String(event.id))) return true;
+  const end = meetingEnd(event);
+  return !Number.isNaN(end.getTime()) && end.getTime() <= Date.now();
+}
+function completeMeeting(id) {
+  const event = calendarEvents.find(function (item) { return item.id === Number(id); });
+  if (!event || !canEditCalendarEvent(event)) return;
+  state.completedMeetingIds = Array.from(new Set((state.completedMeetingIds || []).concat(String(event.id))));
+  saveState();
+  closeEventDetail();
+  render();
+}
+function scheduleMeetingEndCheck() {
+  clearTimeout(meetingEndTimer);
+  const nextEnd = calendarEvents.filter(function (event) { return !(state.completedMeetingIds || []).includes(String(event.id)); }).map(function (event) { return meetingEnd(event).getTime(); }).filter(function (time) { return Number.isFinite(time) && time > Date.now(); }).sort(function (a, b) { return a - b; })[0];
+  if (!nextEnd) return;
+  meetingEndTimer = setTimeout(function () {
+    renderNotes();
+    renderCalendar();
+    scheduleMeetingEndCheck();
+  }, Math.max(1000, Math.min(nextEnd - Date.now() + 1000, 2147483647)));
+}
 function participantsFor(event) {
   if (Array.isArray(event.participantIds)) {
     const selected = event.participantIds.map(function (id) { return state.people.find(function (person) { return person.id === Number(id); }); }).filter(Boolean).map(function (person) { return person.name; });
@@ -985,7 +1017,7 @@ function renderMobileCalendar(days) {
     const people = participantsFor(event);
     const peopleText = people.length ? people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : eventDateInputValue(meetingEnd(event)).slice(11, 16);
     const details = [event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ');
-    return '<button type="button" class="mobile-agenda-event" data-open-event="' + event.id + '"><time>' + escapeHtml(event.date.slice(11, 16)) + '</time><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(details) + '</small></span></button>';
+    return '<button type="button" class="mobile-agenda-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '"><time>' + escapeHtml(event.date.slice(11, 16)) + '</time><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(details) + '</small></span></button>';
   }).join('') : '<p class="mobile-agenda-empty">' + t('noMeetingsDay') + '</p>';
   mobileTeamsCalendar.innerHTML = '<div class="mobile-week-strip">' + days.map(function (day) {
     const key = dateKey(day);
@@ -1031,7 +1063,7 @@ function renderCalendar() {
       const people = participantsFor(event);
       const peopleText = people.length ? '👥 ' + people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : event.date.slice(11, 16) + ' – ' + eventDateInputValue(end).slice(11, 16);
       const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
-      return '<button type="button" class="week-event" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title) + '</strong>' + peopleLine + '</button>';
+      return '<button type="button" class="week-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title + (meetingHasEnded(event) ? ' ✓' : '')) + '</strong>' + peopleLine + '</button>';
     }).join('');
     return '<div class="week-day-column">' + slots + events + '</div>';
   }).join('');
@@ -1166,6 +1198,7 @@ function render() {
   renderCalendar();
   renderSummary();
   scheduleArchiveCheck();
+  scheduleMeetingEndCheck();
 }
 function moveTask(id, column) {
   const currentTask = state.tasks.find(function (task) { return task.id === Number(id); });
@@ -1789,6 +1822,10 @@ document.addEventListener('click', async function (event) {
     closeEventDetail();
     render();
   }
+  if (button.id === 'complete-open-event' && openEventId) {
+    completeMeeting(openEventId);
+    return;
+  }
   if (button.id === 'delete-open-note' && openNoteId) {
     const eventId = calendarEventIdFromNoteId(openNoteId);
     if (eventId) {
@@ -1826,9 +1863,6 @@ participantSearch.addEventListener('input', renderParticipantPicker);
 participantSearch.addEventListener('blur', function () {
   setTimeout(function () { participantSuggestions.hidden = true; }, 120);
 });
-taskDetail.addEventListener('click', function (event) { if (event.target === taskDetail) closeTaskDetail(); });
-eventDetail.addEventListener('click', function (event) { if (event.target === eventDetail) closeEventDetail(); });
-noteDetail.addEventListener('click', function (event) { if (event.target === noteDetail) closeNoteDetail(); });
 document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { setMobileMenu(false); if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
 applyLanguage();
 setInterval(updateSystemClock, 1000);
