@@ -12,13 +12,13 @@
   <link rel="stylesheet" href="style.css?v=meeting-notes-1">
   <link rel="stylesheet" href="teams-calendar.css?v=meeting-notes-1">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
-  <link rel="stylesheet" href="board-tools.css?v=summary-dates-1">
+  <link rel="stylesheet" href="board-tools.css?v=archive-deadline-1">
   <link rel="stylesheet" href="summary-dates.css?v=manual-archive-1">
   <link rel="stylesheet" href="admin-teams.css?v=notifications-1">
   <link rel="stylesheet" href="admin-activity.css?v=admin-activity-1">
   <link rel="stylesheet" href="task-files.css?v=task-files-1">
   <link rel="stylesheet" href="date-picker.css?v=airline-calendar-1">
-  <link rel="stylesheet" href="theme.css?v=theme-2">
+  <link rel="stylesheet" href="theme.css?v=archive-deadline-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -39,6 +39,7 @@
       <div class="appbar-menu" id="appbar-menu">
         <nav aria-label="Разделы">
           <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
+          <button class="tab" data-tab="archive"><span data-i18n="archiveTitle">Архів</span> <b id="archive-count">0</b></button>
           <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
           <button class="tab" id="people-tab" data-tab="people" hidden><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
           <button class="tab" id="team-tab" data-tab="team" hidden><span data-i18n="myTeam">Моя команда</span></button>
@@ -55,8 +56,16 @@
         <div><p class="eyebrow" data-i18n="personalPlan">ЛИЧНЫЙ ПЛАН</p><h1 data-i18n="myTasks">Мои задачи</h1><p data-i18n="boardHint">Добавляй карточки и перетаскивай их между колонками.</p></div>
         <div class="heading-actions"><span class="task-count" id="task-count">0 задач</span><button type="button" class="new-task" id="new-task">＋ <span data-i18n="newTask">Новая задача</span></button></div>
       </div>
-      <section class="task-filters" aria-label="Фильтры задач"><div class="filter-search"><span>⌕</span><input id="task-search" autocomplete="off" data-i18n-placeholder="taskSearchPlaceholder" placeholder="Поиск по названию или описанию"></div><select id="status-filter"><option value="" data-i18n="allColumns">Все статусы</option><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select><select id="responsible-filter"><option value="" data-i18n="allTasks">Все задачи</option><option value="__none__" data-i18n="noResponsible">Без ответственного</option></select><select id="priority-filter"><option value="" data-i18n="allPriorities">Все приоритеты</option><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select><button type="button" id="only-my-tasks" aria-pressed="false" data-i18n="onlyMyTasks">Тільки мої</button><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-task-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-task-period="today" data-i18n="today">Сьогодні</button><button type="button" data-task-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-task-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-task-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="task-custom-range" hidden><input id="task-date-from" type="date"><span>—</span><input id="task-date-to" type="date"></div></div><button type="button" id="clear-filters" data-i18n="clearFilters">Сбросить</button></section>
+      <section class="task-filters" aria-label="Фильтры задач"><div class="filter-search"><span>⌕</span><input id="task-search" autocomplete="off" data-i18n-placeholder="taskSearchPlaceholder" placeholder="Поиск по названию или описанию"></div><select id="status-filter"><option value="" data-i18n="allColumns">Все статусы</option><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select><select id="responsible-filter"><option value="" data-i18n="allTasks">Все задачи</option><option value="__none__" data-i18n="noResponsible">Без ответственного</option></select><select id="priority-filter"><option value="" data-i18n="allPriorities">Все приоритеты</option><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select><label class="only-my-filter"><input type="checkbox" id="only-my-tasks"><span data-i18n="onlyMyTasks">Тільки мої</span></label><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-task-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-task-period="today" data-i18n="today">Сьогодні</button><button type="button" data-task-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-task-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-task-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="task-custom-range" hidden><input id="task-date-from" type="date"><span>—</span><input id="task-date-to" type="date"></div></div><button type="button" id="clear-filters" data-i18n="clearFilters">Сбросить</button></section>
       <section class="board" id="board" aria-label="Личная доска задач"></section>
+    </section>
+
+    <section class="screen" id="archive-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="archiveEyebrow">ІСТОРІЯ РОБОТИ</p><h1 data-i18n="archiveTitle">Архів</h1><p data-i18n="archiveHint">Переглядай завершені завдання та відновлюй їх за потреби.</p></div>
+        <span class="task-count" id="archive-total">0</span>
+      </div>
+      <section class="archive-list" id="archive-list" aria-label="Архів завдань"></section>
     </section>
 
     <section class="screen" id="calendar-screen" hidden>
@@ -175,7 +184,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=auth-language-1"></script>
+  <script src="script.js?v=archive-deadline-1"></script>
   <script src="date-picker.js?v=airline-calendar-1"></script>
 </body>
 </html>

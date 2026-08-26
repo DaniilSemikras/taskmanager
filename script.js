@@ -66,6 +66,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   attachments: 'Attachments', addFiles: 'Add files', downloadFile: 'Open', removeFile: 'Delete', pendingUpload: 'Will upload after saving', filesHint: 'Up to 10 MB per file', fileTooLarge: 'The file is too large. Maximum size is 10 MB.', fileUploadFailed: 'Could not upload the file. Check storage.', uploadingFiles: 'Uploading files…'
 });
+Object.assign(translations.uk, {
+  archiveTitle: 'Архів', archiveEyebrow: 'ІСТОРІЯ РОБОТИ', archiveHint: 'Переглядай завершені завдання та відновлюй їх за потреби.', archiveEmpty: 'Архів поки порожній.', archivedOn: 'В архіві з', restoreTask: 'Відновити', archiveTaskOne: 'завдання', archiveTaskFew: 'завдання', archiveTaskMany: 'завдань', deadlineRemaining: 'Залишилось', deadlineOverdue: 'Прострочено на', dayShort: 'д', hourShort: 'год', minuteShort: 'хв', actionTaskRestored: 'відновив(ла) завдання з архіву'
+});
+Object.assign(translations.en, {
+  archiveTitle: 'Archive', archiveEyebrow: 'WORK HISTORY', archiveHint: 'Review completed tasks and restore them when needed.', archiveEmpty: 'The archive is empty.', archivedOn: 'Archived', restoreTask: 'Restore', archiveTaskOne: 'task', archiveTaskFew: 'tasks', archiveTaskMany: 'tasks', deadlineRemaining: 'Time left', deadlineOverdue: 'Overdue by', dayShort: 'd', hourShort: 'h', minuteShort: 'min', actionTaskRestored: 'restored a task from the archive'
+});
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -85,6 +91,7 @@ const adminActionsList = document.getElementById('admin-actions-list');
 const peopleForm = document.getElementById('people-form');
 const teamForm = document.getElementById('team-form');
 const board = document.getElementById('board');
+const archiveList = document.getElementById('archive-list');
 const noteList = document.getElementById('note-list');
 const peopleList = document.getElementById('people-list');
 const peopleSearch = document.getElementById('people-search');
@@ -99,6 +106,7 @@ const responsibleFilter = document.getElementById('responsible-filter');
 const taskSearch = document.getElementById('task-search');
 const statusFilter = document.getElementById('status-filter');
 const priorityFilter = document.getElementById('priority-filter');
+const onlyMyTasksInput = document.getElementById('only-my-tasks');
 const clearFilters = document.getElementById('clear-filters');
 const taskDateFrom = document.getElementById('task-date-from');
 const taskDateTo = document.getElementById('task-date-to');
@@ -434,7 +442,7 @@ function recordSystemActivity(type, title) {
 }
 function activityTypeLabel(type) {
   const labels = {
-    taskCreated: 'actionTaskCreated', taskUpdated: 'actionTaskUpdated', taskMoved: 'actionTaskMoved', taskDeleted: 'actionTaskDeleted', taskArchived: 'actionTaskArchived', taskAutoArchived: 'actionTaskAutoArchived',
+    taskCreated: 'actionTaskCreated', taskUpdated: 'actionTaskUpdated', taskMoved: 'actionTaskMoved', taskDeleted: 'actionTaskDeleted', taskArchived: 'actionTaskArchived', taskAutoArchived: 'actionTaskAutoArchived', taskRestored: 'actionTaskRestored',
     noteSaved: 'actionNoteSaved', noteDeleted: 'actionNoteDeleted', meetingSaved: 'actionMeetingSaved', meetingDeleted: 'actionMeetingDeleted', meetingCompleted: 'actionMeetingCompleted',
     personSaved: 'actionPersonSaved', personDeleted: 'actionPersonDeleted', teamCreated: 'actionTeamCreated', teamChanged: 'actionTeamChanged', teamDeleted: 'actionTeamDeleted', accessChanged: 'actionAccessChanged', accountCreated: 'actionAccountCreated', notificationDeleted: 'actionNotificationDeleted', notificationsRead: 'actionNotificationsRead'
   };
@@ -907,12 +915,35 @@ function taskDeadlineState(task) {
   const today = eventDateInputValue(new Date()).slice(0, 10);
   return task.dueDate < today ? ' overdue' : task.dueDate === today ? ' today' : '';
 }
+function taskDeadlineCountdown(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
+  const deadline = new Date(value + 'T23:59:59.999');
+  if (Number.isNaN(deadline.getTime())) return '';
+  const difference = deadline.getTime() - Date.now();
+  const totalMinutes = Math.max(1, Math.floor(Math.abs(difference) / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts = [];
+  if (days) parts.push(days + ' ' + t('dayShort'));
+  if (hours && parts.length < 2) parts.push(hours + ' ' + t('hourShort'));
+  if (!days && !hours) parts.push(minutes + ' ' + t('minuteShort'));
+  return t(difference >= 0 ? 'deadlineRemaining' : 'deadlineOverdue') + ': ' + parts.join(' ');
+}
+function updateDeadlineCountdowns() {
+  document.querySelectorAll('[data-deadline-countdown]').forEach(function (element) {
+    const value = element.dataset.deadlineCountdown;
+    const deadline = new Date(value + 'T23:59:59.999');
+    element.textContent = taskDeadlineCountdown(value);
+    element.classList.toggle('overdue', !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now());
+  });
+}
 function taskMarkup(task) {
   const priority = taskPriority(task);
   const completed = task.column === 'done';
   const description = task.description ? '<p class="task-description">' + textWithLinks(task.description) + '</p>' : '';
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
-  const deadline = deadlineLabel ? '<span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span>' : '';
+  const deadline = deadlineLabel ? '<div class="task-deadline-wrap"><span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span><span class="task-deadline-countdown" data-deadline-countdown="' + escapeHtml(task.dueDate) + '">' + escapeHtml(taskDeadlineCountdown(task.dueDate)) + '</span></div>' : '';
   const responsibles = taskResponsibleNames(task);
   const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
   const mentions = taskMentionNames(task);
@@ -985,14 +1016,21 @@ function renderBoard() {
     return '<section class="column" data-column="' + column.id + '"><header class="column-head"><h2>' + t(column.titleKey) + ' <span>' + cards.length + '</span></h2><button type="button" data-add-to="' + column.id + '" aria-label="' + t('addTask') + '">＋</button></header><div class="drop-hint">⇣ ' + t('dropTaskHere') + '</div><div class="column-cards" data-dropzone="' + column.id + '">' + inner + '</div></section>';
   }).join('');
   const shown = filteredTasks.length;
-  const onlyMyTasksButton = document.getElementById('only-my-tasks');
-  if (onlyMyTasksButton) {
-    onlyMyTasksButton.classList.toggle('active', onlyMyTasks);
-    onlyMyTasksButton.setAttribute('aria-pressed', String(onlyMyTasks));
-  }
+  if (onlyMyTasksInput) onlyMyTasksInput.checked = onlyMyTasks;
   const hasFilters = responsible || status || priority || search || from || to || onlyMyTasks;
   document.getElementById('task-count').textContent = hasFilters ? shown + ' ' + t('of') + ' ' + activeTaskCount : activeTaskCount + plural(activeTaskCount, t('taskOne'), t('taskFew'), t('taskMany'));
   bindDragAndDrop();
+  updateDeadlineCountdowns();
+}
+function renderArchive() {
+  const tasks = state.tasks.filter(function (task) { return Boolean(task.archivedAt); }).sort(function (a, b) { return new Date(b.archivedAt || 0) - new Date(a.archivedAt || 0); });
+  document.getElementById('archive-count').textContent = tasks.length;
+  document.getElementById('archive-total').textContent = tasks.length + plural(tasks.length, t('archiveTaskOne'), t('archiveTaskFew'), t('archiveTaskMany'));
+  archiveList.innerHTML = tasks.length ? tasks.map(function (task) {
+    const names = taskResponsibleNames(task).join(', ') || t('notAssigned');
+    const description = task.description ? '<p>' + textWithLinks(task.description) + '</p>' : '';
+    return '<article class="archive-card priority-' + taskPriority(task) + '" data-task="' + task.id + '"><header><div><span class="archive-status">✓ ' + t('done') + '</span><h2>' + escapeHtml(task.title) + '</h2></div><button type="button" data-restore-task="' + task.id + '">↶ ' + t('restoreTask') + '</button></header>' + description + '<footer><span>' + escapeHtml(names) + '</span><time>' + t('archivedOn') + ' ' + escapeHtml(dateLabel(task.archivedAt)) + '</time></footer></article>';
+  }).join('') : '<div class="archive-empty"><span>✓</span><p>' + t('archiveEmpty') + '</p></div>';
 }
 function renderResponsibleFilter() {
   const previous = responsibleFilter.value;
@@ -1438,6 +1476,7 @@ function render() {
   if (archiveCompletedTasks()) saveState();
   renderResponsibleFilter();
   renderBoard();
+  renderArchive();
   renderNotes();
   renderPeople();
   renderMyTeam();
@@ -1560,7 +1599,7 @@ function savedTabForCurrentUser() {
   let tab = 'board';
   try {
     const saved = localStorage.getItem(tabStorageKey());
-    if (['board', 'calendar', 'people', 'team', 'summary', 'meetings', 'admin'].includes(saved)) tab = saved;
+    if (['board', 'archive', 'calendar', 'people', 'team', 'summary', 'meetings', 'admin'].includes(saved)) tab = saved;
   } catch {}
   if (!isAdmin() && tab === 'people') return 'team';
   if (!isAdmin() && tab === 'admin') return 'board';
@@ -1572,6 +1611,7 @@ function showTab(tab) {
   if (tab === 'people') tab = isAdmin() ? 'admin' : 'team';
   if (tab === 'team' && isAdmin()) tab = 'admin';
   document.getElementById('board-screen').hidden = tab !== 'board';
+  document.getElementById('archive-screen').hidden = tab !== 'archive';
   document.getElementById('calendar-screen').hidden = tab !== 'calendar';
   document.getElementById('people-screen').hidden = tab !== 'people';
   document.getElementById('team-screen').hidden = tab !== 'team';
@@ -1615,7 +1655,7 @@ function updateTaskEditorUi() {
   document.getElementById('task-editor-title').textContent = creating ? t('newTask') : t('edit');
   document.getElementById('save-task-detail').textContent = creating ? t('createTask') : t('saveChanges');
   document.getElementById('delete-open-task').hidden = creating;
-  document.getElementById('archive-open-task').hidden = creating || !task || task.column !== 'done';
+  document.getElementById('archive-open-task').hidden = creating || !task || task.column !== 'done' || Boolean(task.archivedAt);
 }
 function closeTaskDetail() {
   pendingTaskFiles = [];
@@ -1916,7 +1956,7 @@ eventEditor.addEventListener('submit', async function (event) {
 document.addEventListener('click', async function (event) {
   if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
   if (notificationsPanel && !event.target.closest('#notification-wrap')) setNotificationsOpen(false);
-  const card = event.target.closest('.task-card');
+  const card = event.target.closest('.task-card, .archive-card');
   if (card && !event.target.closest('button, select')) {
     if (card.dataset.swipeHandled) return;
     openTask(card.dataset.task);
@@ -1965,6 +2005,16 @@ document.addEventListener('click', async function (event) {
   if (button.dataset.tab) {
     showTab(button.dataset.tab);
     setMobileMenu(false);
+  }
+  if (button.dataset.restoreTask) {
+    const taskId = Number(button.dataset.restoreTask);
+    const task = state.tasks.find(function (item) { return item.id === taskId && item.archivedAt; });
+    if (!task) return;
+    state.tasks = state.tasks.map(function (item) { return item.id === taskId ? Object.assign({}, item, { archivedAt: null, completedAt: new Date().toISOString() }) : item; });
+    recordActivity('taskRestored', task.title);
+    saveState();
+    render();
+    return;
   }
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
@@ -2074,11 +2124,6 @@ document.addEventListener('click', async function (event) {
     priorityFilter.value = '';
     onlyMyTasks = false;
     setDatePreset('task', 'all');
-    return;
-  }
-  if (button.id === 'only-my-tasks') {
-    onlyMyTasks = !onlyMyTasks;
-    renderBoard();
     return;
   }
   if (button.id === 'clear-summary-filters') {
@@ -2202,6 +2247,7 @@ authLanguageSwitch.addEventListener('change', function () { changeLanguage(authL
 responsibleFilter.addEventListener('change', renderBoard);
 statusFilter.addEventListener('change', renderBoard);
 priorityFilter.addEventListener('change', renderBoard);
+onlyMyTasksInput.addEventListener('change', function () { onlyMyTasks = onlyMyTasksInput.checked; renderBoard(); });
 taskSearch.addEventListener('input', renderBoard);
 taskDateFrom.addEventListener('change', function () { setDatePreset('task', 'custom'); });
 taskDateTo.addEventListener('change', function () { setDatePreset('task', 'custom'); });
@@ -2219,4 +2265,5 @@ document.addEventListener('pointerdown', unlockNotificationSound);
 document.addEventListener('keydown', unlockNotificationSound);
 applyLanguage();
 setInterval(updateSystemClock, 1000);
+setInterval(updateDeadlineCountdowns, 60000);
 initializeAuth();

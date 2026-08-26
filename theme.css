@@ -74,7 +74,7 @@ html[data-theme="dark"] :is(
   .person-card,.team-card,.account-management,.admin-activity,.admin-feed-panel,
   .teams-calendar,.teams-toolbar,.mini-calendar,.week-calendar,.week-day-head,.mobile-agenda,
   .task-detail,.notification-popover,.save-status,.participant-suggestions,.mention-suggestions,
-  .date-picker-popover,.task-file-item
+  .date-picker-popover,.task-file-item,.archive-card,.archive-empty
 ) { color: #e9e6f1; border-color: var(--line); background: #24222d; box-shadow: none; }
 html[data-theme="dark"] .auth-screen { background: radial-gradient(circle at 20% 15%, #302a5a 0, transparent 35%), #17161e; }
 html[data-theme="dark"] .auth-mode-switch { background: #1c1a22; }
@@ -85,6 +85,15 @@ html[data-theme="dark"] .task-detail label,
 html[data-theme="dark"] .task-file-field>header>span { color: #bbb6c6; }
 
 html[data-theme="dark"] .column { border-color: #393642; background: #201e27; }
+html[data-theme="dark"] .only-my-filter { color: #bbb6c6; border-color: var(--line); background: #24222d; }
+html[data-theme="dark"] .only-my-filter:has(input:checked) { color: #c6beff; border-color: #5a527f; background: #312d4c; }
+html[data-theme="dark"] .task-deadline-countdown { color: #aaa5b5; }
+html[data-theme="dark"] .task-deadline-countdown.overdue { color: #ef929b; }
+html[data-theme="dark"] .archive-card h2 { color: #eeeaf6; }
+html[data-theme="dark"] .archive-card>p { color: #bbb6c6; }
+html[data-theme="dark"] .archive-card footer { color: #aaa5b5; border-color: #3b3845; }
+html[data-theme="dark"] .archive-card header button { color: #c5bdff; border-color: #4b4662; background: #312d49; }
+html[data-theme="dark"] .archive-empty { border-color: #4a4655; }
 html[data-theme="dark"] .column-head h2,
 html[data-theme="dark"] .task-card h3,
 html[data-theme="dark"] .note h3,
