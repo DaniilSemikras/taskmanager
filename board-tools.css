@@ -40,6 +40,15 @@
 html[data-theme="dark"] .task-order-controls { border-color:#4c4669; background:rgba(27,25,35,.48); }
 html[data-theme="dark"] .task-order-controls button { color:#bcb4ff; }
 html[data-theme="dark"] .task-order-controls button+button { border-left-color:#4c4669; }
+.task-card.priority-medium { border-top-color:#8b7cf6; background:#f5f2ff; }
+.archive-card.priority-medium { border-top-color:#8b7cf6; }
+.priority-indicator { width:9px; height:9px; flex:0 0 auto; margin-top:4px; border:2px solid rgba(255,255,255,.78); border-radius:50%; background:#8b7cf6; box-shadow:0 0 0 1px rgba(72,65,112,.16); }
+.priority-high .priority-indicator { background:#e85f78; }
+.priority-medium .priority-indicator { background:#8b7cf6; }
+.priority-low .priority-indicator { background:#579ce1; }
+.archive-title-row { display:flex; align-items:center; gap:8px; margin-top:5px; }
+.archive-title-row h2 { margin:0; }
+html[data-theme="dark"] .priority-indicator { border-color:rgba(24,22,31,.82); box-shadow:0 0 0 1px rgba(211,205,255,.22); }
 @media (max-width:700px) { .task-order-controls button { width:30px; height:30px; font-size:15px; } }
 @media (max-width:1250px) { .task-filters { grid-template-columns:repeat(3,1fr); }.task-filters .filter-search { grid-column:span 2; }.task-filters .period-control { grid-column:span 2; }.summary-stats { grid-template-columns:repeat(2,1fr); }.analytics-dashboard { grid-template-columns:1fr; } }
 @media (max-width:800px) { .summary-filters { align-items:stretch; flex-direction:column; }.summary-filters>select,.summary-filters>button { width:100%; }.period-control { flex-wrap:wrap; }.custom-date-range { margin-left:0; } }

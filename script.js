@@ -1033,6 +1033,10 @@ function updateDeadlineCountdowns() {
     element.classList.toggle('overdue', !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now());
   });
 }
+function priorityIndicator(priority) {
+  const label = t(priority + 'Priority');
+  return '<span class="priority-indicator" role="img" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '"></span>';
+}
 function taskMarkup(task) {
   const priority = taskPriority(task);
   const completed = task.column === 'done';
@@ -1048,7 +1052,7 @@ function taskMarkup(task) {
   const orderIndex = ordered.findIndex(function (item) { return item.id === task.id; });
   const orderControls = '<span class="task-order-controls"><button type="button" draggable="false" data-task-order="-1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskUp') + '" title="' + t('moveTaskUp') + '"' + (orderIndex <= 0 ? ' disabled' : '') + '>↑</button><button type="button" draggable="false" data-task-order="1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskDown') + '" title="' + t('moveTaskDown') + '"' + (orderIndex < 0 || orderIndex >= ordered.length - 1 ? ' disabled' : '') + '>↓</button></span>';
   const details = completed ? '' : description + deadline + files + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
-  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><header class="task-card-head"><h3>' + escapeHtml(task.title) + '</h3>' + orderControls + '</header>' + details + '</article>';
+  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><header class="task-card-head">' + priorityIndicator(priority) + '<h3>' + escapeHtml(task.title) + '</h3>' + orderControls + '</header>' + details + '</article>';
 }
 function localDateValue(iso) {
   if (!iso || Number.isNaN(new Date(iso).getTime())) return '';
@@ -1127,7 +1131,8 @@ function renderArchive() {
   archiveList.innerHTML = tasks.length ? tasks.map(function (task) {
     const names = taskResponsibleNames(task).join(', ') || t('notAssigned');
     const description = task.description ? '<p>' + textWithLinks(task.description) + '</p>' : '';
-    return '<article class="archive-card priority-' + taskPriority(task) + '" data-task="' + task.id + '"><header><div><span class="archive-status">✓ ' + t('done') + '</span><h2>' + escapeHtml(task.title) + '</h2></div><button type="button" data-restore-task="' + task.id + '">↶ ' + t('restoreTask') + '</button></header>' + description + '<footer><span>' + escapeHtml(names) + '</span><time>' + t('archivedOn') + ' ' + escapeHtml(dateLabel(task.archivedAt)) + '</time></footer></article>';
+    const priority = taskPriority(task);
+    return '<article class="archive-card priority-' + priority + '" data-task="' + task.id + '"><header><div><span class="archive-status">✓ ' + t('done') + '</span><div class="archive-title-row">' + priorityIndicator(priority) + '<h2>' + escapeHtml(task.title) + '</h2></div></div><button type="button" data-restore-task="' + task.id + '">↶ ' + t('restoreTask') + '</button></header>' + description + '<footer><span>' + escapeHtml(names) + '</span><time>' + t('archivedOn') + ' ' + escapeHtml(dateLabel(task.archivedAt)) + '</time></footer></article>';
   }).join('') : '<div class="archive-empty"><span>✓</span><p>' + t('archiveEmpty') + '</p></div>';
 }
 function renderResponsibleFilter() {
