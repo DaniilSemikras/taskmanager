@@ -8,7 +8,7 @@
 .calendar-period { min-width:235px; text-align:center; }
 .calendar-period h2 { margin:0; color:#3f3c51; font-size:16px; font-weight:800; }
 .new-meeting { justify-self:end; min-height:33px; padding:0 13px; border:0; border-radius:7px; color:#fff; background:#6657dc; box-shadow:0 5px 12px rgba(102,87,220,.18); font-size:12px; font-weight:700; }
-.teams-calendar-layout { display:grid; grid-template-columns:202px minmax(0,1fr); min-height:700px; }
+.teams-calendar-layout { display:grid; grid-template-columns:202px minmax(0,1fr); min-height:0; }
 .mini-calendar { padding:15px 13px; border-right:1px solid #eae9ef; background:#fbfbfd; }
 .mini-calendar h3 { margin:0 0 12px; color:#4e4b5d; font-size:12px; font-weight:800; text-transform:capitalize; }
 .mini-weekdays,.mini-calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
@@ -19,22 +19,25 @@
 .mini-day.today { color:#fff; background:#6657dc; }
 .mini-day.in-week:not(.today) { color:#5546c8; background:#e8e5ff; font-weight:800; }
 .mini-day.has-event:not(.today) { box-shadow:inset 0 -2px 0 #8f84ed; }
-.week-calendar { min-width:0; background:#fff; }
-.week-header { display:grid; grid-template-columns:64px repeat(7,minmax(116px,1fr)); min-width:876px; border-bottom:1px solid #e7e6ec; }
-.week-time-corner { min-height:58px; border-right:1px solid #e7e6ec; background:#fafafd; }
+.week-calendar { min-width:0; overflow:hidden; background:#fff; }
+.week-scroll { overflow:auto; max-height:min(680px,calc(100vh - 245px)); min-height:480px; scrollbar-width:thin; scrollbar-color:#bbb6ca transparent; overscroll-behavior:contain; }
+.week-scroll::-webkit-scrollbar { width:9px; height:9px; }
+.week-scroll::-webkit-scrollbar-track { background:transparent; }
+.week-scroll::-webkit-scrollbar-thumb { border:2px solid transparent; border-radius:999px; background:#bbb6ca; background-clip:padding-box; }
+.week-header { position:sticky; z-index:6; top:0; display:grid; grid-template-columns:64px repeat(7,minmax(116px,1fr)); min-width:876px; border-bottom:1px solid #e7e6ec; background:#fff; }
+.week-time-corner { position:sticky; z-index:7; left:0; min-height:58px; border-right:1px solid #e7e6ec; background:#fafafd; }
 .week-day-head { min-height:58px; padding:8px 4px; border:0; border-right:1px solid #e7e6ec; color:#565363; background:#fff; text-align:center; }
 .week-day-head:hover { background:#f8f7ff; }
 .week-day-head .weekday-name { display:block; color:#8f8b9c; font-size:10px; font-weight:800; text-transform:uppercase; }
 .week-day-head .date-number { display:inline-grid; place-items:center; width:26px; height:26px; margin-top:3px; border-radius:50%; color:#4d4a5a; font-size:13px; font-weight:800; }
 .week-day-head.today .date-number { color:#fff; background:#6657dc; }
-.week-body { display:grid; grid-template-columns:64px minmax(0,1fr); min-width:876px; }
-.time-axis { background:#fafafd; }
-.time-label { height:54px; padding:5px 8px 0 0; border-bottom:1px solid #ebeaf0; color:#9693a1; font-size:10px; text-align:right; }
-.week-scroll { overflow:auto; max-height:calc(100vh - 280px); min-height:644px; }
+.week-body { display:grid; grid-template-columns:64px minmax(812px,1fr); min-width:876px; }
+.time-axis { position:sticky; z-index:4; left:0; background:#fafafd; }
+.time-label { height:48px; padding:5px 8px 0 0; border-right:1px solid #e7e6ec; border-bottom:1px solid #ebeaf0; color:#9693a1; background:#fafafd; font-size:10px; text-align:right; }
 .week-grid { display:grid; grid-template-columns:repeat(7,minmax(116px,1fr)); min-width:812px; }
-.week-day-column { position:relative; height:756px; border-right:1px solid #e7e6ec; }
+.week-day-column { position:relative; height:672px; border-right:1px solid #e7e6ec; }
 .week-day-column:last-child { border-right:0; }
-.week-slot { display:block; width:100%; height:54px; padding:0; border:0; border-bottom:1px solid #ebeaf0; background:transparent; }
+.week-slot { display:block; width:100%; height:48px; padding:0; border:0; border-bottom:1px solid #ebeaf0; background:transparent; }
 .week-slot:hover { background:rgba(102,87,220,.07); }
 .week-slot:disabled,.week-day-head:disabled,.new-meeting:disabled,.mobile-new-meeting:disabled { cursor:not-allowed; opacity:.46; }
 .week-slot:disabled:hover { background:transparent; }
@@ -45,6 +48,6 @@
 .week-event span { margin-top:2px; color:#6e68a2; font-size:9px; }
 .meeting-times { grid-template-columns:repeat(3,minmax(0,1fr)); }.complete-meeting { min-height:35px; padding:0 11px; border:1px solid #cfe7db; border-radius:7px; color:#39755c; background:#f0fbf5; font-size:11px; font-weight:700; }
 .mobile-teams-calendar { display:none; }
-@media (max-width:800px) { .teams-calendar-layout { grid-template-columns:1fr; }.mini-calendar { display:none; }.teams-toolbar { grid-template-columns:1fr auto; gap:8px; }.calendar-period { grid-column:1 / -1; grid-row:2; justify-self:center; }.week-calendar { overflow-x:auto; }.week-scroll { max-height:620px; }.meeting-times { grid-template-columns:1fr; } }
+@media (max-width:800px) { .teams-calendar-layout { grid-template-columns:1fr; }.mini-calendar { display:none; }.teams-toolbar { grid-template-columns:1fr auto; gap:8px; }.calendar-period { grid-column:1 / -1; grid-row:2; justify-self:center; }.week-scroll { max-height:620px; min-height:460px; }.meeting-times { grid-template-columns:1fr; } }
 @media (max-width:700px) { .teams-toolbar { grid-template-columns:1fr auto; min-height:56px; padding:9px 11px; }.calendar-nav { gap:4px; }.calendar-nav button:not(.today-button) { width:29px; }.today-button { min-height:29px; padding:0 8px; }.calendar-period { display:none; }.new-meeting { min-height:34px; padding:0 10px; font-size:11px; }.teams-calendar-layout { display:none; }.mobile-teams-calendar { display:block; }.mobile-week-strip { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; padding:12px 9px 10px; border-bottom:1px solid #ecebf1; }.mobile-week-day { display:grid; justify-items:center; gap:4px; min-height:61px; padding:4px 0 6px; border:0; border-radius:11px; color:#666273; background:transparent; }.mobile-week-day:hover { background:#f2f0ff; }.mobile-week-day .mobile-weekday { color:#9692a0; font-size:9px; font-weight:800; text-transform:uppercase; }.mobile-week-day .mobile-date { display:grid; place-items:center; width:29px; height:29px; border-radius:50%; color:#474353; font-size:14px; font-weight:800; }.mobile-week-day.selected .mobile-date { color:#fff; background:#6657dc; box-shadow:0 4px 9px rgba(102,87,220,.25); }.mobile-week-day.today:not(.selected) .mobile-date { color:#5b4dca; background:#ece9ff; }.mobile-week-day.has-event:after { width:4px; height:4px; border-radius:50%; content:""; background:#6657dc; }.mobile-agenda { min-height:390px; padding:8px 16px 17px; background:#fff; }.mobile-agenda-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0 15px; }.mobile-agenda-head h3 { margin:0; color:#312e3d; font-size:18px; letter-spacing:-.35px; text-transform:capitalize; }.mobile-agenda-head span { color:#8a8697; font-size:12px; }.mobile-agenda-list { display:grid; gap:9px; }.mobile-agenda-event { display:grid; grid-template-columns:51px minmax(0,1fr); width:100%; padding:8px 0; border:0; color:#3f3b4c; background:transparent; text-align:left; }.mobile-agenda-event time { padding-top:4px; color:#777383; font-size:12px; font-weight:700; }.mobile-agenda-event>span { display:grid; gap:3px; min-width:0; padding:8px 11px; border-left:4px solid #6657dc; border-radius:6px; background:#f0eeff; }.mobile-agenda-event.completed>span { border-left-color:#68ad8c; background:#eaf7f0; }.mobile-agenda-event strong,.mobile-agenda-event small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.mobile-agenda-event strong { font-size:13px; }.mobile-agenda-event small { color:#77718f; font-size:11px; }.mobile-agenda-empty { margin:17px 0 0; color:#9692a0; font-size:13px; }.mobile-new-meeting { display:grid; place-items:center; width:53px; height:53px; margin:28px 0 0 auto; border:0; border-radius:50%; color:#fff; background:#6657dc; box-shadow:0 7px 15px rgba(102,87,220,.32); font-size:31px; line-height:1; }.mobile-new-meeting:hover { background:#5748cf; } }
 @media (max-width:500px) { .new-meeting { width:34px; padding:0; border-radius:50%; font-size:0; }.new-meeting:first-letter { font-size:20px; }.mobile-agenda { min-height:420px; } }

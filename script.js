@@ -1384,9 +1384,9 @@ function renderCalendar() {
       const start = new Date(event.date);
       const end = meetingEnd(event);
       const startMinutes = start.getHours() * 60 + start.getMinutes();
-      const top = Math.max(0, (startMinutes - 7 * 60) * 0.9);
+      const top = Math.max(0, (startMinutes - 7 * 60) * 0.8);
       const duration = Math.max(30, (end.getTime() - start.getTime()) / 60000);
-      const height = Math.max(35, Math.min(750 - top, duration * 0.9 - 4));
+      const height = Math.max(32, Math.min(666 - top, duration * 0.8 - 4));
       const people = participantsFor(event);
       const peopleText = people.length ? '👥 ' + people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : event.date.slice(11, 16) + ' – ' + eventDateInputValue(end).slice(11, 16);
       const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
