@@ -10,7 +10,7 @@ const translations = {
   uk: {
     locale: 'uk-UA', pageTitle: 'Моя дошка', brand: 'моя дошка', board: 'Дошка', calendar: 'Календар', afterMeeting: 'Нотатки',
     personalPlan: 'ОСОБИСТИЙ ПЛАН', myTasks: 'Мої завдання', boardHint: 'Додавай картки та перетягуй їх між колонками.', taskPlaceholder: 'Нове завдання — наприклад, оплатити рахунок', dataSaved: 'Збережено', dataSaving: 'Збереження…', dataBrowser: 'Збережено в браузері', dataUnavailable: 'Немає з’єднання з базою',
-    todo: 'Треба зробити', doing: 'У процесі', done: 'Готово', responsible: 'Відповідальний', violet: 'Фіолетовий', blue: 'Синій', green: 'Зелений', orange: 'Помаранчевий', pink: 'Рожевий',
+    todo: 'Треба зробити', doing: 'У процесі', done: 'Готово', responsible: 'Відповідальний', responsibles: 'Відповідальні', onlyMyTasks: 'Тільки мої', violet: 'Фіолетовий', blue: 'Синій', green: 'Зелений', orange: 'Помаранчевий', pink: 'Рожевий',
     taskDescriptionPlaceholder: 'Опис завдання: що саме потрібно зробити?', addTask: 'Додати завдання', show: 'ПОКАЗАТИ', allTasks: 'Усі завдання', noResponsible: 'Без відповідального',
     myMeetings: 'МОЇ ЗУСТРІЧІ', calendarHint: 'Додавай зустрічі з датою і часом — вони одразу з’являться в календарі.', meetingTitle: 'Назва зустрічі', meetingNotesPlaceholder: 'Нотатки до зустрічі (необов’язково)', addMeeting: 'Додати зустріч', systemTime: 'Системний час', people: 'Учасники', peopleDirectory: 'БАЗА УЧАСНИКІВ', peopleHint: 'Зберігай контакти команди й швидко знаходь їх за ім’ям, поштою або роллю.', personNamePlaceholder: 'Ім’я та прізвище', emailPlaceholder: 'Пошта', rolePlaceholder: 'Роль або посада', phonePlaceholder: 'Телефон', addPerson: 'Додати учасника', savePerson: 'Зберегти учасника', peopleSearchPlaceholder: 'Пошук за ім’ям, поштою або роллю', noPeople: 'База учасників поки порожня. Додай перший контакт.', editPerson: 'Редагувати', deletePerson: 'Видалити', personOne: 'учасник', personFew: 'учасники', personMany: 'учасників', admin: 'Адмін', adminArea: 'АДМІН-ПАНЕЛЬ', teamManagement: 'Керування командами', teamManagementHint: 'Створюй команди та додавай до них учасників із бази.', teamNamePlaceholder: 'Назва команди', addTeam: 'Створити команду', deleteTeam: 'Видалити', addMember: 'Додати учасника', selectPerson: 'Обрати учасника', noTeams: 'Команд поки немає. Створи першу команду.', noTeamMembers: 'У цій команді поки немає учасників.', teamOne: 'команда', teamFew: 'команди', teamMany: 'команд', welcome: 'Моя дошка', loginHint: 'Увійдіть у свій простір.', login: 'Логін', password: 'Пароль', repeatPassword: 'Повторіть пароль', loginPlaceholder: 'Логін', passwordPlaceholder: 'Щонайменше 4 символи', createAdmin: 'Створити адміністратора', signIn: 'Увійти', signOut: 'Вийти', accessControl: 'КЕРУВАННЯ ДОСТУПОМ', accounts: 'Акаунти', addAccount: 'Створити акаунт', noLinkedPerson: 'Без привʼязки до учасника', member: 'Учасник', administrator: 'Адміністратор', invalidCredentials: 'Неправильний логін або пароль.', passwordMismatch: 'Паролі не збігаються.', loginTaken: 'Такий логін уже існує.', accountOne: 'акаунт', accountFew: 'акаунти', accountMany: 'акаунтів',
     personalNotes: 'ОСОБИСТІ НОТАТКИ', notesHint: 'Зберігай головне одразу після дзвінка або зустрічі.', meetingTitlePlaceholder: 'Наприклад, розмова з клієнтом', whatImportant: 'Що важливо запам’ятати', noteTitle: 'Назва нотатки', newNote: 'Нова нотатка', notePlaceholder: 'Рішення, ідеї, наступні кроки — пиши як зручно', saveNote: 'Зберегти нотатку',
@@ -21,7 +21,7 @@ const translations = {
   en: {
     locale: 'en-GB', pageTitle: 'My board', brand: 'my board', board: 'Board', calendar: 'Calendar', afterMeeting: 'Notes',
     personalPlan: 'PERSONAL PLAN', myTasks: 'My tasks', boardHint: 'Add cards and drag them between columns.', taskPlaceholder: 'New task — for example, pay the bill', dataSaved: 'Saved', dataSaving: 'Saving…', dataBrowser: 'Saved in browser', dataUnavailable: 'Database unavailable',
-    todo: 'To do', doing: 'In progress', done: 'Done', responsible: 'Assignee', violet: 'Violet', blue: 'Blue', green: 'Green', orange: 'Orange', pink: 'Pink',
+    todo: 'To do', doing: 'In progress', done: 'Done', responsible: 'Assignee', responsibles: 'Assignees', onlyMyTasks: 'Only mine', violet: 'Violet', blue: 'Blue', green: 'Green', orange: 'Orange', pink: 'Pink',
     taskDescriptionPlaceholder: 'Task description: what needs to be done?', addTask: 'Add task', show: 'SHOW', allTasks: 'All tasks', noResponsible: 'No assignee',
     myMeetings: 'MY MEETINGS', calendarHint: 'Add meetings with date and time — they will appear in the calendar right away.', meetingTitle: 'Meeting title', meetingNotesPlaceholder: 'Meeting notes (optional)', addMeeting: 'Add meeting', systemTime: 'System time', people: 'People', peopleDirectory: 'PEOPLE DIRECTORY', peopleHint: 'Store team contacts and find them quickly by name, email, or role.', personNamePlaceholder: 'Full name', emailPlaceholder: 'Email', rolePlaceholder: 'Role or job title', phonePlaceholder: 'Phone', addPerson: 'Add person', savePerson: 'Save person', peopleSearchPlaceholder: 'Search by name, email, or role', noPeople: 'The people directory is empty. Add your first contact.', editPerson: 'Edit', deletePerson: 'Delete', personOne: 'person', personFew: 'people', personMany: 'people', admin: 'Admin', adminArea: 'ADMIN AREA', teamManagement: 'Team management', teamManagementHint: 'Create teams and add people from the directory.', teamNamePlaceholder: 'Team name', addTeam: 'Create team', deleteTeam: 'Delete', addMember: 'Add person', selectPerson: 'Choose a person', noTeams: 'There are no teams yet. Create the first one.', noTeamMembers: 'There are no people in this team yet.', teamOne: 'team', teamFew: 'teams', teamMany: 'teams', welcome: 'My board', loginHint: 'Sign in to your workspace.', login: 'Login', password: 'Password', repeatPassword: 'Repeat password', loginPlaceholder: 'Login', passwordPlaceholder: 'At least 4 characters', createAdmin: 'Create administrator', signIn: 'Sign in', signOut: 'Sign out', accessControl: 'ACCESS CONTROL', accounts: 'Accounts', addAccount: 'Create account', noLinkedPerson: 'No linked person', member: 'Member', administrator: 'Administrator', invalidCredentials: 'Incorrect login or password.', passwordMismatch: 'Passwords do not match.', loginTaken: 'This login already exists.', accountOne: 'account', accountFew: 'accounts', accountMany: 'accounts',
     personalNotes: 'PERSONAL NOTES', notesHint: 'Save the key points right after a call or meeting.', meetingTitlePlaceholder: 'For example, client call', whatImportant: 'What is important to remember', noteTitle: 'Note title', newNote: 'New note', notePlaceholder: 'Decisions, ideas, next steps — write however you like', saveNote: 'Save note',
@@ -91,6 +91,7 @@ const taskCustomRange = document.getElementById('task-custom-range');
 const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
 const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
+const taskResponsibleOptions = document.getElementById('task-responsible-options');
 const noteEditor = document.getElementById('note-editor');
 const noteDetail = document.getElementById('note-detail');
 const eventEditor = document.getElementById('event-editor');
@@ -124,6 +125,7 @@ let dragId = null;
 let openTaskId = null;
 let openEventId = null;
 let openNoteId = null;
+let onlyMyTasks = false;
 let taskDatePreset = 'all';
 let summaryDatePreset = 'all';
 let peopleEditId = null;
@@ -196,7 +198,8 @@ function normalizeState(saved) {
   const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
-      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))) });
+      const responsibles = normalizeResponsibleNames(Array.isArray(task.responsibles) && task.responsibles.length ? task.responsibles : task.responsible);
+      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))) });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -351,14 +354,25 @@ function taskResponsibleMembers() {
   });
   return Array.from(members.values()).sort(function (a, b) { return a.name.localeCompare(b.name, t('locale')); });
 }
-function renderTaskResponsibleOptions(selectedName) {
-  const responsibleControl = taskEditor && taskEditor.elements.responsible;
-  if (!responsibleControl) return;
-  const selected = String(selectedName || '');
+function normalizeResponsibleNames(value) {
+  return Array.from(new Set((Array.isArray(value) ? value : [value]).filter(function (name) { return name !== undefined && name !== null; }).map(String).map(function (name) { return name.trim(); }).filter(Boolean)));
+}
+function taskResponsibleNames(task) {
+  return normalizeResponsibleNames(Array.isArray(task && task.responsibles) && task.responsibles.length ? task.responsibles : task && task.responsible);
+}
+function currentUserResponsibleNames() {
+  if (!currentUser) return [];
+  const linkedPerson = state.people.find(function (person) { return String(person.id) === String(currentUser.personId || ''); });
+  return normalizeResponsibleNames([linkedPerson && linkedPerson.name, currentUser.login]);
+}
+function renderTaskResponsibleOptions(selectedNames) {
+  if (!taskResponsibleOptions) return;
+  const selected = normalizeResponsibleNames(selectedNames);
   const people = taskResponsibleMembers();
-  const names = Array.from(new Set(people.map(function (person) { return person.name; })));
-  responsibleControl.innerHTML = '<option value="">' + t('notAssigned') + '</option>' + names.map(function (name) { return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>'; }).join('');
-  responsibleControl.value = names.includes(selected) ? selected : '';
+  const names = Array.from(new Set(people.map(function (person) { return person.name; }).concat(selected)));
+  taskResponsibleOptions.innerHTML = names.length ? names.map(function (name) {
+    return '<label class="responsible-option"><input name="responsibles" type="checkbox" value="' + escapeHtml(name) + '"' + (selected.includes(name) ? ' checked' : '') + '><span>' + escapeHtml(name) + '</span></label>';
+  }).join('') : '<span class="responsible-empty">' + t('noTeamMembers') + '</span>';
 }
 function taskMentionNames(task) {
   return Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean)));
@@ -515,6 +529,7 @@ function setAuthMode(mode) {
 function startSession(account) {
   currentUser = account;
   saveNotificationsEnabled = false;
+  onlyMyTasks = false;
   authScreen.hidden = true;
   appShell.hidden = false;
   updateAccessUi();
@@ -592,7 +607,8 @@ function taskMarkup(task) {
   const description = task.description ? '<p class="task-description">' + escapeHtml(task.description) + '</p>' : '';
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
   const deadline = deadlineLabel ? '<span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span>' : '';
-  const assignee = task.responsible ? '<span class="assignee">' + escapeHtml(task.responsible) + '</span>' : '<span class="assignee empty">' + t('notAssigned') + '</span>';
+  const responsibles = taskResponsibleNames(task);
+  const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
   const mentions = taskMentionNames(task);
   const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
   const details = completed ? '' : description + deadline + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
@@ -644,14 +660,17 @@ function renderBoard() {
   const search = taskSearch.value.trim().toLocaleLowerCase();
   const from = taskDateFrom.value;
   const to = taskDateTo.value;
+  const ownResponsibleNames = currentUserResponsibleNames();
   const activeTaskCount = state.tasks.filter(function (task) { return !task.archivedAt; }).length;
   const filteredTasks = state.tasks.filter(function (task) {
     if (task.archivedAt) return false;
-    const matchesResponsible = !responsible || (responsible === '__none__' ? !task.responsible : task.responsible === responsible);
+    const responsibles = taskResponsibleNames(task);
+    const matchesResponsible = !responsible || (responsible === '__none__' ? !responsibles.length : responsibles.includes(responsible));
+    const matchesOnlyMine = !onlyMyTasks || responsibles.some(function (name) { return ownResponsibleNames.includes(name); });
     const matchesStatus = !status || task.column === status;
     const matchesPriority = !priority || taskPriority(task) === priority;
-    const searchable = (task.title + ' ' + (task.description || '') + ' ' + (task.responsible || '')).toLocaleLowerCase();
-    return matchesResponsible && matchesStatus && matchesPriority && isDateInRange(task.createdAt, from, to) && (!search || searchable.includes(search));
+    const searchable = (task.title + ' ' + (task.description || '') + ' ' + responsibles.join(' ')).toLocaleLowerCase();
+    return matchesResponsible && matchesOnlyMine && matchesStatus && matchesPriority && isDateInRange(task.createdAt, from, to) && (!search || searchable.includes(search));
   });
   board.innerHTML = columns.map(function (column) {
     const cards = filteredTasks.filter(function (task) { return task.column === column.id; }).sort(function (a, b) { return priorityRank(a) - priorityRank(b) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
@@ -659,7 +678,12 @@ function renderBoard() {
     return '<section class="column" data-column="' + column.id + '"><header class="column-head"><h2>' + t(column.titleKey) + ' <span>' + cards.length + '</span></h2><button type="button" data-add-to="' + column.id + '" aria-label="' + t('addTask') + '">＋</button></header><div class="drop-hint">⇣ ' + t('dropTaskHere') + '</div><div class="column-cards" data-dropzone="' + column.id + '">' + inner + '</div></section>';
   }).join('');
   const shown = filteredTasks.length;
-  const hasFilters = responsible || status || priority || search || from || to;
+  const onlyMyTasksButton = document.getElementById('only-my-tasks');
+  if (onlyMyTasksButton) {
+    onlyMyTasksButton.classList.toggle('active', onlyMyTasks);
+    onlyMyTasksButton.setAttribute('aria-pressed', String(onlyMyTasks));
+  }
+  const hasFilters = responsible || status || priority || search || from || to || onlyMyTasks;
   document.getElementById('task-count').textContent = hasFilters ? shown + ' ' + t('of') + ' ' + activeTaskCount : activeTaskCount + plural(activeTaskCount, t('taskOne'), t('taskFew'), t('taskMany'));
   bindDragAndDrop();
 }
@@ -1025,9 +1049,11 @@ function renderSummary() {
   renderSummaryCharts(totals, from, to);
   const people = new Map();
   reportTasks.forEach(function (task) {
-    const name = task.responsible || t('notAssigned');
-    if (!people.has(name)) people.set(name, { name: name, todo: 0, doing: 0, done: 0 });
-    people.get(name)[task.column] += 1;
+    const responsibles = taskResponsibleNames(task);
+    (responsibles.length ? responsibles : [t('notAssigned')]).forEach(function (name) {
+      if (!people.has(name)) people.set(name, { name: name, todo: 0, doing: 0, done: 0 });
+      people.get(name)[task.column] += 1;
+    });
   });
   const rows = Array.from(people.values()).sort(function (a, b) { return (b.done + b.doing + b.todo) - (a.done + a.doing + a.todo) || a.name.localeCompare(b.name, t('locale')); });
   summaryByPerson.innerHTML = rows.length ? rows.map(function (person) {
@@ -1036,7 +1062,7 @@ function renderSummary() {
   }).join('') : '<tr><td colspan="5" class="summary-empty">' + t('emptyColumn') + '</td></tr>';
   const doneTasks = reportTasks.filter(function (task) { return task.column === 'done'; }).sort(function (a, b) { return new Date(b.completedAt || b.createdAt || 0) - new Date(a.completedAt || a.createdAt || 0); });
   completedTasks.innerHTML = doneTasks.length ? '<div class="completed-list">' + doneTasks.map(function (task) {
-    return '<div class="completed-task"><strong>✓ ' + escapeHtml(task.title) + '</strong><span>' + escapeHtml(task.responsible || t('notAssigned')) + '</span></div>';
+    return '<div class="completed-task"><strong>✓ ' + escapeHtml(task.title) + '</strong><span>' + escapeHtml(taskResponsibleNames(task).join(', ') || t('notAssigned')) + '</span></div>';
   }).join('') + '</div>' : '<div class="summary-empty">' + t('noCompletedTasks') + '</div>';
 }
 function plural(number, one, few, many) {
@@ -1217,7 +1243,7 @@ function openTask(id) {
   taskEditor.elements.title.value = task.title || '';
   taskEditor.elements.description.value = task.description || '';
   taskEditor.elements.dueDate.value = task.dueDate || '';
-  renderTaskResponsibleOptions(task.responsible);
+  renderTaskResponsibleOptions(taskResponsibleNames(task));
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
   updateTaskEditorUi();
@@ -1444,7 +1470,8 @@ taskEditor.addEventListener('submit', function (event) {
   event.preventDefault();
   const form = new FormData(taskEditor);
   const description = form.get('description').trim();
-  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsible: form.get('responsible').trim(), dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
+  const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
+  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
   if (openTaskId) {
     state.tasks = state.tasks.map(function (task) {
       if (task.id !== openTaskId) return task;
@@ -1619,7 +1646,13 @@ document.addEventListener('click', async function (event) {
     statusFilter.value = '';
     responsibleFilter.value = '';
     priorityFilter.value = '';
+    onlyMyTasks = false;
     setDatePreset('task', 'all');
+    return;
+  }
+  if (button.id === 'only-my-tasks') {
+    onlyMyTasks = !onlyMyTasks;
+    renderBoard();
     return;
   }
   if (button.id === 'clear-summary-filters') {
@@ -1645,7 +1678,7 @@ document.addEventListener('click', async function (event) {
     const calendarEvent = eventId ? calendarEvents.find(function (item) { return item.id === eventId; }) : null;
     const note = calendarEvent ? { id: 'event-' + eventId, title: calendarEvent.title, text: calendarEvent.notes, eventId: eventId } : state.notes.find(function (item) { return item.id === Number(button.dataset.createTaskFromNote); });
     if (note) {
-      state.tasks.unshift({ id: Date.now(), title: note.title, description: note.text, responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() });
+      state.tasks.unshift({ id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() });
       if (calendarEvent) {
         if (canEditCalendarEvent(calendarEvent)) await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }));
       } else {
