@@ -514,11 +514,13 @@ function taskDeadlineState(task) {
 }
 function taskMarkup(task) {
   const priority = taskPriority(task);
+  const completed = task.column === 'done';
   const description = task.description ? '<p class="task-description">' + escapeHtml(task.description) + '</p>' : '';
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
   const deadline = deadlineLabel ? '<span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span>' : '';
   const assignee = task.responsible ? '<span class="assignee">' + escapeHtml(task.responsible) + '</span>' : '<span class="assignee empty">' + t('notAssigned') + '</span>';
-  return '<article class="task-card priority-' + priority + '" draggable="true" data-task="' + task.id + '"><h3>' + escapeHtml(task.title) + '</h3>' + description + deadline + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer></article>';
+  const details = completed ? '' : description + deadline + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
+  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><h3>' + escapeHtml(task.title) + '</h3>' + details + '</article>';
 }
 function localDateValue(iso) {
   if (!iso || Number.isNaN(new Date(iso).getTime())) return '';
