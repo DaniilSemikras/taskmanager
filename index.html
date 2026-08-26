@@ -117,6 +117,11 @@
       </div>
       <section class="summary-filters"><select id="summary-date-mode"><option value="created" data-i18n="createdDate">По дате создания</option><option value="completed" data-i18n="completedDate">По дате выполнения</option></select><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-summary-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-summary-period="today" data-i18n="today">Сьогодні</button><button type="button" data-summary-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-summary-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-summary-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="summary-custom-range" hidden><input id="summary-date-from" type="date"><span>—</span><input id="summary-date-to" type="date"></div></div><button type="button" id="clear-summary-filters" data-i18n="clearFilters">Сбросить</button></section>
       <section class="summary-stats" id="summary-stats"></section>
+      <section class="analytics-dashboard" aria-label="Аналітика задач">
+        <article class="analytics-card completion-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="completionRate">Виконано</h2></div><span id="summary-completion-label">0%</span></header><div class="completion-content"><div class="completion-donut" id="summary-completion-chart"><div><b>0%</b><span data-i18n="done">Готово</span></div></div><div class="completion-legend" id="summary-completion-legend"></div></div></article>
+        <article class="analytics-card status-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="statusDistribution">Розподіл за статусами</h2></div><span class="analytics-hint" data-i18n="analyticsHint">Дані оновлюються разом із фільтром періоду.</span></header><div class="status-chart" id="summary-status-chart"></div></article>
+      </section>
+      <section class="analytics-card activity-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="taskActivity">Активність за 7 днів</h2></div><div class="chart-legend"><span class="created"><i></i><b data-i18n="createdTasks">Створено</b></span><span class="closed"><i></i><b data-i18n="closedTasks">Завершено</b></span></div></header><div class="activity-chart" id="summary-activity-chart"></div></section>
       <section class="summary-panel"><header><h2 data-i18n="byPerson">По участникам</h2><span data-i18n="doneTasks">Выполненные задачи</span></header><div class="summary-table-wrap"><table class="summary-table"><thead><tr><th data-i18n="person">Участник</th><th data-i18n="todo">Нужно сделать</th><th data-i18n="doing">В процессе</th><th data-i18n="done">Готово</th><th data-i18n="total">Всего</th></tr></thead><tbody id="summary-by-person"></tbody></table></div></section>
       <section class="completed-panel"><header><h2 data-i18n="completedList">Что уже сделано</h2></header><div id="completed-tasks"></div></section>
     </section>
@@ -154,6 +159,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=ui-copy-1"></script>
+  <script src="script.js?v=analytics-1"></script>
 </body>
 </html>
