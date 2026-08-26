@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="teams-calendar.css?v=stability-3">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
   <link rel="stylesheet" href="board-tools.css?v=stability-3">
-  <link rel="stylesheet" href="admin-teams.css?v=stability-3">
+  <link rel="stylesheet" href="admin-teams.css?v=account-controls-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -107,7 +107,7 @@
       </div>
       <form class="add-team" id="team-form"><input name="name" required autocomplete="off" data-i18n-placeholder="teamNamePlaceholder" placeholder="Назва команди"><button type="submit">＋ <span data-i18n="addTeam">Створити команду</span></button></form>
       <section class="teams-list" id="teams-list" aria-label="Команди"></section>
-      <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Користувачі</h2><p class="account-access-hint" data-i18n="accountAccessHint">Призначай роль, команду та пов’язаний профіль учасника.</p></div></header><form class="add-account" id="account-form"><input name="login" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, user123"><input name="password" required minlength="8" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 8 символів"><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Додати користувача</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
+      <section class="account-management"><header><div><p class="eyebrow" data-i18n="accessControl">КЕРУВАННЯ ДОСТУПОМ</p><h2 data-i18n="accounts">Користувачі</h2><p class="account-access-hint" data-i18n="accountAccessHint">Призначай роль та команду користувача.</p></div></header><form class="add-account" id="account-form"><input name="login" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, user123"><input name="password" required minlength="8" type="password" autocomplete="new-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Щонайменше 8 символів"><select name="role"><option value="member" data-i18n="member">Учасник</option><option value="admin" data-i18n="administrator">Адміністратор</option></select><button type="submit">＋ <span data-i18n="addAccount">Додати користувача</span></button></form><section class="accounts-list" id="accounts-list"></section></section>
     </section>
 
     <section class="screen" id="summary-screen" hidden>
@@ -159,6 +159,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=admin-navigation-1"></script>
+  <script src="script.js?v=account-controls-1"></script>
 </body>
 </html>

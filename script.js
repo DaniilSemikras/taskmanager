@@ -37,10 +37,10 @@ Object.assign(translations.en, {
   login: 'Login', loginPlaceholder: 'For example, user123', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.', noMeetingsDay: 'There are no meetings on this day.'
 });
 Object.assign(translations.uk, {
-  team: 'Команда', noTeam: 'Без команди', linkedPerson: 'Пов’язаний учасник', accountRole: 'Роль', accountAccessHint: 'Призначай роль, команду та пов’язаний профіль учасника.', saveAccess: 'Зберегти доступ', teamCalendar: 'Календар команди', meetingTeamHint: 'Учасники команди бачать цю зустріч у календарі.', accessSaved: 'Доступ оновлено', noCalendarTeam: 'Щоб створювати зустрічі, попросіть адміністратора призначити вам команду.'
+  team: 'Команда', noTeam: 'Без команди', accountRole: 'Роль', accountAccessHint: 'Призначай роль та команду користувача.', saveAccess: 'Зберегти доступ', teamCalendar: 'Календар команди', meetingTeamHint: 'Учасники команди бачать цю зустріч у календарі.', accessSaved: 'Доступ оновлено', noCalendarTeam: 'Щоб створювати зустрічі, попросіть адміністратора призначити вам команду.'
 });
 Object.assign(translations.en, {
-  team: 'Team', noTeam: 'No team', linkedPerson: 'Linked person', accountRole: 'Role', accountAccessHint: 'Assign a role, team, and linked person profile.', saveAccess: 'Save access', teamCalendar: 'Team calendar', meetingTeamHint: 'Everyone on this team can see the meeting in their calendar.', accessSaved: 'Access updated', noCalendarTeam: 'Ask an administrator to assign you to a team before creating meetings.'
+  team: 'Team', noTeam: 'No team', accountRole: 'Role', accountAccessHint: 'Assign a role and team to a user.', saveAccess: 'Save access', teamCalendar: 'Team calendar', meetingTeamHint: 'Everyone on this team can see the meeting in their calendar.', accessSaved: 'Access updated', noCalendarTeam: 'Ask an administrator to assign you to a team before creating meetings.'
 });
 Object.assign(translations.uk, {
   myTeam: 'Моя команда', teamViewHint: 'Тут лише учасники вашої команди та їхні контакти.', teamMembers: 'учасники команди', noTeamAssigned: 'Команду ще не призначено', noTeamAssignedHint: 'Попросіть адміністратора додати вас до команди.'
@@ -363,12 +363,6 @@ function teamOptions(selectedId, includeEmpty) {
     return '<option value="' + escapeHtml(String(team.id)) + '"' + (String(team.id) === selected ? ' selected' : '') + '>' + escapeHtml(team.name) + '</option>';
   }).join('');
 }
-function personOptions(selectedId) {
-  const selected = String(selectedId || '');
-  return '<option value="">' + t('noLinkedPerson') + '</option>' + state.people.map(function (person) {
-    return '<option value="' + person.id + '"' + (String(person.id) === selected ? ' selected' : '') + '>' + escapeHtml(person.name || person.email) + '</option>';
-  }).join('');
-}
 function renderMeetingTeamPicker(selectedId) {
   if (!meetingTeam) return;
   const ownTeam = currentTeamId();
@@ -636,7 +630,7 @@ function renderAccounts() {
     const roleKey = account.role === 'admin' ? 'administrator' : 'member';
     const ownAccount = Boolean(currentUser && account.id === currentUser.id);
     const roleOptions = '<option value="member"' + (account.role !== 'admin' ? ' selected' : '') + '>' + t('member') + '</option><option value="admin"' + (account.role === 'admin' ? ' selected' : '') + '>' + t('administrator') + '</option>';
-    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div><div class="account-access-controls"><label class="account-control-label"><span>' + t('accountRole') + '</span><select data-account-role="' + account.id + '"' + (ownAccount ? ' disabled' : '') + '>' + roleOptions + '</select></label><label class="account-control-label"><span>' + t('team') + '</span><select data-account-team="' + account.id + '">' + teamOptions(account.teamId, true) + '</select></label><label class="account-control-label"><span>' + t('linkedPerson') + '</span><select data-account-person="' + account.id + '">' + personOptions(account.personId) + '</select></label><button type="button" data-save-account-access="' + account.id + '">' + t('saveAccess') + '</button></div></article>';
+    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div><div class="account-access-controls"><label class="account-control-label"><span>' + t('accountRole') + '</span><select data-account-role="' + account.id + '"' + (ownAccount ? ' disabled' : '') + '>' + roleOptions + '</select></label><label class="account-control-label"><span>' + t('team') + '</span><select data-account-team="' + account.id + '">' + teamOptions(account.teamId, true) + '</select></label><button type="button" data-save-account-access="' + account.id + '">' + t('saveAccess') + '</button></div></article>';
   }).join('');
 }
 function syncPersonTeamMembership(personId, teamId) {
@@ -659,12 +653,11 @@ async function saveAccountAccess(accountId) {
   const account = accounts.find(function (item) { return item.id === accountId; });
   const roleControl = document.querySelector('[data-account-role="' + accountId + '"]');
   const teamControl = document.querySelector('[data-account-team="' + accountId + '"]');
-  const personControl = document.querySelector('[data-account-person="' + accountId + '"]');
-  if (!account || !roleControl || !teamControl || !personControl) return;
+  if (!account || !roleControl || !teamControl) return;
   const update = {
     role: account.id === currentUser.id ? account.role : roleControl.value,
     team_id: teamControl.value || null,
-    person_id: personControl.value || null
+    person_id: account.personId || null
   };
   setSaveStatus('dataSaving');
   const response = await supabaseClient.from('profiles').update(update).eq('id', accountId);
