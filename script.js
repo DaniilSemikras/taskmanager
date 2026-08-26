@@ -14,7 +14,7 @@ const translations = {
     taskDescriptionPlaceholder: 'Опис завдання: що саме потрібно зробити?', addTask: 'Додати завдання', show: 'ПОКАЗАТИ', allTasks: 'Усі завдання', noResponsible: 'Без відповідального',
     myMeetings: 'МОЇ ЗУСТРІЧІ', calendarHint: 'Додавай зустрічі з датою і часом — вони одразу з’являться в календарі.', meetingTitle: 'Назва зустрічі', meetingNotesPlaceholder: 'Нотатки до зустрічі (необов’язково)', addMeeting: 'Додати зустріч', systemTime: 'Системний час', people: 'Учасники', peopleDirectory: 'БАЗА УЧАСНИКІВ', peopleHint: 'Зберігай контакти команди й швидко знаходь їх за ім’ям, поштою або роллю.', personNamePlaceholder: 'Ім’я та прізвище', emailPlaceholder: 'Пошта', rolePlaceholder: 'Роль або посада', phonePlaceholder: 'Телефон', addPerson: 'Додати учасника', savePerson: 'Зберегти учасника', peopleSearchPlaceholder: 'Пошук за ім’ям, поштою або роллю', noPeople: 'База учасників поки порожня. Додай перший контакт.', editPerson: 'Редагувати', deletePerson: 'Видалити', personOne: 'учасник', personFew: 'учасники', personMany: 'учасників', admin: 'Адмін', adminArea: 'АДМІН-ПАНЕЛЬ', teamManagement: 'Керування командами', teamManagementHint: 'Створюй команди та додавай до них учасників із бази.', teamNamePlaceholder: 'Назва команди', addTeam: 'Створити команду', deleteTeam: 'Видалити', addMember: 'Додати учасника', selectPerson: 'Обрати учасника', noTeams: 'Команд поки немає. Створи першу команду.', noTeamMembers: 'У цій команді поки немає учасників.', teamOne: 'команда', teamFew: 'команди', teamMany: 'команд', welcome: 'Моя дошка', loginHint: 'Увійдіть у свій простір.', login: 'Логін', password: 'Пароль', repeatPassword: 'Повторіть пароль', loginPlaceholder: 'Логін', passwordPlaceholder: 'Щонайменше 4 символи', createAdmin: 'Створити адміністратора', signIn: 'Увійти', signOut: 'Вийти', accessControl: 'КЕРУВАННЯ ДОСТУПОМ', accounts: 'Акаунти', addAccount: 'Створити акаунт', noLinkedPerson: 'Без привʼязки до учасника', member: 'Учасник', administrator: 'Адміністратор', invalidCredentials: 'Неправильний логін або пароль.', passwordMismatch: 'Паролі не збігаються.', loginTaken: 'Такий логін уже існує.', accountOne: 'акаунт', accountFew: 'акаунти', accountMany: 'акаунтів',
     personalNotes: 'ОСОБИСТІ НОТАТКИ', notesHint: 'Зберігай головне одразу після дзвінка або зустрічі.', meetingTitlePlaceholder: 'Наприклад, розмова з клієнтом', whatImportant: 'Що важливо запам’ятати', noteTitle: 'Назва нотатки', newNote: 'Нова нотатка', notePlaceholder: 'Рішення, ідеї, наступні кроки — пиши як зручно', saveNote: 'Зберегти нотатку',
-    taskCard: 'КАРТКА ЗАВДАННЯ', edit: 'Редагування', close: 'Закрити', taskName: 'Назва завдання', description: 'Опис', taskDescPlaceholder: 'Що саме потрібно зробити?', deadline: 'Дедлайн', column: 'Колонка', cardColor: 'Колір картки', priority: 'Пріоритет', highPriority: 'Високий', mediumPriority: 'Середній', lowPriority: 'Низький', allPriorities: 'Усі пріоритети', notAssigned: 'Не призначено', cancel: 'Скасувати', saveChanges: 'Зберегти зміни', delete: 'Видалити',
+    taskCard: 'КАРТКА ЗАВДАННЯ', edit: 'Редагування', close: 'Закрити', taskName: 'Назва завдання', description: 'Опис', taskDescPlaceholder: 'Що саме потрібно зробити?', deadline: 'Дедлайн', mentionPeople: 'Введіть @, щоб відмітити учасника', noMentionMatches: 'У команді нікого не знайдено', column: 'Колонка', cardColor: 'Колір картки', priority: 'Пріоритет', highPriority: 'Високий', mediumPriority: 'Середній', lowPriority: 'Низький', allPriorities: 'Усі пріоритети', notAssigned: 'Не призначено', cancel: 'Скасувати', saveChanges: 'Зберегти зміни', delete: 'Видалити',
     meetingCard: 'ЗУСТРІЧ', meetingDetails: 'Деталі зустрічі', meetingNotes: 'Нотатки зустрічі', dateTime: 'Дата й час', startTime: 'Початок', endTime: 'Завершення', participants: 'Учасники', participantsPlaceholder: 'Знайти за ім’ям або поштою', noParticipantsFound: 'Нікого не знайдено. Додай контакт у вкладці «Учасники».', today: 'Сьогодні', newMeeting: 'Нова зустріч', eventNotesPlaceholder: 'Пиши все важливе: рішення, ідеї, домовленості, наступні кроки.', meetingHint: 'Після збереження нотатка одразу з’явиться у вкладці «Нотатки».', saveNotes: 'Зберегти зустріч',
     taskOne: 'завдання', taskFew: 'завдання', taskMany: 'завдань', noteOne: 'нотатка', noteFew: 'нотатки', noteMany: 'нотаток', eventOne: 'зустріч', eventFew: 'зустрічі', eventMany: 'зустрічей', of: 'з', from: 'Від', to: 'До', period: 'Період', allTime: 'Увесь час', last7Days: '7 днів', thisMonth: 'Місяць', customPeriod: 'Свій', createdDate: 'За датою створення', completedDate: 'За датою виконання', emptyColumn: 'Поки порожньо', noNotes: 'Нотаток поки немає. Збережи першу після зустрічі.', createTask: 'Створити завдання', newTask: 'Нове завдання', taskSearchPlaceholder: 'Пошук за назвою або описом', allColumns: 'Усі статуси', allColors: 'Усі кольори', clearFilters: 'Скинути', dropTaskHere: 'Відпустіть, щоб перенести сюди', summary: 'Зведення', workOverview: 'ЗВЕДЕННЯ РОБОТИ', summaryHeading: 'Хто що зробив', summaryHint: 'Дивись прогрес команди та список виконаних завдань.', byPerson: 'За учасниками', doneTasks: 'Виконані завдання', person: 'Учасник', total: 'Усього', completedList: 'Що вже зроблено', noCompletedTasks: 'Виконаних завдань поки немає.', moveTask: 'Перемістити завдання', deleteTask: 'Видалити завдання', deleteNote: 'Видалити нотатку', weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
   },
@@ -25,7 +25,7 @@ const translations = {
     taskDescriptionPlaceholder: 'Task description: what needs to be done?', addTask: 'Add task', show: 'SHOW', allTasks: 'All tasks', noResponsible: 'No assignee',
     myMeetings: 'MY MEETINGS', calendarHint: 'Add meetings with date and time — they will appear in the calendar right away.', meetingTitle: 'Meeting title', meetingNotesPlaceholder: 'Meeting notes (optional)', addMeeting: 'Add meeting', systemTime: 'System time', people: 'People', peopleDirectory: 'PEOPLE DIRECTORY', peopleHint: 'Store team contacts and find them quickly by name, email, or role.', personNamePlaceholder: 'Full name', emailPlaceholder: 'Email', rolePlaceholder: 'Role or job title', phonePlaceholder: 'Phone', addPerson: 'Add person', savePerson: 'Save person', peopleSearchPlaceholder: 'Search by name, email, or role', noPeople: 'The people directory is empty. Add your first contact.', editPerson: 'Edit', deletePerson: 'Delete', personOne: 'person', personFew: 'people', personMany: 'people', admin: 'Admin', adminArea: 'ADMIN AREA', teamManagement: 'Team management', teamManagementHint: 'Create teams and add people from the directory.', teamNamePlaceholder: 'Team name', addTeam: 'Create team', deleteTeam: 'Delete', addMember: 'Add person', selectPerson: 'Choose a person', noTeams: 'There are no teams yet. Create the first one.', noTeamMembers: 'There are no people in this team yet.', teamOne: 'team', teamFew: 'teams', teamMany: 'teams', welcome: 'My board', loginHint: 'Sign in to your workspace.', login: 'Login', password: 'Password', repeatPassword: 'Repeat password', loginPlaceholder: 'Login', passwordPlaceholder: 'At least 4 characters', createAdmin: 'Create administrator', signIn: 'Sign in', signOut: 'Sign out', accessControl: 'ACCESS CONTROL', accounts: 'Accounts', addAccount: 'Create account', noLinkedPerson: 'No linked person', member: 'Member', administrator: 'Administrator', invalidCredentials: 'Incorrect login or password.', passwordMismatch: 'Passwords do not match.', loginTaken: 'This login already exists.', accountOne: 'account', accountFew: 'accounts', accountMany: 'accounts',
     personalNotes: 'PERSONAL NOTES', notesHint: 'Save the key points right after a call or meeting.', meetingTitlePlaceholder: 'For example, client call', whatImportant: 'What is important to remember', noteTitle: 'Note title', newNote: 'New note', notePlaceholder: 'Decisions, ideas, next steps — write however you like', saveNote: 'Save note',
-    taskCard: 'TASK CARD', edit: 'Edit', close: 'Close', taskName: 'Task title', description: 'Description', taskDescPlaceholder: 'What exactly needs to be done?', deadline: 'Due date', column: 'Column', cardColor: 'Card color', priority: 'Priority', highPriority: 'High', mediumPriority: 'Medium', lowPriority: 'Low', allPriorities: 'All priorities', notAssigned: 'Not assigned', cancel: 'Cancel', saveChanges: 'Save changes', delete: 'Delete',
+    taskCard: 'TASK CARD', edit: 'Edit', close: 'Close', taskName: 'Task title', description: 'Description', taskDescPlaceholder: 'What exactly needs to be done?', deadline: 'Due date', mentionPeople: 'Type @ to mention a team member', noMentionMatches: 'No team members found', column: 'Column', cardColor: 'Card color', priority: 'Priority', highPriority: 'High', mediumPriority: 'Medium', lowPriority: 'Low', allPriorities: 'All priorities', notAssigned: 'Not assigned', cancel: 'Cancel', saveChanges: 'Save changes', delete: 'Delete',
     meetingCard: 'MEETING', meetingDetails: 'Meeting details', meetingNotes: 'Meeting notes', dateTime: 'Date and time', startTime: 'Starts', endTime: 'Ends', participants: 'Participants', participantsPlaceholder: 'Find by name or email', noParticipantsFound: 'No one found. Add a contact in the People tab.', today: 'Today', newMeeting: 'New meeting', eventNotesPlaceholder: 'Write down everything important: decisions, ideas, agreements, and next steps.', meetingHint: 'After saving, the note will appear in the “Notes” tab.', saveNotes: 'Save meeting',
     taskOne: 'task', taskFew: 'tasks', taskMany: 'tasks', noteOne: 'note', noteFew: 'notes', noteMany: 'notes', eventOne: 'meeting', eventFew: 'meetings', eventMany: 'meetings', of: 'of', from: 'From', to: 'To', period: 'Period', allTime: 'All time', last7Days: '7 days', thisMonth: 'This month', customPeriod: 'Custom', createdDate: 'Created date', completedDate: 'Completed date', emptyColumn: 'Nothing here yet', noNotes: 'No notes yet. Save your first one after a meeting.', createTask: 'Create task', newTask: 'New task', taskSearchPlaceholder: 'Search by title or description', allColumns: 'All statuses', allColors: 'All colors', clearFilters: 'Clear', dropTaskHere: 'Release to move here', summary: 'Summary', workOverview: 'WORK SUMMARY', summaryHeading: 'Who did what', summaryHint: 'See team progress and completed tasks.', byPerson: 'By person', doneTasks: 'Completed tasks', person: 'Person', total: 'Total', completedList: 'What is already done', noCompletedTasks: 'No completed tasks yet.', moveTask: 'Move task', deleteTask: 'Delete task', deleteNote: 'Delete note', weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   }
@@ -90,6 +90,7 @@ const taskDateTo = document.getElementById('task-date-to');
 const taskCustomRange = document.getElementById('task-custom-range');
 const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
+const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
 const noteEditor = document.getElementById('note-editor');
 const noteDetail = document.getElementById('note-detail');
 const eventEditor = document.getElementById('event-editor');
@@ -193,7 +194,7 @@ function normalizeState(saved) {
   const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
-      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '' });
+      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))) });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -342,6 +343,61 @@ function renderTaskResponsibleOptions(selectedName) {
   const names = Array.from(new Set(people.map(function (person) { return person.name; })));
   responsibleControl.innerHTML = '<option value="">' + t('notAssigned') + '</option>' + names.map(function (name) { return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>'; }).join('');
   responsibleControl.value = names.includes(selected) ? selected : '';
+}
+function taskMentionNames(task) {
+  return Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean)));
+}
+function extractTaskMentions(description) {
+  const text = String(description || '').toLocaleLowerCase();
+  return taskResponsibleMembers().map(function (member) { return member.name; }).filter(function (name) {
+    const mention = '@' + name.toLocaleLowerCase();
+    let position = text.indexOf(mention);
+    while (position !== -1) {
+      const before = position === 0 ? '' : text[position - 1];
+      const after = text[position + mention.length] || '';
+      if ((!before || /\s/.test(before)) && (!after || /[\s.,!?:;)]/.test(after))) return true;
+      position = text.indexOf(mention, position + mention.length);
+    }
+    return false;
+  });
+}
+function taskMentionContext() {
+  const description = taskEditor && taskEditor.elements.description;
+  if (!description || typeof description.selectionStart !== 'number') return null;
+  const before = description.value.slice(0, description.selectionStart);
+  const match = before.match(/(?:^|\s)@([^\n@]*)$/);
+  if (!match) return null;
+  return { start: before.length - match[1].length - 1, end: description.selectionStart, query: match[1].trim() };
+}
+function hideTaskMentionSuggestions() {
+  if (!taskMentionSuggestions) return;
+  taskMentionSuggestions.hidden = true;
+  taskMentionSuggestions.innerHTML = '';
+}
+function renderTaskMentionSuggestions() {
+  const context = taskMentionContext();
+  if (!context || !taskMentionSuggestions) {
+    hideTaskMentionSuggestions();
+    return;
+  }
+  const query = context.query.toLocaleLowerCase();
+  const people = taskResponsibleMembers().filter(function (person) { return person.name.toLocaleLowerCase().includes(query); });
+  taskMentionSuggestions.hidden = false;
+  taskMentionSuggestions.innerHTML = people.length ? people.map(function (person) {
+    const details = person.email ? '<small>' + escapeHtml(person.email) + '</small>' : '';
+    return '<button type="button" role="option" data-task-mention="' + escapeHtml(person.name) + '"><b>@' + escapeHtml(person.name) + '</b>' + details + '</button>';
+  }).join('') : '<p>' + t('noMentionMatches') + '</p>';
+}
+function insertTaskMention(name) {
+  const context = taskMentionContext();
+  const description = taskEditor && taskEditor.elements.description;
+  if (!context || !description) return;
+  const mention = '@' + name + ' ';
+  description.value = description.value.slice(0, context.start) + mention + description.value.slice(context.end);
+  const caret = context.start + mention.length;
+  description.focus();
+  description.setSelectionRange(caret, caret);
+  hideTaskMentionSuggestions();
 }
 function teamName(id) {
   const team = teamForId(id);
@@ -519,7 +575,9 @@ function taskMarkup(task) {
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
   const deadline = deadlineLabel ? '<span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span>' : '';
   const assignee = task.responsible ? '<span class="assignee">' + escapeHtml(task.responsible) + '</span>' : '<span class="assignee empty">' + t('notAssigned') + '</span>';
-  const details = completed ? '' : description + deadline + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
+  const mentions = taskMentionNames(task);
+  const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
+  const details = completed ? '' : description + deadline + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
   return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><h3>' + escapeHtml(task.title) + '</h3>' + details + '</article>';
 }
 function localDateValue(iso) {
@@ -1164,6 +1222,7 @@ function updateTaskEditorUi() {
 }
 function closeTaskDetail() {
   openTaskId = null;
+  hideTaskMentionSuggestions();
   taskDetail.hidden = true;
 }
 function openNewNote() {
@@ -1364,7 +1423,8 @@ accountForm.addEventListener('submit', async function (event) {
 taskEditor.addEventListener('submit', function (event) {
   event.preventDefault();
   const form = new FormData(taskEditor);
-  const details = { title: form.get('title').trim(), description: form.get('description').trim(), responsible: form.get('responsible').trim(), dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
+  const description = form.get('description').trim();
+  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsible: form.get('responsible').trim(), dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
   if (openTaskId) {
     state.tasks = state.tasks.map(function (task) {
       if (task.id !== openTaskId) return task;
@@ -1377,6 +1437,15 @@ taskEditor.addEventListener('submit', function (event) {
   saveState();
   closeTaskDetail();
   render();
+});
+taskEditor.elements.description.addEventListener('input', renderTaskMentionSuggestions);
+taskEditor.elements.description.addEventListener('click', renderTaskMentionSuggestions);
+taskMentionSuggestions.addEventListener('mousedown', function (event) {
+  event.preventDefault();
+});
+taskMentionSuggestions.addEventListener('click', function (event) {
+  const option = event.target.closest('[data-task-mention]');
+  if (option) insertTaskMention(option.dataset.taskMention);
 });
 eventEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
