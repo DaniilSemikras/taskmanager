@@ -60,6 +60,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   workspaceAudit: 'WORKSPACE CONTROL', activityOverview: 'Notifications and actions', activityOverviewHint: 'A summary of everything happening in the workspace.', allNotifications: 'All notifications', actionLog: 'Action log', totalNotifications: 'Total notifications', unreadNotifications: 'Unread', recordedActions: 'Recorded actions', noAdminNotifications: 'No notifications yet.', noActivity: 'No actions yet.', deleteNotification: 'Delete notification', notificationRecipient: 'Recipient', systemActor: 'System', actionTaskCreated: 'created a task', actionTaskUpdated: 'updated a task', actionTaskMoved: 'changed a task status', actionTaskDeleted: 'deleted a task', actionTaskArchived: 'archived a task', actionTaskAutoArchived: 'automatically archived a task', actionNoteSaved: 'saved a note', actionNoteDeleted: 'deleted a note', actionMeetingSaved: 'saved a meeting', actionMeetingDeleted: 'deleted a meeting', actionMeetingCompleted: 'completed a meeting', actionPersonSaved: 'saved a person', actionPersonDeleted: 'deleted a person', actionTeamCreated: 'created a team', actionTeamChanged: 'changed team membership', actionTeamDeleted: 'deleted a team', actionAccessChanged: 'changed user access', actionAccountCreated: 'created a user', actionNotificationDeleted: 'deleted a notification', actionNotificationsRead: 'marked all notifications as read'
 });
+Object.assign(translations.uk, {
+  attachments: 'Вкладення', addFiles: 'Додати файли', downloadFile: 'Відкрити', removeFile: 'Видалити', pendingUpload: 'Буде завантажено після збереження', filesHint: 'До 10 МБ на файл', fileTooLarge: 'Файл завеликий. Максимум 10 МБ.', fileUploadFailed: 'Не вдалося завантажити файл. Перевірте сховище.', uploadingFiles: 'Завантаження файлів…'
+});
+Object.assign(translations.en, {
+  attachments: 'Attachments', addFiles: 'Add files', downloadFile: 'Open', removeFile: 'Delete', pendingUpload: 'Will upload after saving', filesHint: 'Up to 10 MB per file', fileTooLarge: 'The file is too large. Maximum size is 10 MB.', fileUploadFailed: 'Could not upload the file. Check storage.', uploadingFiles: 'Uploading files…'
+});
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -101,6 +107,10 @@ const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
 const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
 const taskResponsibleOptions = document.getElementById('task-responsible-options');
+const taskLinkPreview = document.getElementById('task-link-preview');
+const taskFileInput = document.getElementById('task-file-input');
+const taskFileList = document.getElementById('task-file-list');
+const taskFilesMessage = document.getElementById('task-files-message');
 const notificationButton = document.getElementById('notification-button');
 const notificationsPanel = document.getElementById('notifications-panel');
 const notificationsList = document.getElementById('notifications-list');
@@ -136,6 +146,7 @@ const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const appbarMenu = document.getElementById('appbar-menu');
 let dragId = null;
 let openTaskId = null;
+let pendingTaskFiles = [];
 let openEventId = null;
 let openNoteId = null;
 let onlyMyTasks = false;
@@ -154,6 +165,10 @@ let saveToastTimer = null;
 let saveNotificationsEnabled = false;
 let archiveCheckTimer = null;
 let meetingEndTimer = null;
+let notificationPollTimer = null;
+let notificationAudioContext = null;
+let notificationTrackingReady = false;
+let knownNotificationIds = new Set();
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
 let calendarEvents = [];
@@ -213,7 +228,8 @@ function normalizeState(saved) {
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
       const responsibles = normalizeResponsibleNames(Array.isArray(task.responsibles) && task.responsibles.length ? task.responsibles : task.responsible);
-      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))) });
+      const attachments = (Array.isArray(task.attachments) ? task.attachments : []).filter(function (file) { return file && file.id && file.path; }).map(function (file) { return { id: String(file.id), name: String(file.name || 'file'), path: String(file.path), size: Number(file.size) || 0, type: String(file.type || ''), createdAt: file.createdAt || new Date().toISOString(), uploadedBy: String(file.uploadedBy || '') }; });
+      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -426,6 +442,62 @@ function accountNameById(id) {
   const account = accounts.find(function (item) { return String(item.id) === String(id); });
   return account ? account.login : String(id || '');
 }
+function initializeNotificationTracking() {
+  knownNotificationIds = new Set(currentUserNotifications().map(function (item) { return item.id; }));
+  notificationTrackingReady = true;
+}
+function unlockNotificationSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  if (!notificationAudioContext) notificationAudioContext = new AudioContextClass();
+  if (notificationAudioContext.state === 'suspended') notificationAudioContext.resume().catch(function () {});
+}
+function playNotificationSound() {
+  unlockNotificationSound();
+  if (!notificationAudioContext || notificationAudioContext.state !== 'running') return;
+  const now = notificationAudioContext.currentTime;
+  const gain = notificationAudioContext.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+  gain.connect(notificationAudioContext.destination);
+  [660, 880].forEach(function (frequency, index) {
+    const oscillator = notificationAudioContext.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    oscillator.connect(gain);
+    oscillator.start(now + index * 0.1);
+    oscillator.stop(now + 0.28 + index * 0.1);
+  });
+}
+function detectNewNotificationSound(notifications) {
+  const ids = new Set(notifications.map(function (item) { return item.id; }));
+  if (notificationTrackingReady && notifications.some(function (item) { return !item.read && !knownNotificationIds.has(item.id); })) playNotificationSound();
+  knownNotificationIds = ids;
+  notificationTrackingReady = true;
+}
+async function pollWorkspaceNotifications() {
+  if (!supabaseClient || !currentUser || saveStatusKey === 'dataSaving') return;
+  const response = await supabaseClient.from('workspace_state').select('state').eq('id', 'main').single();
+  if (response.error || !response.data) return;
+  const remoteState = normalizeState(response.data.state);
+  const remoteVersion = JSON.stringify([remoteState.notifications || [], remoteState.activityLog || []]);
+  const localVersion = JSON.stringify([state.notifications || [], state.activityLog || []]);
+  if (remoteVersion === localVersion) return;
+  state = remoteState;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  render();
+}
+function startNotificationPolling() {
+  clearInterval(notificationPollTimer);
+  notificationPollTimer = setInterval(pollWorkspaceNotifications, 8000);
+}
+function stopNotificationPolling() {
+  clearInterval(notificationPollTimer);
+  notificationPollTimer = null;
+  notificationTrackingReady = false;
+  knownNotificationIds = new Set();
+}
 function currentUserNotifications() {
   if (!currentUser) return [];
   return (state.notifications || []).filter(function (notification) { return notification.recipientId === String(currentUser.id); }).sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
@@ -433,6 +505,7 @@ function currentUserNotifications() {
 function renderNotifications() {
   if (!notificationsList || !notificationCount) return;
   const notifications = currentUserNotifications();
+  detectNewNotificationSound(notifications);
   const unread = notifications.filter(function (notification) { return !notification.read; }).length;
   notificationCount.hidden = unread === 0;
   notificationCount.textContent = unread > 99 ? '99+' : String(unread);
@@ -590,6 +663,8 @@ async function hydrateCalendarEvents() {
 async function hydrateWorkspace() {
   await hydrateDatabase();
   await hydrateCalendarEvents();
+  initializeNotificationTracking();
+  startNotificationPolling();
 }
 async function saveCalendarEvent(event) {
   if (!supabaseClient || !currentUser) return false;
@@ -664,6 +739,7 @@ function setAuthMode(mode) {
   document.querySelectorAll('[data-auth-mode]').forEach(function (button) { button.classList.toggle('active', button.dataset.authMode === authMode); });
 }
 function startSession(account) {
+  stopNotificationPolling();
   currentUser = account;
   saveNotificationsEnabled = false;
   onlyMyTasks = false;
@@ -711,6 +787,97 @@ function escapeHtml(value) {
   element.textContent = value;
   return element.innerHTML;
 }
+function textWithLinks(value) {
+  const text = String(value || '');
+  const pattern = /https?:\/\/[^\s<>"']+/gi;
+  let result = '';
+  let offset = 0;
+  let match;
+  while ((match = pattern.exec(text))) {
+    result += escapeHtml(text.slice(offset, match.index));
+    result += '<a class="inline-link" href="' + escapeHtml(match[0]) + '" target="_blank" rel="noopener noreferrer">link</a>';
+    offset = match.index + match[0].length;
+  }
+  return result + escapeHtml(text.slice(offset));
+}
+function renderTaskLinkPreview() {
+  if (!taskLinkPreview || !taskEditor) return;
+  const links = Array.from(new Set(String(taskEditor.elements.description.value || '').match(/https?:\/\/[^\s<>"']+/gi) || []));
+  taskLinkPreview.innerHTML = links.map(function (url) { return '<a class="inline-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">link</a>'; }).join('');
+}
+function formatFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function setTaskFilesMessage(key, error) {
+  if (!taskFilesMessage) return;
+  taskFilesMessage.textContent = key ? t(key) : t('filesHint');
+  taskFilesMessage.classList.toggle('error', Boolean(error));
+}
+function renderTaskFiles(task) {
+  if (!taskFileList) return;
+  const stored = task && Array.isArray(task.attachments) ? task.attachments : [];
+  const savedMarkup = stored.map(function (file) {
+    const details = formatFileSize(file.size);
+    return '<article class="task-file-item"><span class="task-file-name">📎 ' + escapeHtml(file.name) + (details ? ' · ' + escapeHtml(details) : '') + '</span><div class="task-file-actions"><button type="button" data-open-task-file="' + escapeHtml(file.id) + '" data-task-id="' + task.id + '">' + t('downloadFile') + '</button><button type="button" class="remove-file" data-delete-task-file="' + escapeHtml(file.id) + '" data-task-id="' + task.id + '" aria-label="' + escapeHtml(t('removeFile')) + '">×</button></div></article>';
+  }).join('');
+  const pendingMarkup = pendingTaskFiles.map(function (file, index) {
+    return '<article class="task-file-item pending"><span class="task-file-name">📎 ' + escapeHtml(file.name) + ' · ' + escapeHtml(t('pendingUpload')) + '</span><div class="task-file-actions"><button type="button" class="remove-file" data-remove-pending-file="' + index + '" aria-label="' + escapeHtml(t('removeFile')) + '">×</button></div></article>';
+  }).join('');
+  taskFileList.innerHTML = savedMarkup + pendingMarkup;
+  setTaskFilesMessage('', false);
+}
+async function uploadTaskFiles(taskId, files) {
+  if (!files.length) return [];
+  if (!supabaseClient || !currentUser) return null;
+  setTaskFilesMessage('uploadingFiles', false);
+  const uploaded = [];
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
+    const safeName = file.name.replace(/[^A-Za-z0-9._-]+/g, '-').slice(-100) || 'file';
+    const path = 'workspace/tasks/' + taskId + '/' + Date.now() + '-' + index + '-' + Math.random().toString(36).slice(2, 8) + '-' + safeName;
+    const response = await supabaseClient.storage.from('task-files').upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || undefined });
+    if (response.error) {
+      if (uploaded.length) await supabaseClient.storage.from('task-files').remove(uploaded.map(function (item) { return item.path; }));
+      setTaskFilesMessage('fileUploadFailed', true);
+      return null;
+    }
+    uploaded.push({ id: String(Date.now()) + '-' + index + '-' + Math.random().toString(36).slice(2, 7), name: file.name, path: path, size: file.size, type: file.type || '', createdAt: new Date().toISOString(), uploadedBy: String(currentUser.id || '') });
+  }
+  return uploaded;
+}
+async function openTaskFile(taskId, fileId) {
+  const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
+  const file = task && (task.attachments || []).find(function (item) { return item.id === String(fileId); });
+  if (!file || !supabaseClient) return;
+  const response = await supabaseClient.storage.from('task-files').createSignedUrl(file.path, 300);
+  if (response.error || !response.data || !response.data.signedUrl) {
+    setTaskFilesMessage('fileUploadFailed', true);
+    return;
+  }
+  window.open(response.data.signedUrl, '_blank', 'noopener');
+}
+async function deleteTaskFile(taskId, fileId) {
+  const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
+  const file = task && (task.attachments || []).find(function (item) { return item.id === String(fileId); });
+  if (!task || !file || !supabaseClient) return;
+  const response = await supabaseClient.storage.from('task-files').remove([file.path]);
+  if (response.error) {
+    setTaskFilesMessage('fileUploadFailed', true);
+    return;
+  }
+  state.tasks = state.tasks.map(function (item) { return item.id === task.id ? Object.assign({}, item, { attachments: (item.attachments || []).filter(function (attachment) { return attachment.id !== file.id; }) }) : item; });
+  recordActivity('taskUpdated', task.title);
+  saveState();
+  render();
+  renderTaskFiles(state.tasks.find(function (item) { return item.id === task.id; }));
+}
+async function removeStoredTaskFiles(task) {
+  const paths = task && Array.isArray(task.attachments) ? task.attachments.map(function (file) { return file.path; }).filter(Boolean) : [];
+  if (!paths.length || !supabaseClient) return;
+  await supabaseClient.storage.from('task-files').remove(paths);
+}
 function dateLabel(iso) {
   return new Intl.DateTimeFormat(t('locale'), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 }
@@ -741,14 +908,15 @@ function taskDeadlineState(task) {
 function taskMarkup(task) {
   const priority = taskPriority(task);
   const completed = task.column === 'done';
-  const description = task.description ? '<p class="task-description">' + escapeHtml(task.description) + '</p>' : '';
+  const description = task.description ? '<p class="task-description">' + textWithLinks(task.description) + '</p>' : '';
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
   const deadline = deadlineLabel ? '<span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span>' : '';
   const responsibles = taskResponsibleNames(task);
   const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
   const mentions = taskMentionNames(task);
   const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
-  const details = completed ? '' : description + deadline + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
+  const files = Array.isArray(task.attachments) && task.attachments.length ? '<span class="task-files-count">📎 ' + task.attachments.length + '</span>' : '';
+  const details = completed ? '' : description + deadline + files + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
   return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><h3>' + escapeHtml(task.title) + '</h3>' + details + '</article>';
 }
 function localDateValue(iso) {
@@ -852,7 +1020,7 @@ function renderNotes() {
   noteList.innerHTML = visibleNotes.map(function (note) {
     const id = escapeHtml(String(note.id));
     const pending = note.calendarEvent && !(note.text || '').trim();
-    const content = pending ? '<p class="meeting-note-pending">' + t('meetingNotePending') + '</p>' : '<p>' + escapeHtml(note.text) + '</p>';
+    const content = pending ? '<p class="meeting-note-pending">' + t('meetingNotePending') + '</p>' : '<p>' + textWithLinks(note.text) + '</p>';
     const actions = pending ? '' : '<footer class="note-actions"><button class="create-task" data-create-task-from-note="' + id + '">＋ ' + t('createTask') + '</button></footer>';
     return '<article class="note' + (pending ? ' pending-meeting-note' : '') + '" data-note="' + id + '"><header><div><h3>' + escapeHtml(note.title) + '</h3><time>' + dateLabel(note.createdAt) + '</time></div><button class="delete" data-delete-note="' + id + '" aria-label="' + t('deleteNote') + '">×</button></header>' + content + actions + '</article>';
   }).join('');
@@ -1414,6 +1582,7 @@ function showTab(tab) {
 function openTask(id) {
   const task = state.tasks.find(function (item) { return item.id === Number(id); });
   if (!task) return;
+  pendingTaskFiles = [];
   openTaskId = task.id;
   taskEditor.elements.title.value = task.title || '';
   taskEditor.elements.description.value = task.description || '';
@@ -1422,15 +1591,20 @@ function openTask(id) {
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
   updateTaskEditorUi();
+  renderTaskLinkPreview();
+  renderTaskFiles(task);
   taskDetail.hidden = false;
 }
 function openNewTask(column) {
+  pendingTaskFiles = [];
   openTaskId = null;
   taskEditor.reset();
   renderTaskResponsibleOptions('');
   taskEditor.elements.column.value = column || 'todo';
   taskEditor.elements.priority.value = 'medium';
   updateTaskEditorUi();
+  renderTaskLinkPreview();
+  renderTaskFiles(null);
   taskDetail.hidden = false;
 }
 function updateTaskEditorUi() {
@@ -1442,6 +1616,8 @@ function updateTaskEditorUi() {
   document.getElementById('archive-open-task').hidden = creating || !task || task.column !== 'done';
 }
 function closeTaskDetail() {
+  pendingTaskFiles = [];
+  if (taskFileInput) taskFileInput.value = '';
   openTaskId = null;
   hideTaskMentionSuggestions();
   taskDetail.hidden = true;
@@ -1648,12 +1824,20 @@ accountForm.addEventListener('submit', async function (event) {
   await saveState(true);
   render();
 });
-taskEditor.addEventListener('submit', function (event) {
+taskEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
   const form = new FormData(taskEditor);
   const description = form.get('description').trim();
   const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
   const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
+  const taskId = openTaskId || Date.now();
+  const saveButton = document.getElementById('save-task-detail');
+  saveButton.disabled = true;
+  const uploadedFiles = await uploadTaskFiles(taskId, pendingTaskFiles);
+  if (uploadedFiles === null) {
+    saveButton.disabled = false;
+    return;
+  }
   let previousTask = null;
   let savedTask = null;
   if (openTaskId) {
@@ -1661,11 +1845,11 @@ taskEditor.addEventListener('submit', function (event) {
       if (task.id !== openTaskId) return task;
       const completedAt = details.column === 'done' && task.column !== 'done' ? new Date().toISOString() : (details.column === 'done' ? task.completedAt : null);
       previousTask = task;
-      savedTask = Object.assign({}, task, details, { completedAt: completedAt });
+      savedTask = Object.assign({}, task, details, { completedAt: completedAt, attachments: (task.attachments || []).concat(uploadedFiles) });
       return savedTask;
     });
   } else {
-    savedTask = Object.assign({ id: Date.now(), createdAt: new Date().toISOString(), completedAt: details.column === 'done' ? new Date().toISOString() : null }, details);
+    savedTask = Object.assign({ id: taskId, createdAt: new Date().toISOString(), completedAt: details.column === 'done' ? new Date().toISOString() : null, attachments: uploadedFiles }, details);
     state.tasks.unshift(savedTask);
   }
   const previousMentions = previousTask ? taskMentionNames(previousTask) : [];
@@ -1673,12 +1857,24 @@ taskEditor.addEventListener('submit', function (event) {
   addTaskNotifications('mention', savedTask, newMentions);
   if (previousTask && previousTask.column !== savedTask.column) addTaskNotifications('status', savedTask, taskResponsibleNames(savedTask).concat(taskMentionNames(savedTask)));
   recordActivity(previousTask ? (previousTask.column !== savedTask.column ? 'taskMoved' : 'taskUpdated') : 'taskCreated', savedTask.title);
+  pendingTaskFiles = [];
+  saveButton.disabled = false;
   saveState();
   closeTaskDetail();
   render();
 });
-taskEditor.elements.description.addEventListener('input', renderTaskMentionSuggestions);
+taskEditor.elements.description.addEventListener('input', function () { renderTaskMentionSuggestions(); renderTaskLinkPreview(); });
 taskEditor.elements.description.addEventListener('click', renderTaskMentionSuggestions);
+taskFileInput.addEventListener('change', function () {
+  const selected = Array.from(taskFileInput.files || []);
+  const valid = selected.filter(function (file) { return file.size <= 10 * 1024 * 1024; });
+  const hasOversized = valid.length !== selected.length;
+  pendingTaskFiles = pendingTaskFiles.concat(valid);
+  taskFileInput.value = '';
+  const task = state.tasks.find(function (item) { return item.id === openTaskId; });
+  renderTaskFiles(task || null);
+  if (hasOversized) setTaskFilesMessage('fileTooLarge', true);
+});
 taskMentionSuggestions.addEventListener('mousedown', function (event) {
   event.preventDefault();
 });
@@ -1747,6 +1943,19 @@ document.addEventListener('click', async function (event) {
     deleteCurrentNotification(button.dataset.deleteNotification);
     return;
   }
+  if (button.dataset.removePendingFile !== undefined) {
+    pendingTaskFiles.splice(Number(button.dataset.removePendingFile), 1);
+    renderTaskFiles(state.tasks.find(function (item) { return item.id === openTaskId; }) || null);
+    return;
+  }
+  if (button.dataset.openTaskFile) {
+    await openTaskFile(button.dataset.taskId, button.dataset.openTaskFile);
+    return;
+  }
+  if (button.dataset.deleteTaskFile) {
+    await deleteTaskFile(button.dataset.taskId, button.dataset.deleteTaskFile);
+    return;
+  }
   if (button.dataset.authMode) {
     setAuthMode(button.dataset.authMode);
     return;
@@ -1757,6 +1966,7 @@ document.addEventListener('click', async function (event) {
   }
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
+    stopNotificationPolling();
     currentUser = null;
     setNotificationsOpen(false);
     showAuth();
@@ -1878,6 +2088,7 @@ document.addEventListener('click', async function (event) {
   if (button.dataset.deleteTask) {
     const taskId = Number(button.dataset.deleteTask);
     const task = state.tasks.find(function (item) { return item.id === taskId; });
+    await removeStoredTaskFiles(task);
     state.tasks = state.tasks.filter(function (item) { return item.id !== taskId; });
     if (task) recordActivity('taskDeleted', task.title);
     saveState();
@@ -1928,6 +2139,7 @@ document.addEventListener('click', async function (event) {
   if (button.classList.contains('close-detail') || button.classList.contains('cancel-detail')) closeTaskDetail();
   if (button.id === 'delete-open-task' && openTaskId) {
     const task = state.tasks.find(function (item) { return item.id === openTaskId; });
+    await removeStoredTaskFiles(task);
     state.tasks = state.tasks.filter(function (task) { return task.id !== openTaskId; });
     if (task) recordActivity('taskDeleted', task.title);
     saveState();
@@ -1999,6 +2211,8 @@ participantSearch.addEventListener('blur', function () {
   setTimeout(function () { participantSuggestions.hidden = true; }, 120);
 });
 document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { setMobileMenu(false); if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
+document.addEventListener('pointerdown', unlockNotificationSound);
+document.addEventListener('keydown', unlockNotificationSound);
 applyLanguage();
 setInterval(updateSystemClock, 1000);
 initializeAuth();

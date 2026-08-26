@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="summary-dates.css?v=manual-archive-1">
   <link rel="stylesheet" href="admin-teams.css?v=notifications-1">
   <link rel="stylesheet" href="admin-activity.css?v=admin-activity-1">
+  <link rel="stylesheet" href="task-files.css?v=task-files-1">
+  <link rel="stylesheet" href="date-picker.css?v=airline-calendar-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -133,6 +135,8 @@
       <header class="detail-head"><div><p class="eyebrow" data-i18n="taskCard">КАРТОЧКА ЗАДАЧИ</p><h2 id="task-editor-title">Редактирование</h2></div><button type="button" class="close-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
       <label><span data-i18n="taskName">Название задачи</span><input name="title" required autocomplete="off"></label>
       <label><span data-i18n="description">Описание</span><textarea name="description" data-i18n-placeholder="taskDescPlaceholder" placeholder="Что именно нужно сделать?"></textarea></label>
+      <div class="task-link-preview" id="task-link-preview"></div>
+      <section class="task-file-field"><header><span data-i18n="attachments">Вкладення</span><label class="task-file-picker">＋ <span data-i18n="addFiles">Додати файли</span><input id="task-file-input" type="file" multiple></label></header><div class="task-file-list" id="task-file-list"></div><small id="task-files-message"></small></section>
       <p class="mention-hint" data-i18n="mentionPeople">Введіть @, щоб відмітити учасника</p>
       <div class="mention-suggestions" id="task-mention-suggestions" hidden role="listbox"></div>
       <div class="task-responsible-picker"><span data-i18n="responsibles">Відповідальні</span><div class="responsible-options" id="task-responsible-options"></div></div>
@@ -164,6 +168,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=admin-activity-1"></script>
+  <script src="script.js?v=task-files-sound-1"></script>
+  <script src="date-picker.js?v=airline-calendar-1"></script>
 </body>
 </html>

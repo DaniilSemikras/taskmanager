@@ -1,0 +1,61 @@
+.inline-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 5px;
+  color: #5547c2;
+  background: #eeebff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.inline-link:hover { background: #dfdaff; text-decoration: underline; }
+.task-description,.note > p { white-space: pre-wrap; }
+.task-link-preview { display: flex; flex-wrap: wrap; gap: 5px; margin-top: -9px; }
+.task-link-preview:empty { display: none; }
+
+.task-file-field {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid #e5e2ee;
+  border-radius: 9px;
+  background: #fcfbff;
+}
+
+.task-file-field > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.task-file-field > header > span { color: #626071; font-size: 11px; font-weight: 800; }
+.task-file-picker { display: inline-flex !important; align-items: center; width: auto !important; padding: 7px 9px; border: 1px solid #ddd8f4; border-radius: 7px; color: #5d50c9 !important; background: #f3f1ff; cursor: pointer; font-size: 10px !important; font-weight: 800 !important; }
+.task-file-picker input { position: absolute; width: 1px !important; height: 1px; padding: 0 !important; opacity: 0; pointer-events: none; }
+.task-file-list { display: grid; gap: 6px; }
+
+.task-file-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid #ebe8f3;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.task-file-item.pending { border-style: dashed; background: #f8f7ff; }
+.task-file-name { min-width: 0; overflow: hidden; color: #595568; font-size: 10px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.task-file-actions { display: flex; gap: 4px; }
+.task-file-actions button { min-height: 26px; padding: 0 7px; border: 1px solid #e5e2ef; border-radius: 6px; color: #6156ba; background: #fff; font-size: 9px; font-weight: 800; }
+.task-file-actions .remove-file { color: #bd6268; }
+.task-file-field > small { color: #9a96a5; font-size: 9px; }
+.task-file-field > small.error { color: #c45e65; }
+.task-files-count { display: inline-flex; width: max-content; padding: 4px 6px; border-radius: 6px; color: #6256b9; background: #f0eeff; font-size: 9px; font-weight: 800; }
+
+@media (max-width: 500px) {
+  .task-file-field > header { align-items: flex-start; flex-direction: column; }
+}
