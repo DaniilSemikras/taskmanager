@@ -18,11 +18,12 @@
   <link rel="stylesheet" href="admin-activity.css?v=admin-activity-1">
   <link rel="stylesheet" href="task-files.css?v=task-files-1">
   <link rel="stylesheet" href="date-picker.css?v=airline-calendar-1">
-  <link rel="stylesheet" href="theme.css?v=theme-1">
+  <link rel="stylesheet" href="theme.css?v=theme-2">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
     <div class="auth-card">
+      <select class="language-switch auth-language-switch" id="auth-language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select>
       <button class="theme-toggle auth-theme-toggle" type="button" data-theme-toggle aria-label="Темна тема" title="Темна тема"><span aria-hidden="true">☾</span></button>
       <div class="auth-logo">☼</div><h1 data-i18n="welcome">Моя дошка</h1><p id="auth-description" data-i18n="loginHint">Увійдіть у свій простір.</p>
       <div class="auth-mode-switch" role="tablist" aria-label="Авторизація"><button type="button" class="active" data-auth-mode="login" data-i18n="signIn">Увійти</button><button type="button" data-auth-mode="register" data-i18n="register">Реєстрація</button></div>
@@ -174,7 +175,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=task-files-sound-1"></script>
+  <script src="script.js?v=auth-language-1"></script>
   <script src="date-picker.js?v=airline-calendar-1"></script>
 </body>
 </html>

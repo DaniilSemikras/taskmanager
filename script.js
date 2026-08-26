@@ -141,6 +141,7 @@ const summaryDateFrom = document.getElementById('summary-date-from');
 const summaryDateTo = document.getElementById('summary-date-to');
 const summaryCustomRange = document.getElementById('summary-custom-range');
 const languageSwitch = document.getElementById('language-switch');
+const authLanguageSwitch = document.getElementById('auth-language-switch');
 const saveStatus = document.getElementById('save-status');
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const appbarMenu = document.getElementById('appbar-menu');
@@ -184,6 +185,7 @@ function applyLanguage() {
   document.documentElement.lang = language;
   document.title = t('pageTitle');
   languageSwitch.value = language;
+  authLanguageSwitch.value = language;
   document.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = t(element.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = t(element.dataset.i18nPlaceholder); });
   document.querySelectorAll('[data-i18n-aria]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
@@ -2189,12 +2191,14 @@ document.addEventListener('click', async function (event) {
 document.addEventListener('change', function (event) {
   if (event.target.dataset.move) moveTask(event.target.dataset.move, event.target.value);
 });
-languageSwitch.addEventListener('change', function () {
-  language = languageSwitch.value === 'en' ? 'en' : 'uk';
+function changeLanguage(value) {
+  language = value === 'en' ? 'en' : 'uk';
   localStorage.setItem(LANGUAGE_KEY, language);
   applyLanguage();
   render();
-});
+}
+languageSwitch.addEventListener('change', function () { changeLanguage(languageSwitch.value); });
+authLanguageSwitch.addEventListener('change', function () { changeLanguage(authLanguageSwitch.value); });
 responsibleFilter.addEventListener('change', renderBoard);
 statusFilter.addEventListener('change', renderBoard);
 priorityFilter.addEventListener('change', renderBoard);

@@ -17,6 +17,19 @@
 .theme-toggle span { display: block; }
 .auth-card { position: relative; }
 .auth-theme-toggle { position: absolute; top: 16px; right: 16px; }
+.auth-language-switch {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: #5c50c9;
+  background: #f5f3ff;
+  font-size: 11px;
+  font-weight: 850;
+}
 
 html[data-theme="dark"] {
   --ink: #f3f1fb;
