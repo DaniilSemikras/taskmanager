@@ -67,10 +67,10 @@ Object.assign(translations.en, {
   attachments: 'Attachments', addFiles: 'Add files', downloadFile: 'Open', removeFile: 'Delete', pendingUpload: 'Will upload after saving', filesHint: 'Up to 10 MB per file', fileTooLarge: 'The file is too large. Maximum size is 10 MB.', fileUploadFailed: 'Could not upload the file. Check storage.', uploadingFiles: 'Uploading files…'
 });
 Object.assign(translations.uk, {
-  archiveTitle: 'Архів', archiveEyebrow: 'ІСТОРІЯ РОБОТИ', archiveHint: 'Переглядай завершені завдання та відновлюй їх за потреби.', archiveEmpty: 'Архів поки порожній.', archivedOn: 'В архіві з', restoreTask: 'Відновити', archiveTaskOne: 'завдання', archiveTaskFew: 'завдання', archiveTaskMany: 'завдань', deadlineRemaining: 'Залишилось', deadlineOverdue: 'Прострочено на', dayShort: 'д', hourShort: 'год', minuteShort: 'хв', actionTaskRestored: 'відновив(ла) завдання з архіву'
+  archiveTitle: 'Архів', archiveEyebrow: 'ІСТОРІЯ РОБОТИ', archiveHint: 'Переглядай завершені завдання та відновлюй їх за потреби.', archiveEmpty: 'Архів поки порожній.', archivedOn: 'В архіві з', restoreTask: 'Відновити', archiveTaskOne: 'завдання', archiveTaskFew: 'завдання', archiveTaskMany: 'завдань', deadlineRemaining: 'Залишилось', deadlineOverdue: 'Прострочено на', dayShort: 'д', hourShort: 'год', minuteShort: 'хв', actionTaskRestored: 'відновив(ла) завдання з архіву', moveTaskUp: 'Підняти завдання вище', moveTaskDown: 'Опустити завдання нижче'
 });
 Object.assign(translations.en, {
-  archiveTitle: 'Archive', archiveEyebrow: 'WORK HISTORY', archiveHint: 'Review completed tasks and restore them when needed.', archiveEmpty: 'The archive is empty.', archivedOn: 'Archived', restoreTask: 'Restore', archiveTaskOne: 'task', archiveTaskFew: 'tasks', archiveTaskMany: 'tasks', deadlineRemaining: 'Time left', deadlineOverdue: 'Overdue by', dayShort: 'd', hourShort: 'h', minuteShort: 'min', actionTaskRestored: 'restored a task from the archive'
+  archiveTitle: 'Archive', archiveEyebrow: 'WORK HISTORY', archiveHint: 'Review completed tasks and restore them when needed.', archiveEmpty: 'The archive is empty.', archivedOn: 'Archived', restoreTask: 'Restore', archiveTaskOne: 'task', archiveTaskFew: 'tasks', archiveTaskMany: 'tasks', deadlineRemaining: 'Time left', deadlineOverdue: 'Overdue by', dayShort: 'd', hourShort: 'h', minuteShort: 'min', actionTaskRestored: 'restored a task from the archive', moveTaskUp: 'Move task up', moveTaskDown: 'Move task down'
 });
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
@@ -939,6 +939,19 @@ function placeTaskByPriority(taskId) {
   const before = orderedTasksInColumn(task.column, task.id).find(function (item) { return priorityRank(item) >= priorityRank(task); });
   placeTaskInColumn(task.id, task.column, before && before.id);
 }
+function moveTaskStep(taskId, direction) {
+  const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
+  if (!task) return;
+  const ordered = orderedTasksInColumn(task.column);
+  const index = ordered.findIndex(function (item) { return item.id === task.id; });
+  const nextIndex = index + (direction < 0 ? -1 : 1);
+  if (index < 0 || nextIndex < 0 || nextIndex >= ordered.length) return;
+  const beforeId = direction < 0 ? ordered[nextIndex].id : (ordered[index + 2] && ordered[index + 2].id);
+  placeTaskInColumn(task.id, task.column, beforeId);
+  recordActivity('taskUpdated', task.title);
+  saveState();
+  render();
+}
 function taskDeadlineLabel(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
   const date = new Date(value + 'T00:00:00');
@@ -984,8 +997,11 @@ function taskMarkup(task) {
   const mentions = taskMentionNames(task);
   const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
   const files = Array.isArray(task.attachments) && task.attachments.length ? '<span class="task-files-count">📎 ' + task.attachments.length + '</span>' : '';
+  const ordered = orderedTasksInColumn(task.column);
+  const orderIndex = ordered.findIndex(function (item) { return item.id === task.id; });
+  const orderControls = '<span class="task-order-controls"><button type="button" draggable="false" data-task-order="-1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskUp') + '" title="' + t('moveTaskUp') + '"' + (orderIndex <= 0 ? ' disabled' : '') + '>↑</button><button type="button" draggable="false" data-task-order="1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskDown') + '" title="' + t('moveTaskDown') + '"' + (orderIndex < 0 || orderIndex >= ordered.length - 1 ? ' disabled' : '') + '>↓</button></span>';
   const details = completed ? '' : description + deadline + files + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
-  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><h3>' + escapeHtml(task.title) + '</h3>' + details + '</article>';
+  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><header class="task-card-head"><h3>' + escapeHtml(task.title) + '</h3>' + orderControls + '</header>' + details + '</article>';
 }
 function localDateValue(iso) {
   if (!iso || Number.isNaN(new Date(iso).getTime())) return '';
@@ -2048,6 +2064,10 @@ document.addEventListener('click', async function (event) {
   }
   if (button.dataset.deleteNotification) {
     deleteCurrentNotification(button.dataset.deleteNotification);
+    return;
+  }
+  if (button.dataset.taskOrder) {
+    moveTaskStep(button.dataset.taskId, Number(button.dataset.taskOrder));
     return;
   }
   if (button.dataset.removePendingFile !== undefined) {
