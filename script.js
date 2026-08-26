@@ -1110,8 +1110,9 @@ function renderSummaryCharts(totals, from, to) {
     const createdHeight = item.created ? Math.max(12, Math.round(item.created / maxValue * 100)) : 4;
     const closedHeight = item.closed ? Math.max(12, Math.round(item.closed / maxValue * 100)) : 4;
     const label = weekdayFormat.format(item.day).replace('.', '');
-    const title = label + ': ' + t('createdTasks') + ' — ' + item.created + ', ' + t('closedTasks') + ' — ' + item.closed;
-    return '<div class="activity-day" title="' + escapeHtml(title) + '"><div class="activity-bars"><i class="created' + (item.created ? '' : ' is-empty') + '" style="height:' + createdHeight + '%" data-value="' + item.created + '"></i><i class="closed' + (item.closed ? '' : ' is-empty') + '" style="height:' + closedHeight + '%" data-value="' + item.closed + '"></i></div><span>' + escapeHtml(label) + '</span></div>';
+    const numericDate = String(item.day.getDate()).padStart(2, '0') + '.' + String(item.day.getMonth() + 1).padStart(2, '0');
+    const title = label + ' ' + numericDate + ': ' + t('createdTasks') + ' — ' + item.created + ', ' + t('closedTasks') + ' — ' + item.closed;
+    return '<div class="activity-day" title="' + escapeHtml(title) + '"><div class="activity-bars"><i class="created' + (item.created ? '' : ' is-empty') + '" style="height:' + createdHeight + '%" data-value="' + item.created + '"></i><i class="closed' + (item.closed ? '' : ' is-empty') + '" style="height:' + closedHeight + '%" data-value="' + item.closed + '"></i></div><span><b>' + escapeHtml(label) + '</b><small>' + numericDate + '</small></span></div>';
   }).join('');
 }
 function renderSummary() {
