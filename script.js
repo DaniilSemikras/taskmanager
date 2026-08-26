@@ -303,6 +303,46 @@ function canEditCalendarEvent(event) {
 function teamForId(id) {
   return state.teams.find(function (team) { return String(team.id) === String(id || ''); });
 }
+function teamMembersFor(teamId) {
+  const team = teamForId(teamId);
+  if (!team) return [];
+  const members = new Map();
+  function addMember(person, key) {
+    const name = String(person && (person.name || person.login || person.email) || '').trim();
+    if (!name || members.has(key)) return;
+    members.set(key, { id: person.id, key: key, name: name, email: person.email || '', role: person.role || '' });
+  }
+  (Array.isArray(team.memberIds) ? team.memberIds : []).map(Number).forEach(function (personId) {
+    const person = state.people.find(function (item) { return Number(item.id) === personId; });
+    if (person) addMember(person, 'person:' + person.id);
+  });
+  accounts.filter(function (account) { return String(account.teamId || '') === String(team.id); }).forEach(function (account) {
+    const person = state.people.find(function (item) { return String(item.id) === String(account.personId || ''); });
+    if (person) {
+      addMember(person, 'person:' + person.id);
+      return;
+    }
+    addMember({ id: account.id, name: account.login, email: account.email, role: account.role === 'admin' ? t('administrator') : t('member') }, 'account:' + account.id);
+  });
+  return Array.from(members.values()).sort(function (a, b) { return a.name.localeCompare(b.name, t('locale')); });
+}
+function taskResponsibleMembers() {
+  const teamIds = isAdmin() ? state.teams.map(function (team) { return team.id; }) : [currentTeamId()];
+  const members = new Map();
+  teamIds.filter(Boolean).forEach(function (teamId) {
+    teamMembersFor(teamId).forEach(function (member) { members.set(member.key, member); });
+  });
+  return Array.from(members.values()).sort(function (a, b) { return a.name.localeCompare(b.name, t('locale')); });
+}
+function renderTaskResponsibleOptions(selectedName) {
+  const responsibleControl = taskEditor && taskEditor.elements.responsible;
+  if (!responsibleControl) return;
+  const selected = String(selectedName || '');
+  const people = taskResponsibleMembers();
+  const names = Array.from(new Set(people.map(function (person) { return person.name; })));
+  responsibleControl.innerHTML = '<option value="">' + t('notAssigned') + '</option>' + names.map(function (name) { return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>'; }).join('');
+  responsibleControl.value = names.includes(selected) ? selected : '';
+}
 function teamName(id) {
   const team = teamForId(id);
   return team ? team.name : t('noTeam');
@@ -534,7 +574,7 @@ function renderBoard() {
 }
 function renderResponsibleFilter() {
   const previous = responsibleFilter.value;
-  const people = Array.from(new Set(state.tasks.filter(function (task) { return !task.archivedAt; }).map(function (task) { return task.responsible; }).filter(Boolean))).sort();
+  const people = Array.from(new Set(taskResponsibleMembers().map(function (person) { return person.name; }))).sort(function (a, b) { return a.localeCompare(b, t('locale')); });
   responsibleFilter.innerHTML = '<option value="">' + t('allTasks') + '</option><option value="__none__">' + t('noResponsible') + '</option>' + people.map(function (person) { return '<option value="' + escapeHtml(person) + '">' + escapeHtml(person) + '</option>'; }).join('');
   if (people.includes(previous) || previous === '__none__') responsibleFilter.value = previous;
 }
@@ -583,7 +623,6 @@ function renderPeople() {
       return '<article class="person-card"><header><span class="person-avatar">' + escapeHtml(personInitials(person.name)) + '</span><div><h3>' + escapeHtml(person.name) + '</h3>' + role + '</div></header><div class="person-data"><span><b>@</b>' + escapeHtml(person.email) + '</span></div><footer class="person-actions"><button type="button" data-edit-person="' + person.id + '">' + t('editPerson') + '</button><button type="button" class="delete-person" data-delete-person="' + person.id + '">' + t('deletePerson') + '</button></footer></article>';
     }).join('');
   }
-  document.getElementById('responsible-list').innerHTML = state.people.map(function (person) { return '<option value="' + escapeHtml(person.name) + '"></option>'; }).join('');
 }
 function renderMyTeam() {
   const team = teamForId(currentTeamId());
@@ -594,10 +633,7 @@ function renderMyTeam() {
     myTeamMembers.innerHTML = '<div class="empty team-empty"><span>♧</span>' + t('noTeamAssignedHint') + '</div>';
     return;
   }
-  const memberIds = Array.isArray(team.memberIds) ? team.memberIds.map(Number) : [];
-  const members = memberIds.map(function (id) { return state.people.find(function (person) { return person.id === id; }); }).filter(Boolean);
-  const ownPerson = state.people.find(function (person) { return String(person.id) === String(currentUser && currentUser.personId || ''); });
-  if (ownPerson && !members.some(function (person) { return person.id === ownPerson.id; })) members.unshift(ownPerson);
+  const members = teamMembersFor(team.id);
   myTeamName.textContent = team.name;
   myTeamHint.textContent = t('teamViewHint');
   myTeamTotal.textContent = members.length + plural(members.length, t('personOne'), t('personFew'), t('personMany'));
@@ -1089,7 +1125,7 @@ function openTask(id) {
   openTaskId = task.id;
   taskEditor.elements.title.value = task.title || '';
   taskEditor.elements.description.value = task.description || '';
-  taskEditor.elements.responsible.value = task.responsible || '';
+  renderTaskResponsibleOptions(task.responsible);
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
   updateTaskEditorUi();
@@ -1098,6 +1134,7 @@ function openTask(id) {
 function openNewTask(column) {
   openTaskId = null;
   taskEditor.reset();
+  renderTaskResponsibleOptions('');
   taskEditor.elements.column.value = column || 'todo';
   taskEditor.elements.priority.value = 'medium';
   updateTaskEditorUi();

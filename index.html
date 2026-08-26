@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Личная доска задач в стиле Trello">
   <title>Моя доска</title>
-  <link rel="stylesheet" href="style.css?v=mobile-access-1">
+  <link rel="stylesheet" href="style.css?v=task-team-1">
   <link rel="stylesheet" href="teams-calendar.css?v=stability-3">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
   <link rel="stylesheet" href="board-tools.css?v=stability-3">
@@ -44,7 +44,6 @@
         <div><p class="eyebrow" data-i18n="personalPlan">ЛИЧНЫЙ ПЛАН</p><h1 data-i18n="myTasks">Мои задачи</h1><p data-i18n="boardHint">Добавляй карточки и перетаскивай их между колонками.</p></div>
         <div class="heading-actions"><span class="task-count" id="task-count">0 задач</span><button type="button" class="new-task" id="new-task">＋ <span data-i18n="newTask">Новая задача</span></button></div>
       </div>
-      <datalist id="responsible-list"><option value="Я"><option value="Аня"><option value="Иван"><option value="Лена"></datalist>
       <section class="task-filters" aria-label="Фильтры задач"><div class="filter-search"><span>⌕</span><input id="task-search" autocomplete="off" data-i18n-placeholder="taskSearchPlaceholder" placeholder="Поиск по названию или описанию"></div><select id="status-filter"><option value="" data-i18n="allColumns">Все статусы</option><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select><select id="responsible-filter"><option value="" data-i18n="allTasks">Все задачи</option><option value="__none__" data-i18n="noResponsible">Без ответственного</option></select><select id="priority-filter"><option value="" data-i18n="allPriorities">Все приоритеты</option><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select><div class="period-control"><span data-i18n="period">Період</span><div class="period-chips"><button type="button" class="active" data-task-period="all" data-i18n="allTime">Увесь час</button><button type="button" data-task-period="today" data-i18n="today">Сьогодні</button><button type="button" data-task-period="week" data-i18n="last7Days">7 днів</button><button type="button" data-task-period="month" data-i18n="thisMonth">Місяць</button><button type="button" data-task-period="custom" data-i18n="customPeriod">Свій</button></div><div class="custom-date-range" id="task-custom-range" hidden><input id="task-date-from" type="date"><span>—</span><input id="task-date-to" type="date"></div></div><button type="button" id="clear-filters" data-i18n="clearFilters">Сбросить</button></section>
       <section class="board" id="board" aria-label="Личная доска задач"></section>
     </section>
@@ -132,7 +131,7 @@
       <label><span data-i18n="taskName">Название задачи</span><input name="title" required autocomplete="off"></label>
       <label><span data-i18n="description">Описание</span><textarea name="description" data-i18n-placeholder="taskDescPlaceholder" placeholder="Что именно нужно сделать?"></textarea></label>
       <div class="detail-fields">
-        <label><span data-i18n="responsible">Ответственный</span><input name="responsible" list="responsible-list" autocomplete="off" data-i18n-placeholder="notAssigned" placeholder="Не назначен"></label>
+        <label><span data-i18n="responsible">Ответственный</span><select name="responsible"><option value="" data-i18n="notAssigned">Не назначен</option></select></label>
         <label><span data-i18n="column">Колонка</span><select name="column"><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select></label>
         <label><span data-i18n="priority">Приоритет</span><select name="priority"><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select></label>
       </div>
@@ -159,6 +158,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=account-controls-1"></script>
+  <script src="script.js?v=task-team-1"></script>
 </body>
 </html>
