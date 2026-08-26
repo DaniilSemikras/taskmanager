@@ -31,10 +31,10 @@ const translations = {
   }
 };
 Object.assign(translations.uk, {
-  login: 'Логін', loginPlaceholder: 'Наприклад, danylo', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт', register: 'Реєстрація', registerHint: 'Створіть свій акаунт.', noMeetingsDay: 'На цей день зустрічей немає.'
+  login: 'Логін', loginPlaceholder: 'Наприклад, user123', passwordPlaceholder: 'Щонайменше 8 символів', createAdmin: 'Створити акаунт', register: 'Реєстрація', registerHint: 'Створіть свій акаунт.', noMeetingsDay: 'На цей день зустрічей немає.'
 });
 Object.assign(translations.en, {
-  login: 'Login', loginPlaceholder: 'For example, danylo', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.', noMeetingsDay: 'There are no meetings on this day.'
+  login: 'Login', loginPlaceholder: 'For example, user123', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.', noMeetingsDay: 'There are no meetings on this day.'
 });
 Object.assign(translations.uk, {
   team: 'Команда', noTeam: 'Без команди', linkedPerson: 'Пов’язаний учасник', accountRole: 'Роль', accountAccessHint: 'Призначай роль, команду та пов’язаний профіль учасника.', saveAccess: 'Зберегти доступ', teamCalendar: 'Календар команди', meetingTeamHint: 'Учасники команди бачать цю зустріч у календарі.', accessSaved: 'Доступ оновлено', noCalendarTeam: 'Щоб створювати зустрічі, попросіть адміністратора призначити вам команду.'
