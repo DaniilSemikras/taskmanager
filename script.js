@@ -10,7 +10,7 @@ const translations = {
   uk: {
     locale: 'uk-UA', pageTitle: 'Моя дошка', brand: 'моя дошка', board: 'Дошка', calendar: 'Календар', afterMeeting: 'Нотатки',
     personalPlan: 'ОСОБИСТИЙ ПЛАН', myTasks: 'Мої завдання', boardHint: 'Додавай картки та перетягуй їх між колонками.', taskPlaceholder: 'Нове завдання — наприклад, оплатити рахунок', dataSaved: 'Збережено', dataSaving: 'Збереження…', dataBrowser: 'Збережено в браузері', dataUnavailable: 'Немає з’єднання з базою',
-    todo: 'Треба зробити', doing: 'У процесі', done: 'Готово', responsible: 'Відповідальний', responsibles: 'Відповідальні', onlyMyTasks: 'Тільки мої', violet: 'Фіолетовий', blue: 'Синій', green: 'Зелений', orange: 'Помаранчевий', pink: 'Рожевий',
+    todo: 'Треба зробити', doing: 'У процесі', done: 'Готово', responsible: 'Відповідальний', responsibles: 'Відповідальні', onlyMyTasks: 'Тільки мої', notifications: 'Сповіщення', markAllRead: 'Прочитати все', noNotifications: 'Нових сповіщень поки немає.', notificationMention: 'Вас відмітили у завданні', notificationStatus: 'Змінено статус завдання', violet: 'Фіолетовий', blue: 'Синій', green: 'Зелений', orange: 'Помаранчевий', pink: 'Рожевий',
     taskDescriptionPlaceholder: 'Опис завдання: що саме потрібно зробити?', addTask: 'Додати завдання', show: 'ПОКАЗАТИ', allTasks: 'Усі завдання', noResponsible: 'Без відповідального',
     myMeetings: 'МОЇ ЗУСТРІЧІ', calendarHint: 'Додавай зустрічі з датою і часом — вони одразу з’являться в календарі.', meetingTitle: 'Назва зустрічі', meetingNotesPlaceholder: 'Нотатки до зустрічі (необов’язково)', addMeeting: 'Додати зустріч', systemTime: 'Системний час', people: 'Учасники', peopleDirectory: 'БАЗА УЧАСНИКІВ', peopleHint: 'Зберігай контакти команди й швидко знаходь їх за ім’ям, поштою або роллю.', personNamePlaceholder: 'Ім’я та прізвище', emailPlaceholder: 'Пошта', rolePlaceholder: 'Роль або посада', phonePlaceholder: 'Телефон', addPerson: 'Додати учасника', savePerson: 'Зберегти учасника', peopleSearchPlaceholder: 'Пошук за ім’ям, поштою або роллю', noPeople: 'База учасників поки порожня. Додай перший контакт.', editPerson: 'Редагувати', deletePerson: 'Видалити', personOne: 'учасник', personFew: 'учасники', personMany: 'учасників', admin: 'Адмін', adminArea: 'АДМІН-ПАНЕЛЬ', teamManagement: 'Керування командами', teamManagementHint: 'Створюй команди та додавай до них учасників із бази.', teamNamePlaceholder: 'Назва команди', addTeam: 'Створити команду', deleteTeam: 'Видалити', addMember: 'Додати учасника', selectPerson: 'Обрати учасника', noTeams: 'Команд поки немає. Створи першу команду.', noTeamMembers: 'У цій команді поки немає учасників.', teamOne: 'команда', teamFew: 'команди', teamMany: 'команд', welcome: 'Моя дошка', loginHint: 'Увійдіть у свій простір.', login: 'Логін', password: 'Пароль', repeatPassword: 'Повторіть пароль', loginPlaceholder: 'Логін', passwordPlaceholder: 'Щонайменше 4 символи', createAdmin: 'Створити адміністратора', signIn: 'Увійти', signOut: 'Вийти', accessControl: 'КЕРУВАННЯ ДОСТУПОМ', accounts: 'Акаунти', addAccount: 'Створити акаунт', noLinkedPerson: 'Без привʼязки до учасника', member: 'Учасник', administrator: 'Адміністратор', invalidCredentials: 'Неправильний логін або пароль.', passwordMismatch: 'Паролі не збігаються.', loginTaken: 'Такий логін уже існує.', accountOne: 'акаунт', accountFew: 'акаунти', accountMany: 'акаунтів',
     personalNotes: 'ОСОБИСТІ НОТАТКИ', notesHint: 'Зберігай головне одразу після дзвінка або зустрічі.', meetingTitlePlaceholder: 'Наприклад, розмова з клієнтом', whatImportant: 'Що важливо запам’ятати', noteTitle: 'Назва нотатки', newNote: 'Нова нотатка', notePlaceholder: 'Рішення, ідеї, наступні кроки — пиши як зручно', saveNote: 'Зберегти нотатку',
@@ -21,7 +21,7 @@ const translations = {
   en: {
     locale: 'en-GB', pageTitle: 'My board', brand: 'my board', board: 'Board', calendar: 'Calendar', afterMeeting: 'Notes',
     personalPlan: 'PERSONAL PLAN', myTasks: 'My tasks', boardHint: 'Add cards and drag them between columns.', taskPlaceholder: 'New task — for example, pay the bill', dataSaved: 'Saved', dataSaving: 'Saving…', dataBrowser: 'Saved in browser', dataUnavailable: 'Database unavailable',
-    todo: 'To do', doing: 'In progress', done: 'Done', responsible: 'Assignee', responsibles: 'Assignees', onlyMyTasks: 'Only mine', violet: 'Violet', blue: 'Blue', green: 'Green', orange: 'Orange', pink: 'Pink',
+    todo: 'To do', doing: 'In progress', done: 'Done', responsible: 'Assignee', responsibles: 'Assignees', onlyMyTasks: 'Only mine', notifications: 'Notifications', markAllRead: 'Mark all as read', noNotifications: 'No new notifications yet.', notificationMention: 'You were mentioned in a task', notificationStatus: 'Task status was changed', violet: 'Violet', blue: 'Blue', green: 'Green', orange: 'Orange', pink: 'Pink',
     taskDescriptionPlaceholder: 'Task description: what needs to be done?', addTask: 'Add task', show: 'SHOW', allTasks: 'All tasks', noResponsible: 'No assignee',
     myMeetings: 'MY MEETINGS', calendarHint: 'Add meetings with date and time — they will appear in the calendar right away.', meetingTitle: 'Meeting title', meetingNotesPlaceholder: 'Meeting notes (optional)', addMeeting: 'Add meeting', systemTime: 'System time', people: 'People', peopleDirectory: 'PEOPLE DIRECTORY', peopleHint: 'Store team contacts and find them quickly by name, email, or role.', personNamePlaceholder: 'Full name', emailPlaceholder: 'Email', rolePlaceholder: 'Role or job title', phonePlaceholder: 'Phone', addPerson: 'Add person', savePerson: 'Save person', peopleSearchPlaceholder: 'Search by name, email, or role', noPeople: 'The people directory is empty. Add your first contact.', editPerson: 'Edit', deletePerson: 'Delete', personOne: 'person', personFew: 'people', personMany: 'people', admin: 'Admin', adminArea: 'ADMIN AREA', teamManagement: 'Team management', teamManagementHint: 'Create teams and add people from the directory.', teamNamePlaceholder: 'Team name', addTeam: 'Create team', deleteTeam: 'Delete', addMember: 'Add person', selectPerson: 'Choose a person', noTeams: 'There are no teams yet. Create the first one.', noTeamMembers: 'There are no people in this team yet.', teamOne: 'team', teamFew: 'teams', teamMany: 'teams', welcome: 'My board', loginHint: 'Sign in to your workspace.', login: 'Login', password: 'Password', repeatPassword: 'Repeat password', loginPlaceholder: 'Login', passwordPlaceholder: 'At least 4 characters', createAdmin: 'Create administrator', signIn: 'Sign in', signOut: 'Sign out', accessControl: 'ACCESS CONTROL', accounts: 'Accounts', addAccount: 'Create account', noLinkedPerson: 'No linked person', member: 'Member', administrator: 'Administrator', invalidCredentials: 'Incorrect login or password.', passwordMismatch: 'Passwords do not match.', loginTaken: 'This login already exists.', accountOne: 'account', accountFew: 'accounts', accountMany: 'accounts',
     personalNotes: 'PERSONAL NOTES', notesHint: 'Save the key points right after a call or meeting.', meetingTitlePlaceholder: 'For example, client call', whatImportant: 'What is important to remember', noteTitle: 'Note title', newNote: 'New note', notePlaceholder: 'Decisions, ideas, next steps — write however you like', saveNote: 'Save note',
@@ -92,6 +92,10 @@ const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
 const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
 const taskResponsibleOptions = document.getElementById('task-responsible-options');
+const notificationButton = document.getElementById('notification-button');
+const notificationsPanel = document.getElementById('notifications-panel');
+const notificationsList = document.getElementById('notifications-list');
+const notificationCount = document.getElementById('notification-count');
 const noteEditor = document.getElementById('note-editor');
 const noteDetail = document.getElementById('note-detail');
 const eventEditor = document.getElementById('event-editor');
@@ -203,6 +207,9 @@ function normalizeState(saved) {
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
+    notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
+      return { id: String(notification.id), recipientId: String(notification.recipientId), type: notification.type === 'mention' ? 'mention' : 'status', taskId: Number(notification.taskId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
+    }).slice(0, 160),
     deletedEventIds: deletedEventIds,
     people: (Array.isArray(source.people) ? source.people : []).map(function (person) {
       return { id: person.id, name: person.name || '', email: person.email || '', role: person.role || '' };
@@ -241,7 +248,7 @@ function setSaveStatus(key) {
   if (saveNotificationsEnabled && (changed || key === 'dataSaving' || key === 'dataSaved' || key === 'accessSaved')) showSaveToast(key);
 }
 function hasStoredContent() {
-  return Boolean(accounts.length || state.tasks.length || state.notes.length || calendarEvents.length || state.people.length || state.teams.length);
+  return Boolean(accounts.length || state.tasks.length || state.notes.length || state.notifications.length || calendarEvents.length || state.people.length || state.teams.length);
 }
 async function saveDatabaseNow(snapshot) {
   if (!supabaseClient || !currentUser) {
@@ -364,6 +371,56 @@ function currentUserResponsibleNames() {
   if (!currentUser) return [];
   const linkedPerson = state.people.find(function (person) { return String(person.id) === String(currentUser.personId || ''); });
   return normalizeResponsibleNames([linkedPerson && linkedPerson.name, currentUser.login]);
+}
+function accountIdsForResponsibleNames(names) {
+  const targetNames = normalizeResponsibleNames(names).map(function (name) { return name.toLocaleLowerCase(); });
+  if (!targetNames.length) return [];
+  return accounts.filter(function (account) {
+    const linkedPerson = state.people.find(function (person) { return String(person.id) === String(account.personId || ''); });
+    return targetNames.includes(String(account.login || '').toLocaleLowerCase()) || Boolean(linkedPerson && targetNames.includes(String(linkedPerson.name || '').toLocaleLowerCase()));
+  }).map(function (account) { return String(account.id); });
+}
+function addTaskNotifications(type, task, recipientNames) {
+  if (!currentUser || !task) return;
+  const recipients = Array.from(new Set(accountIdsForResponsibleNames(recipientNames))).filter(function (id) { return id !== String(currentUser.id); });
+  if (!recipients.length) return;
+  const createdAt = new Date().toISOString();
+  const additions = recipients.map(function (recipientId, index) {
+    return { id: String(Date.now()) + '-' + type + '-' + index + '-' + recipientId, recipientId: recipientId, type: type === 'mention' ? 'mention' : 'status', taskId: Number(task.id) || 0, taskTitle: task.title || '', fromUser: currentUser.login || '', createdAt: createdAt, read: false };
+  });
+  state.notifications = additions.concat(state.notifications || []).slice(0, 160);
+}
+function currentUserNotifications() {
+  if (!currentUser) return [];
+  return (state.notifications || []).filter(function (notification) { return notification.recipientId === String(currentUser.id); }).sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+}
+function renderNotifications() {
+  if (!notificationsList || !notificationCount) return;
+  const notifications = currentUserNotifications();
+  const unread = notifications.filter(function (notification) { return !notification.read; }).length;
+  notificationCount.hidden = unread === 0;
+  notificationCount.textContent = unread > 99 ? '99+' : String(unread);
+  const markReadButton = document.getElementById('mark-notifications-read');
+  if (markReadButton) markReadButton.hidden = unread === 0;
+  notificationsList.innerHTML = notifications.length ? notifications.slice(0, 30).map(function (notification) {
+    const title = t(notification.type === 'mention' ? 'notificationMention' : 'notificationStatus');
+    const author = notification.fromUser ? '<small>' + escapeHtml(notification.fromUser) + ' · ' + escapeHtml(dateLabel(notification.createdAt)) + '</small>' : '<small>' + escapeHtml(dateLabel(notification.createdAt)) + '</small>';
+    return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
+  }).join('') : '<p class="notifications-empty">' + t('noNotifications') + '</p>';
+}
+function setNotificationsOpen(open) {
+  if (!notificationsPanel || !notificationButton) return;
+  notificationsPanel.hidden = !open;
+  notificationButton.setAttribute('aria-expanded', String(Boolean(open)));
+}
+function markCurrentNotificationsRead() {
+  if (!currentUser) return;
+  const recipientId = String(currentUser.id);
+  state.notifications = (state.notifications || []).map(function (notification) {
+    return notification.recipientId === recipientId ? Object.assign({}, notification, { read: true }) : notification;
+  });
+  saveState();
+  renderNotifications();
 }
 function renderTaskResponsibleOptions(selectedNames) {
   if (!taskResponsibleOptions) return;
@@ -1105,11 +1162,15 @@ function render() {
   renderMyTeam();
   renderTeams();
   renderAccounts();
+  renderNotifications();
   renderCalendar();
   renderSummary();
   scheduleArchiveCheck();
 }
 function moveTask(id, column) {
+  const currentTask = state.tasks.find(function (task) { return task.id === Number(id); });
+  if (!currentTask || currentTask.column === column) return;
+  addTaskNotifications('status', currentTask, taskResponsibleNames(currentTask).concat(taskMentionNames(currentTask)));
   state.tasks = state.tasks.map(function (task) {
     if (task.id !== Number(id)) return task;
     const completedAt = column === 'done' && task.column !== 'done' ? new Date().toISOString() : (column === 'done' ? task.completedAt : null);
@@ -1472,15 +1533,24 @@ taskEditor.addEventListener('submit', function (event) {
   const description = form.get('description').trim();
   const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
   const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
+  let previousTask = null;
+  let savedTask = null;
   if (openTaskId) {
     state.tasks = state.tasks.map(function (task) {
       if (task.id !== openTaskId) return task;
       const completedAt = details.column === 'done' && task.column !== 'done' ? new Date().toISOString() : (details.column === 'done' ? task.completedAt : null);
-      return Object.assign({}, task, details, { completedAt: completedAt });
+      previousTask = task;
+      savedTask = Object.assign({}, task, details, { completedAt: completedAt });
+      return savedTask;
     });
   } else {
-    state.tasks.unshift(Object.assign({ id: Date.now(), createdAt: new Date().toISOString(), completedAt: details.column === 'done' ? new Date().toISOString() : null }, details));
+    savedTask = Object.assign({ id: Date.now(), createdAt: new Date().toISOString(), completedAt: details.column === 'done' ? new Date().toISOString() : null }, details);
+    state.tasks.unshift(savedTask);
   }
+  const previousMentions = previousTask ? taskMentionNames(previousTask) : [];
+  const newMentions = taskMentionNames(savedTask).filter(function (name) { return !previousMentions.includes(name); });
+  addTaskNotifications('mention', savedTask, newMentions);
+  if (previousTask && previousTask.column !== savedTask.column) addTaskNotifications('status', savedTask, taskResponsibleNames(savedTask).concat(taskMentionNames(savedTask)));
   saveState();
   closeTaskDetail();
   render();
@@ -1523,6 +1593,7 @@ eventEditor.addEventListener('submit', async function (event) {
 });
 document.addEventListener('click', async function (event) {
   if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
+  if (notificationsPanel && !event.target.closest('#notification-wrap')) setNotificationsOpen(false);
   const card = event.target.closest('.task-card');
   if (card && !event.target.closest('button, select')) {
     if (card.dataset.swipeHandled) return;
@@ -1540,6 +1611,14 @@ document.addEventListener('click', async function (event) {
     setMobileMenu(!appbarMenu.classList.contains('open'));
     return;
   }
+  if (button.id === 'notification-button') {
+    setNotificationsOpen(notificationsPanel.hidden);
+    return;
+  }
+  if (button.id === 'mark-notifications-read') {
+    markCurrentNotificationsRead();
+    return;
+  }
   if (button.dataset.authMode) {
     setAuthMode(button.dataset.authMode);
     return;
@@ -1551,6 +1630,7 @@ document.addEventListener('click', async function (event) {
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
     currentUser = null;
+    setNotificationsOpen(false);
     showAuth();
     return;
   }
