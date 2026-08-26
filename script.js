@@ -35,6 +35,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   login: 'Login', loginPlaceholder: 'For example, danylo', passwordPlaceholder: 'At least 8 characters', createAdmin: 'Create account', register: 'Register', registerHint: 'Create your account.', noMeetingsDay: 'There are no meetings on this day.'
 });
+Object.assign(translations.uk, {
+  team: 'Команда', noTeam: 'Без команди', linkedPerson: 'Пов’язаний учасник', accountRole: 'Роль', accountAccessHint: 'Призначай роль, команду та пов’язаний профіль учасника.', saveAccess: 'Зберегти доступ', teamCalendar: 'Календар команди', meetingTeamHint: 'Учасники команди бачать цю зустріч у календарі.', accessSaved: 'Доступ оновлено', noCalendarTeam: 'Щоб створювати зустрічі, попросіть адміністратора призначити вам команду.'
+});
+Object.assign(translations.en, {
+  team: 'Team', noTeam: 'No team', linkedPerson: 'Linked person', accountRole: 'Role', accountAccessHint: 'Assign a role, team, and linked person profile.', saveAccess: 'Save access', teamCalendar: 'Team calendar', meetingTeamHint: 'Everyone on this team can see the meeting in their calendar.', accessSaved: 'Access updated', noCalendarTeam: 'Ask an administrator to assign you to a team before creating meetings.'
+});
 const columns = [
   { id: 'todo', titleKey: 'todo' },
   { id: 'doing', titleKey: 'doing' },
@@ -77,6 +83,7 @@ const mobileTeamsCalendar = document.getElementById('mobile-teams-calendar');
 const participantSearch = document.getElementById('participant-search');
 const participantTags = document.getElementById('participant-tags');
 const participantSuggestions = document.getElementById('participant-suggestions');
+const meetingTeam = document.getElementById('meeting-team');
 const summaryStats = document.getElementById('summary-stats');
 const summaryByPerson = document.getElementById('summary-by-person');
 const completedTasks = document.getElementById('completed-tasks');
@@ -106,6 +113,7 @@ let databaseWriteQueue = Promise.resolve();
 let archiveCheckTimer = null;
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
+let calendarEvents = [];
 let authMode = 'login';
 
 function t(key) {
@@ -189,7 +197,7 @@ function setSaveStatus(key) {
   updateSaveStatus();
 }
 function hasStoredContent() {
-  return Boolean(accounts.length || state.tasks.length || state.notes.length || state.events.length || state.people.length || state.teams.length);
+  return Boolean(accounts.length || state.tasks.length || state.notes.length || calendarEvents.length || state.people.length || state.teams.length);
 }
 async function saveDatabaseNow(snapshot) {
   if (!supabaseClient || !currentUser) {
@@ -242,22 +250,122 @@ async function hydrateDatabase() {
 }
 async function refreshAccounts() {
   if (!supabaseClient) return [];
-  const response = await supabaseClient.from('profiles').select('id, email, display_name, role, created_at').order('created_at');
+  const response = await supabaseClient.from('profiles').select('id, email, display_name, role, team_id, person_id, created_at').order('created_at');
   if (response.error) return [];
   accounts = response.data.map(function (profile) {
-    return { id: profile.id, login: profile.display_name || profile.email.split('@')[0], email: profile.email, role: profile.role, personId: '' };
+    return { id: profile.id, login: profile.display_name || profile.email.split('@')[0], email: profile.email, role: profile.role, teamId: profile.team_id || '', personId: profile.person_id || '' };
   });
   return accounts;
 }
 function accountForUser(user) {
   const account = accounts.find(function (item) { return item.id === user.id; });
-  return account || { id: user.id, login: user.user_metadata && user.user_metadata.display_name || user.email.split('@')[0], email: user.email, role: 'member', personId: '' };
+  return account || { id: user.id, login: user.user_metadata && user.user_metadata.display_name || user.email.split('@')[0], email: user.email, role: 'member', teamId: '', personId: '' };
 }
 function internalEmailForLogin(login) {
   return login.trim().toLocaleLowerCase() + '@taskmanager.local';
 }
 function isAdmin() {
   return Boolean(currentUser && currentUser.role === 'admin');
+}
+function currentTeamId() {
+  return currentUser && currentUser.teamId ? String(currentUser.teamId) : '';
+}
+function canCreateMeetings() {
+  return isAdmin() || Boolean(currentTeamId());
+}
+function canEditCalendarEvent(event) {
+  return Boolean(event && (isAdmin() || (currentTeamId() && String(event.teamId || '') === currentTeamId())));
+}
+function teamForId(id) {
+  return state.teams.find(function (team) { return String(team.id) === String(id || ''); });
+}
+function teamName(id) {
+  const team = teamForId(id);
+  return team ? team.name : t('noTeam');
+}
+function calendarEventFromRow(row) {
+  return { id: Number(row.id), title: row.title || '', date: String(row.starts_at || '').slice(0, 16), end: String(row.ends_at || '').slice(0, 16), notes: row.notes || '', teamId: row.team_id || '', participantIds: (Array.isArray(row.participant_ids) ? row.participant_ids : []).map(Number), createdBy: row.created_by || '' };
+}
+function calendarEventToRow(event) {
+  const stored = calendarEvents.find(function (item) { return item.id === Number(event.id); });
+  return { id: Number(event.id), title: event.title, starts_at: event.date, ends_at: event.end, notes: event.notes || '', team_id: event.teamId || null, participant_ids: (event.participantIds || []).map(String), created_by: event.createdBy || (stored && stored.createdBy) || currentUser.id };
+}
+async function hydrateCalendarEvents() {
+  if (!supabaseClient || !currentUser) {
+    calendarEvents = [];
+    return false;
+  }
+  const response = await supabaseClient.from('calendar_events').select('id, title, starts_at, ends_at, notes, team_id, participant_ids, created_by').order('starts_at');
+  if (response.error) {
+    setSaveStatus('dataUnavailable');
+    return false;
+  }
+  calendarEvents = response.data.map(calendarEventFromRow);
+  return true;
+}
+async function hydrateWorkspace() {
+  await hydrateDatabase();
+  await hydrateCalendarEvents();
+}
+async function saveCalendarEvent(event) {
+  if (!supabaseClient || !currentUser) return false;
+  setSaveStatus('dataSaving');
+  const response = await supabaseClient.from('calendar_events').upsert(calendarEventToRow(event));
+  if (response.error) {
+    setSaveStatus('dataUnavailable');
+    return false;
+  }
+  const index = calendarEvents.findIndex(function (item) { return item.id === event.id; });
+  if (index === -1) calendarEvents.unshift(event); else calendarEvents[index] = event;
+  setSaveStatus('dataSaved');
+  return true;
+}
+async function removeCalendarEvent(id) {
+  if (!supabaseClient || !currentUser) return false;
+  setSaveStatus('dataSaving');
+  const response = await supabaseClient.from('calendar_events').delete().eq('id', Number(id));
+  if (response.error) {
+    setSaveStatus('dataUnavailable');
+    return false;
+  }
+  calendarEvents = calendarEvents.filter(function (event) { return event.id !== Number(id); });
+  setSaveStatus('dataSaved');
+  return true;
+}
+function teamOptions(selectedId, includeEmpty) {
+  const selected = String(selectedId || '');
+  const empty = includeEmpty ? '<option value="">' + t('noTeam') + '</option>' : '';
+  return empty + state.teams.map(function (team) {
+    return '<option value="' + escapeHtml(String(team.id)) + '"' + (String(team.id) === selected ? ' selected' : '') + '>' + escapeHtml(team.name) + '</option>';
+  }).join('');
+}
+function personOptions(selectedId) {
+  const selected = String(selectedId || '');
+  return '<option value="">' + t('noLinkedPerson') + '</option>' + state.people.map(function (person) {
+    return '<option value="' + person.id + '"' + (String(person.id) === selected ? ' selected' : '') + '>' + escapeHtml(person.name || person.email) + '</option>';
+  }).join('');
+}
+function renderMeetingTeamPicker(selectedId) {
+  if (!meetingTeam) return;
+  const ownTeam = currentTeamId();
+  const selected = isAdmin() ? String(selectedId || '') : String(selectedId || ownTeam);
+  if (isAdmin()) {
+    meetingTeam.innerHTML = teamOptions(selected, true);
+  } else {
+    const team = teamForId(selected) || teamForId(ownTeam);
+    meetingTeam.innerHTML = team ? '<option value="' + escapeHtml(String(team.id)) + '">' + escapeHtml(team.name) + '</option>' : '<option value="">' + t('noTeam') + '</option>';
+  }
+  meetingTeam.value = selected;
+  meetingTeam.disabled = !isAdmin();
+}
+function updateEventEditorAccess(calendarEvent) {
+  const editable = !calendarEvent || canEditCalendarEvent(calendarEvent);
+  eventEditor.querySelectorAll('input, textarea, select').forEach(function (control) {
+    if (control.name === 'participantIds') return;
+    control.disabled = !editable || (control === meetingTeam && !isAdmin());
+  });
+  eventEditor.querySelector('.save-detail').disabled = !editable;
+  document.getElementById('delete-open-event').hidden = !calendarEvent || !editable;
 }
 function showAuth() {
   appShell.hidden = true;
@@ -307,7 +415,7 @@ async function initializeAuth() {
   }
   await refreshAccounts();
   startSession(accountForUser(user));
-  await hydrateDatabase();
+  await hydrateWorkspace();
   render();
 }
 function escapeHtml(value) {
@@ -408,15 +516,28 @@ function renderResponsibleFilter() {
   responsibleFilter.innerHTML = '<option value="">' + t('allTasks') + '</option><option value="__none__">' + t('noResponsible') + '</option>' + people.map(function (person) { return '<option value="' + escapeHtml(person) + '">' + escapeHtml(person) + '</option>'; }).join('');
   if (people.includes(previous) || previous === '__none__') responsibleFilter.value = previous;
 }
+function notesForView() {
+  const personalNotes = state.notes.filter(function (note) { return !note.eventId; });
+  const meetingNotes = calendarEvents.filter(function (event) { return Boolean((event.notes || '').trim()); }).map(function (event) {
+    return { id: 'event-' + event.id, eventId: event.id, title: event.title, text: event.notes, createdAt: event.date, calendarEvent: true };
+  });
+  return personalNotes.concat(meetingNotes).sort(function (a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
+}
+function calendarEventIdFromNoteId(id) {
+  const match = /^event-(\d+)$/.exec(String(id || ''));
+  return match ? Number(match[1]) : null;
+}
 function renderNotes() {
-  document.getElementById('meeting-count').textContent = state.notes.length;
-  document.getElementById('notes-count').textContent = state.notes.length + plural(state.notes.length, t('noteOne'), t('noteFew'), t('noteMany'));
-  if (!state.notes.length) {
+  const visibleNotes = notesForView();
+  document.getElementById('meeting-count').textContent = visibleNotes.length;
+  document.getElementById('notes-count').textContent = visibleNotes.length + plural(visibleNotes.length, t('noteOne'), t('noteFew'), t('noteMany'));
+  if (!visibleNotes.length) {
     noteList.innerHTML = '<div class="empty"><span>✦</span>' + t('noNotes') + '</div>';
     return;
   }
-  noteList.innerHTML = state.notes.map(function (note) {
-    return '<article class="note" data-note="' + note.id + '"><header><div><h3>' + escapeHtml(note.title) + '</h3><time>' + dateLabel(note.createdAt) + '</time></div><button class="delete" data-delete-note="' + note.id + '" aria-label="' + t('deleteNote') + '">×</button></header><p>' + escapeHtml(note.text) + '</p><footer class="note-actions"><button class="create-task" data-create-task-from-note="' + note.id + '">＋ ' + t('createTask') + '</button></footer></article>';
+  noteList.innerHTML = visibleNotes.map(function (note) {
+    const id = escapeHtml(String(note.id));
+    return '<article class="note" data-note="' + id + '"><header><div><h3>' + escapeHtml(note.title) + '</h3><time>' + dateLabel(note.createdAt) + '</time></div><button class="delete" data-delete-note="' + id + '" aria-label="' + t('deleteNote') + '">×</button></header><p>' + escapeHtml(note.text) + '</p><footer class="note-actions"><button class="create-task" data-create-task-from-note="' + id + '">＋ ' + t('createTask') + '</button></footer></article>';
   }).join('');
 }
 function contactMatches(person, query) {
@@ -464,8 +585,69 @@ function renderAccounts() {
   }
   accountsList.innerHTML = accounts.map(function (account) {
     const roleKey = account.role === 'admin' ? 'administrator' : 'member';
-    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + t(roleKey) + '</span></div><div><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div></article>';
+    const ownAccount = Boolean(currentUser && account.id === currentUser.id);
+    const roleOptions = '<option value="member"' + (account.role !== 'admin' ? ' selected' : '') + '>' + t('member') + '</option><option value="admin"' + (account.role === 'admin' ? ' selected' : '') + '>' + t('administrator') + '</option>';
+    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div><div class="account-access-controls"><label class="account-control-label"><span>' + t('accountRole') + '</span><select data-account-role="' + account.id + '"' + (ownAccount ? ' disabled' : '') + '>' + roleOptions + '</select></label><label class="account-control-label"><span>' + t('team') + '</span><select data-account-team="' + account.id + '">' + teamOptions(account.teamId, true) + '</select></label><label class="account-control-label"><span>' + t('linkedPerson') + '</span><select data-account-person="' + account.id + '">' + personOptions(account.personId) + '</select></label><button type="button" data-save-account-access="' + account.id + '">' + t('saveAccess') + '</button></div></article>';
   }).join('');
+}
+function syncPersonTeamMembership(personId, teamId) {
+  const person = Number(personId);
+  if (!person) return false;
+  const target = String(teamId || '');
+  let changed = false;
+  state.teams = state.teams.map(function (team) {
+    const members = (team.memberIds || []).map(Number);
+    const shouldContain = target && String(team.id) === target;
+    const hasPerson = members.includes(person);
+    if ((shouldContain && hasPerson) || (!shouldContain && !hasPerson)) return team;
+    changed = true;
+    return Object.assign({}, team, { memberIds: shouldContain ? Array.from(new Set(members.concat(person))) : members.filter(function (id) { return id !== person; }) });
+  });
+  return changed;
+}
+async function saveAccountAccess(accountId) {
+  if (!isAdmin() || !supabaseClient) return;
+  const account = accounts.find(function (item) { return item.id === accountId; });
+  const roleControl = document.querySelector('[data-account-role="' + accountId + '"]');
+  const teamControl = document.querySelector('[data-account-team="' + accountId + '"]');
+  const personControl = document.querySelector('[data-account-person="' + accountId + '"]');
+  if (!account || !roleControl || !teamControl || !personControl) return;
+  const update = {
+    role: account.id === currentUser.id ? account.role : roleControl.value,
+    team_id: teamControl.value || null,
+    person_id: personControl.value || null
+  };
+  setSaveStatus('dataSaving');
+  const response = await supabaseClient.from('profiles').update(update).eq('id', accountId);
+  if (response.error) {
+    setSaveStatus('dataUnavailable');
+    return;
+  }
+  const membershipChanged = syncPersonTeamMembership(update.person_id, update.team_id);
+  if (membershipChanged) await saveState(true);
+  await refreshAccounts();
+  if (currentUser && currentUser.id === accountId) {
+    currentUser = accounts.find(function (item) { return item.id === accountId; }) || currentUser;
+    updateAccessUi();
+  }
+  setSaveStatus('accessSaved');
+  render();
+}
+async function setLinkedAccountsTeam(personId, teamId) {
+  if (!isAdmin() || !supabaseClient || !personId) return true;
+  const linkedAccounts = accounts.filter(function (account) { return String(account.personId || '') === String(personId); });
+  if (!linkedAccounts.length) return true;
+  const responses = await Promise.all(linkedAccounts.map(function (account) {
+    return supabaseClient.from('profiles').update({ team_id: teamId || null }).eq('id', account.id);
+  }));
+  if (responses.some(function (response) { return response.error; })) {
+    setSaveStatus('dataUnavailable');
+    return false;
+  }
+  await refreshAccounts();
+  if (currentUser) currentUser = accounts.find(function (account) { return account.id === currentUser.id; }) || currentUser;
+  updateAccessUi();
+  return true;
 }
 function selectedPeople() {
   return selectedParticipantIds.map(function (id) { return state.people.find(function (person) { return person.id === id; }); }).filter(Boolean);
@@ -536,30 +718,36 @@ function renderMiniCalendar() {
   miniCalendarGrid.innerHTML = Array.from({ length: cellCount }, function (_, index) {
     const day = new Date(year, month, index - offset + 1);
     const key = dateKey(day);
-    const classes = [day.getMonth() !== month ? 'muted' : '', key === today ? 'today' : '', key >= weekStart && key <= weekEnd ? 'in-week' : '', state.events.some(function (event) { return event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
+    const classes = [day.getMonth() !== month ? 'muted' : '', key === today ? 'today' : '', key >= weekStart && key <= weekEnd ? 'in-week' : '', calendarEvents.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
     return '<button type="button" class="mini-day ' + classes + '" data-jump-date="' + key + '">' + day.getDate() + '</button>';
   }).join('');
 }
 function renderMobileCalendar(days) {
   if (!mobileTeamsCalendar) return;
+  const canCreate = canCreateMeetings();
   const availableDays = days.map(dateKey);
   if (!availableDays.includes(selectedCalendarDay)) selectedCalendarDay = availableDays[0];
   const selectedDate = dateFromKey(selectedCalendarDay);
   const weekdayFormat = new Intl.DateTimeFormat(t('locale'), { weekday: 'short' });
   const agendaTitle = new Intl.DateTimeFormat(t('locale'), { weekday: 'long', day: 'numeric', month: 'short' }).format(selectedDate);
-  const events = state.events.filter(function (event) { return event.date && event.date.slice(0, 10) === selectedCalendarDay; }).sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+  const events = calendarEvents.filter(function (event) { return event.date && event.date.slice(0, 10) === selectedCalendarDay; }).sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
   const eventList = events.length ? events.map(function (event) {
     const people = participantsFor(event);
-    const details = people.length ? people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : eventDateInputValue(meetingEnd(event)).slice(11, 16);
+    const peopleText = people.length ? people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : eventDateInputValue(meetingEnd(event)).slice(11, 16);
+    const details = [event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ');
     return '<button type="button" class="mobile-agenda-event" data-open-event="' + event.id + '"><time>' + escapeHtml(event.date.slice(11, 16)) + '</time><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(details) + '</small></span></button>';
   }).join('') : '<p class="mobile-agenda-empty">' + t('noMeetingsDay') + '</p>';
   mobileTeamsCalendar.innerHTML = '<div class="mobile-week-strip">' + days.map(function (day) {
     const key = dateKey(day);
-    const classes = [key === selectedCalendarDay ? 'selected' : '', key === dateKey(new Date()) ? 'today' : '', state.events.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
+    const classes = [key === selectedCalendarDay ? 'selected' : '', key === dateKey(new Date()) ? 'today' : '', calendarEvents.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
     return '<button type="button" class="mobile-week-day ' + classes + '" data-mobile-day="' + key + '"><span class="mobile-weekday">' + weekdayFormat.format(day) + '</span><span class="mobile-date">' + day.getDate() + '</span></button>';
-  }).join('') + '</div><div class="mobile-agenda"><header class="mobile-agenda-head"><h3>' + escapeHtml(agendaTitle) + '</h3><span>' + events.length + plural(events.length, t('eventOne'), t('eventFew'), t('eventMany')) + '</span></header><div class="mobile-agenda-list">' + eventList + '</div><button type="button" class="mobile-new-meeting" data-new-event-day="' + selectedCalendarDay + '" aria-label="' + t('newMeeting') + '">＋</button></div>';
+  }).join('') + '</div><div class="mobile-agenda"><header class="mobile-agenda-head"><h3>' + escapeHtml(agendaTitle) + '</h3><span>' + events.length + plural(events.length, t('eventOne'), t('eventFew'), t('eventMany')) + '</span></header><div class="mobile-agenda-list">' + eventList + '</div><button type="button" class="mobile-new-meeting" data-new-event-day="' + selectedCalendarDay + '" aria-label="' + t('newMeeting') + '"' + (canCreate ? '' : ' disabled title="' + escapeHtml(t('noCalendarTeam')) + '"') + '>＋</button></div>';
 }
 function renderCalendar() {
+  const canCreate = canCreateMeetings();
+  const newMeetingButton = document.getElementById('new-meeting');
+  newMeetingButton.disabled = !canCreate;
+  newMeetingButton.title = canCreate ? '' : t('noCalendarTeam');
   const days = Array.from({ length: 7 }, function (_, index) {
     return new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + index);
   });
@@ -567,13 +755,13 @@ function renderCalendar() {
   const titleFormat = new Intl.DateTimeFormat(t('locale'), { day: 'numeric', month: 'short', year: 'numeric' });
   const weekdayFormat = new Intl.DateTimeFormat(t('locale'), { weekday: 'short' });
   document.getElementById('calendar-title').textContent = titleFormat.format(days[0]) + ' – ' + titleFormat.format(days[6]);
-  document.getElementById('event-count').textContent = state.events.length;
-  document.getElementById('calendar-total').textContent = state.events.length + plural(state.events.length, t('eventOne'), t('eventFew'), t('eventMany'));
+  document.getElementById('event-count').textContent = calendarEvents.length;
+  document.getElementById('calendar-total').textContent = calendarEvents.length + plural(calendarEvents.length, t('eventOne'), t('eventFew'), t('eventMany'));
   renderMiniCalendar();
   renderMobileCalendar(days);
   weekHeader.innerHTML = '<div class="week-time-corner"></div>' + days.map(function (day) {
     const key = dateKey(day);
-    return '<button type="button" class="week-day-head' + (key === today ? ' today' : '') + '" data-new-event-day="' + key + '"><span class="weekday-name">' + weekdayFormat.format(day) + '</span><span class="date-number">' + day.getDate() + '</span></button>';
+    return '<button type="button" class="week-day-head' + (key === today ? ' today' : '') + '" data-new-event-day="' + key + '"' + (canCreate ? '' : ' disabled') + '><span class="weekday-name">' + weekdayFormat.format(day) + '</span><span class="date-number">' + day.getDate() + '</span></button>';
   }).join('');
   timeAxis.innerHTML = Array.from({ length: 14 }, function (_, index) {
     return '<div class="time-label">' + String(index + 7).padStart(2, '0') + ':00</div>';
@@ -581,9 +769,9 @@ function renderCalendar() {
   weekGrid.innerHTML = days.map(function (day) {
     const key = dateKey(day);
     const slots = Array.from({ length: 14 }, function (_, index) {
-      return '<button type="button" class="week-slot" data-new-event-time="' + dateInputFor(day, index + 7) + '"></button>';
+      return '<button type="button" class="week-slot" data-new-event-time="' + dateInputFor(day, index + 7) + '"' + (canCreate ? '' : ' disabled') + '></button>';
     }).join('');
-    const events = state.events.filter(function (event) { return event.date && event.date.slice(0, 10) === key; }).map(function (event) {
+    const events = calendarEvents.filter(function (event) { return event.date && event.date.slice(0, 10) === key; }).map(function (event) {
       const start = new Date(event.date);
       const end = meetingEnd(event);
       const startMinutes = start.getHours() * 60 + start.getMinutes();
@@ -591,7 +779,8 @@ function renderCalendar() {
       const duration = Math.max(30, (end.getTime() - start.getTime()) / 60000);
       const height = Math.max(35, Math.min(750 - top, duration * 0.9 - 4));
       const people = participantsFor(event);
-      const peopleLine = people.length ? '<span>👥 ' + escapeHtml(people.slice(0, 2).join(', ')) + (people.length > 2 ? ' +' + (people.length - 2) : '') + '</span>' : '<span>' + event.date.slice(11, 16) + ' – ' + eventDateInputValue(end).slice(11, 16) + '</span>';
+      const peopleText = people.length ? '👥 ' + people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : event.date.slice(11, 16) + ' – ' + eventDateInputValue(end).slice(11, 16);
+      const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
       return '<button type="button" class="week-event" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title) + '</strong>' + peopleLine + '</button>';
     }).join('');
     return '<div class="week-day-column">' + slots + events + '</div>';
@@ -784,21 +973,6 @@ function showTab(tab) {
   document.getElementById('meetings-screen').hidden = tab !== 'meetings';
   document.querySelectorAll('.tab').forEach(function (button) { button.classList.toggle('active', button.dataset.tab === tab); });
 }
-function syncMeetingNote(event) {
-  const text = (event.notes || '').trim();
-  const existing = state.notes.find(function (note) { return note.eventId === event.id; });
-  if (!text) {
-    if (existing) state.notes = state.notes.filter(function (note) { return note.eventId !== event.id; });
-    return;
-  }
-  if (existing) {
-    existing.title = event.title;
-    existing.text = text;
-    existing.createdAt = event.date;
-  } else {
-    state.notes.unshift({ id: Date.now(), eventId: event.id, title: event.title, text: text, createdAt: event.date });
-  }
-}
 function openTask(id) {
   const task = state.tasks.find(function (item) { return item.id === Number(id); });
   if (!task) return;
@@ -836,18 +1010,32 @@ function openNewNote() {
   noteDetail.hidden = false;
 }
 function openNote(id) {
-  const note = state.notes.find(function (item) { return item.id === Number(id); });
-  if (!note) return;
-  openNoteId = note.id;
-  noteEditor.elements.title.value = note.title || '';
-  noteEditor.elements.text.value = note.text || '';
+  const eventId = calendarEventIdFromNoteId(id);
+  if (eventId) {
+    const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
+    if (!calendarEvent) return;
+    openNoteId = 'event-' + eventId;
+    noteEditor.elements.title.value = calendarEvent.title || '';
+    noteEditor.elements.text.value = calendarEvent.notes || '';
+  } else {
+    const note = state.notes.find(function (item) { return item.id === Number(id); });
+    if (!note) return;
+    openNoteId = note.id;
+    noteEditor.elements.title.value = note.title || '';
+    noteEditor.elements.text.value = note.text || '';
+  }
   updateNoteEditorUi();
   noteDetail.hidden = false;
 }
 function updateNoteEditorUi() {
+  const calendarEventId = calendarEventIdFromNoteId(openNoteId);
+  const calendarEvent = calendarEventId ? calendarEvents.find(function (item) { return item.id === calendarEventId; }) : null;
+  const editable = !calendarEvent || canEditCalendarEvent(calendarEvent);
   document.getElementById('note-editor-title').textContent = openNoteId ? t('edit') : t('newNote');
   document.getElementById('save-note-detail').textContent = t('saveNote');
-  document.getElementById('delete-open-note').hidden = !openNoteId;
+  noteEditor.querySelectorAll('input, textarea').forEach(function (control) { control.disabled = !editable; });
+  document.getElementById('save-note-detail').disabled = !editable;
+  document.getElementById('delete-open-note').hidden = !openNoteId || !editable;
 }
 function closeNoteDetail() {
   openNoteId = null;
@@ -866,18 +1054,20 @@ function openNewEvent(startValue) {
   eventEditor.reset();
   eventEditor.elements.date.value = eventDateInputValue(start);
   eventEditor.elements.end.value = eventDateInputValue(end);
+  renderMeetingTeamPicker(isAdmin() ? '' : currentTeamId());
   participantSearch.value = '';
   setSelectedParticipants([]);
-  document.getElementById('delete-open-event').hidden = true;
+  updateEventEditorAccess(null);
   eventDetail.hidden = false;
 }
 function openEvent(id) {
-  const event = state.events.find(function (item) { return item.id === Number(id); });
+  const event = calendarEvents.find(function (item) { return item.id === Number(id); });
   if (!event) return;
   openEventId = event.id;
   eventEditor.elements.title.value = event.title || '';
   eventEditor.elements.date.value = event.date || eventDateInputValue(new Date());
   eventEditor.elements.end.value = eventDateInputValue(meetingEnd(event));
+  renderMeetingTeamPicker(event.teamId);
   participantSearch.value = '';
   const matchingIds = Array.isArray(event.participantIds) ? event.participantIds : participantsFor(event).map(function (name) {
     const person = state.people.find(function (item) { return item.name.toLocaleLowerCase() === name.toLocaleLowerCase(); });
@@ -885,7 +1075,7 @@ function openEvent(id) {
   }).filter(Boolean);
   setSelectedParticipants(matchingIds);
   eventEditor.elements.notes.value = event.notes || '';
-  document.getElementById('delete-open-event').hidden = false;
+  updateEventEditorAccess(event);
   eventDetail.hidden = false;
 }
 function closeEventDetail() {
@@ -925,7 +1115,7 @@ setupForm.addEventListener('submit', async function (event) {
   }
   await refreshAccounts();
   startSession(accountForUser(response.data.user));
-  await hydrateDatabase();
+  await hydrateWorkspace();
   render();
 });
 loginForm.addEventListener('submit', async function (event) {
@@ -940,23 +1130,24 @@ loginForm.addEventListener('submit', async function (event) {
   }
   await refreshAccounts();
   startSession(accountForUser(response.data.user));
-  await hydrateDatabase();
+  await hydrateWorkspace();
   render();
 });
-noteEditor.addEventListener('submit', function (event) {
+noteEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
   const form = new FormData(noteEditor);
   const details = { title: form.get('title').trim(), text: form.get('text').trim() };
-  if (openNoteId) {
-    const current = state.notes.find(function (note) { return note.id === openNoteId; });
+  const eventId = calendarEventIdFromNoteId(openNoteId);
+  if (eventId) {
+    const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
+    if (!calendarEvent || !canEditCalendarEvent(calendarEvent)) return;
+    if (!await saveCalendarEvent(Object.assign({}, calendarEvent, { title: details.title, notes: details.text }))) return;
+  } else if (openNoteId) {
     state.notes = state.notes.map(function (note) { return note.id === openNoteId ? Object.assign({}, note, details) : note; });
-    if (current && current.eventId) {
-      state.events = state.events.map(function (meeting) { return meeting.id === current.eventId ? Object.assign({}, meeting, { title: details.title, notes: details.text }) : meeting; });
-    }
   } else {
     state.notes.unshift(Object.assign({ id: Date.now(), createdAt: new Date().toISOString() }, details));
   }
-  saveState();
+  if (!eventId) saveState();
   closeNoteDetail();
   render();
 });
@@ -1024,26 +1215,29 @@ taskEditor.addEventListener('submit', function (event) {
   closeTaskDetail();
   render();
 });
-eventEditor.addEventListener('submit', function (event) {
+eventEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
   const form = new FormData(eventEditor);
   const start = form.get('date');
   let end = form.get('end');
   if (new Date(end) <= new Date(start)) end = eventDateInputValue(new Date(new Date(start).getTime() + 60 * 60000));
-  const details = { title: form.get('title').trim(), date: start, end: end, participantIds: selectedParticipantIds.slice(), notes: form.get('notes').trim() };
+  const teamId = isAdmin() ? String(form.get('teamId') || '') : currentTeamId();
+  if (!isAdmin() && !teamId) {
+    meetingTeam.setCustomValidity(t('noCalendarTeam'));
+    meetingTeam.reportValidity();
+    meetingTeam.setCustomValidity('');
+    return;
+  }
+  const details = { title: form.get('title').trim(), date: start, end: end, teamId: teamId, participantIds: selectedParticipantIds.slice(), notes: form.get('notes').trim() };
   let changedEvent;
   if (openEventId) {
-    state.events = state.events.map(function (item) {
-      if (item.id !== openEventId) return item;
-      changedEvent = Object.assign({}, item, details);
-      return changedEvent;
-    });
+    const current = calendarEvents.find(function (item) { return item.id === openEventId; });
+    if (!current || !canEditCalendarEvent(current)) return;
+    changedEvent = Object.assign({}, current, details);
   } else {
-    changedEvent = Object.assign({ id: Date.now() }, details);
-    state.events.unshift(changedEvent);
+    changedEvent = Object.assign({ id: Date.now(), createdBy: currentUser.id }, details);
   }
-  syncMeetingNote(changedEvent);
-  saveState();
+  if (!await saveCalendarEvent(changedEvent)) return;
   closeEventDetail();
   render();
   if (changedEvent.notes) showTab('meetings');
@@ -1081,6 +1275,10 @@ document.addEventListener('click', async function (event) {
     showAuth();
     return;
   }
+  if (button.dataset.saveAccountAccess) {
+    await saveAccountAccess(button.dataset.saveAccountAccess);
+    return;
+  }
   if (button.dataset.editPerson) {
     const person = state.people.find(function (item) { return item.id === Number(button.dataset.editPerson); });
     if (!person) return;
@@ -1096,7 +1294,6 @@ document.addEventListener('click', async function (event) {
     const id = Number(button.dataset.deletePerson);
     state.people = state.people.filter(function (person) { return person.id !== id; });
     state.teams = state.teams.map(function (team) { return Object.assign({}, team, { memberIds: (team.memberIds || []).filter(function (memberId) { return Number(memberId) !== id; }) }); });
-    state.events = state.events.map(function (meeting) { return Object.assign({}, meeting, { participantIds: (meeting.participantIds || []).filter(function (personId) { return Number(personId) !== id; }) }); });
     selectedParticipantIds = selectedParticipantIds.filter(function (personId) { return personId !== id; });
     saveState();
     render();
@@ -1104,9 +1301,20 @@ document.addEventListener('click', async function (event) {
     return;
   }
   if (button.dataset.deleteTeam) {
-    state.teams = state.teams.filter(function (team) { return team.id !== Number(button.dataset.deleteTeam); });
-    saveState();
-    renderTeams();
+    const teamId = String(button.dataset.deleteTeam);
+    if (supabaseClient && isAdmin()) {
+      const response = await supabaseClient.from('profiles').update({ team_id: null }).eq('team_id', teamId);
+      if (response.error) {
+        setSaveStatus('dataUnavailable');
+        return;
+      }
+      await refreshAccounts();
+      if (currentUser) currentUser = accounts.find(function (account) { return account.id === currentUser.id; }) || currentUser;
+      updateAccessUi();
+    }
+    state.teams = state.teams.filter(function (team) { return team.id !== Number(teamId); });
+    await saveState(true);
+    render();
     return;
   }
   if (button.dataset.addTeamMember) {
@@ -1114,21 +1322,23 @@ document.addEventListener('click', async function (event) {
     const picker = document.querySelector('[data-team-picker="' + teamId + '"]');
     const personId = picker ? Number(picker.value) : 0;
     if (!personId) return;
+    if (!await setLinkedAccountsTeam(personId, String(teamId))) return;
     state.teams = state.teams.map(function (team) {
       return team.id === teamId ? Object.assign({}, team, { memberIds: Array.from(new Set((team.memberIds || []).map(Number).concat(personId))) }) : team;
     });
-    saveState();
-    renderTeams();
+    await saveState(true);
+    render();
     return;
   }
   if (button.dataset.removeTeamMember) {
     const teamId = Number(button.dataset.removeTeamMember);
     const personId = Number(button.dataset.person);
+    if (!await setLinkedAccountsTeam(personId, '')) return;
     state.teams = state.teams.map(function (team) {
       return team.id === teamId ? Object.assign({}, team, { memberIds: (team.memberIds || []).filter(function (id) { return Number(id) !== personId; }) }) : team;
     });
-    saveState();
-    renderTeams();
+    await saveState(true);
+    render();
     return;
   }
   if (button.dataset.addParticipant) {
@@ -1168,18 +1378,27 @@ document.addEventListener('click', async function (event) {
   if (button.dataset.openEvent) openEvent(button.dataset.openEvent);
   if (button.dataset.deleteTask) { state.tasks = state.tasks.filter(function (task) { return task.id !== Number(button.dataset.deleteTask); }); saveState(); render(); }
   if (button.dataset.deleteNote) {
-    const note = state.notes.find(function (item) { return item.id === Number(button.dataset.deleteNote); });
-    state.notes = state.notes.filter(function (item) { return item.id !== Number(button.dataset.deleteNote); });
-    if (note && note.eventId) state.events = state.events.map(function (meeting) { return meeting.id === note.eventId ? Object.assign({}, meeting, { notes: '' }) : meeting; });
-    saveState();
+    const eventId = calendarEventIdFromNoteId(button.dataset.deleteNote);
+    if (eventId) {
+      const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
+      if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
+    } else {
+      state.notes = state.notes.filter(function (item) { return item.id !== Number(button.dataset.deleteNote); });
+      saveState();
+    }
     render();
   }
   if (button.dataset.createTaskFromNote) {
-    const note = state.notes.find(function (item) { return item.id === Number(button.dataset.createTaskFromNote); });
+    const eventId = calendarEventIdFromNoteId(button.dataset.createTaskFromNote);
+    const calendarEvent = eventId ? calendarEvents.find(function (item) { return item.id === eventId; }) : null;
+    const note = calendarEvent ? { id: 'event-' + eventId, title: calendarEvent.title, text: calendarEvent.notes, eventId: eventId } : state.notes.find(function (item) { return item.id === Number(button.dataset.createTaskFromNote); });
     if (note) {
       state.tasks.unshift({ id: Date.now(), title: note.title, description: note.text, responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() });
-      state.notes = state.notes.filter(function (item) { return item.id !== note.id; });
-      if (note.eventId) state.events = state.events.map(function (meeting) { return meeting.id === note.eventId ? Object.assign({}, meeting, { notes: '' }) : meeting; });
+      if (calendarEvent) {
+        if (canEditCalendarEvent(calendarEvent)) await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }));
+      } else {
+        state.notes = state.notes.filter(function (item) { return item.id !== note.id; });
+      }
       saveState();
       render();
       showTab('board');
@@ -1201,18 +1420,19 @@ document.addEventListener('click', async function (event) {
     render();
   }
   if (button.id === 'delete-open-event' && openEventId) {
-    state.deletedEventIds = Array.from(new Set((state.deletedEventIds || []).concat(String(openEventId))));
-    state.events = state.events.filter(function (meeting) { return meeting.id !== openEventId; });
-    state.notes = state.notes.filter(function (note) { return note.eventId !== openEventId; });
-    await saveState(true);
+    if (!await removeCalendarEvent(openEventId)) return;
     closeEventDetail();
     render();
   }
   if (button.id === 'delete-open-note' && openNoteId) {
-    const note = state.notes.find(function (item) { return item.id === openNoteId; });
-    state.notes = state.notes.filter(function (item) { return item.id !== openNoteId; });
-    if (note && note.eventId) state.events = state.events.map(function (meeting) { return meeting.id === note.eventId ? Object.assign({}, meeting, { notes: '' }) : meeting; });
-    saveState();
+    const eventId = calendarEventIdFromNoteId(openNoteId);
+    if (eventId) {
+      const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
+      if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
+    } else {
+      state.notes = state.notes.filter(function (item) { return item.id !== openNoteId; });
+      saveState();
+    }
     closeNoteDetail();
     render();
   }
