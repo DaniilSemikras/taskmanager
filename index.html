@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" id="theme-color" content="#f5f5f8">
   <meta name="description" content="Личная доска задач в стиле Trello">
   <title>Моя доска</title>
+  <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml">
+  <script src="theme.js?v=theme-1"></script>
   <link rel="stylesheet" href="style.css?v=meeting-notes-1">
   <link rel="stylesheet" href="teams-calendar.css?v=meeting-notes-1">
   <link rel="stylesheet" href="people-directory.css?v=stability-3">
@@ -14,10 +18,12 @@
   <link rel="stylesheet" href="admin-activity.css?v=admin-activity-1">
   <link rel="stylesheet" href="task-files.css?v=task-files-1">
   <link rel="stylesheet" href="date-picker.css?v=airline-calendar-1">
+  <link rel="stylesheet" href="theme.css?v=theme-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
     <div class="auth-card">
+      <button class="theme-toggle auth-theme-toggle" type="button" data-theme-toggle aria-label="Темна тема" title="Темна тема"><span aria-hidden="true">☾</span></button>
       <div class="auth-logo">☼</div><h1 data-i18n="welcome">Моя дошка</h1><p id="auth-description" data-i18n="loginHint">Увійдіть у свій простір.</p>
       <div class="auth-mode-switch" role="tablist" aria-label="Авторизація"><button type="button" class="active" data-auth-mode="login" data-i18n="signIn">Увійти</button><button type="button" data-auth-mode="register" data-i18n="register">Реєстрація</button></div>
       <form id="login-form"><label><span data-i18n="login">Логін</span><input name="login" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="username" autocapitalize="none" spellcheck="false" data-i18n-placeholder="loginPlaceholder" placeholder="Наприклад, user123"></label><label><span data-i18n="password">Пароль</span><input name="password" required type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Пароль"></label><button type="submit" data-i18n="signIn">Увійти</button></form>
@@ -39,7 +45,7 @@
           <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
           <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
         </nav>
-        <div class="menu-controls"><div class="user-menu"><span id="current-user"></span><div class="notification-wrap" id="notification-wrap"><button type="button" class="notification-button" id="notification-button" data-i18n-aria="notifications" aria-label="Сповіщення" aria-expanded="false" aria-controls="notifications-panel"><i aria-hidden="true">🔔</i><b id="notification-count" hidden>0</b></button><section class="notification-popover" id="notifications-panel" hidden><header><strong data-i18n="notifications">Сповіщення</strong><button type="button" id="mark-notifications-read" data-i18n="markAllRead">Прочитати все</button></header><div class="notification-list" id="notifications-list"></div></section></div><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div><span class="save-status" id="save-status" role="status"></span><select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select></div>
+        <div class="menu-controls"><div class="user-menu"><span id="current-user"></span><div class="notification-wrap" id="notification-wrap"><button type="button" class="notification-button" id="notification-button" data-i18n-aria="notifications" aria-label="Сповіщення" aria-expanded="false" aria-controls="notifications-panel"><i aria-hidden="true">🔔</i><b id="notification-count" hidden>0</b></button><section class="notification-popover" id="notifications-panel" hidden><header><strong data-i18n="notifications">Сповіщення</strong><button type="button" id="mark-notifications-read" data-i18n="markAllRead">Прочитати все</button></header><div class="notification-list" id="notifications-list"></div></section></div><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div><span class="save-status" id="save-status" role="status"></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Темна тема" title="Темна тема"><span aria-hidden="true">☾</span></button><select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select></div>
       </div>
     </header>
 
