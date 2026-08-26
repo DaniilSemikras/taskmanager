@@ -1574,11 +1574,16 @@ function moveTask(id, column, placement) {
   render();
 }
 function bindDragAndDrop() {
-  const marker = document.createElement('div');
-  marker.className = 'task-drop-marker';
+  let dropTargetCard = null;
+  let dropAfterTarget = false;
+  function clearInsertionTarget() {
+    document.querySelectorAll('.task-card.drop-before, .task-card.drop-after').forEach(function (card) { card.classList.remove('drop-before', 'drop-after'); });
+    dropTargetCard = null;
+    dropAfterTarget = false;
+  }
   function clearTargets() {
     document.querySelectorAll('.column').forEach(function (column) { column.classList.remove('is-drag-target'); });
-    marker.remove();
+    clearInsertionTarget();
   }
   document.querySelectorAll('.task-card').forEach(function (card) {
     card.addEventListener('dragstart', function (event) {
@@ -1656,17 +1661,33 @@ function bindDragAndDrop() {
       }
       const zone = column.querySelector('.column-cards');
       const cards = Array.from(zone.querySelectorAll('.task-card:not(.dragging)'));
-      const before = cards.find(function (card) { return event.clientY < card.getBoundingClientRect().top + card.getBoundingClientRect().height / 2; });
-      if (before) zone.insertBefore(marker, before); else zone.appendChild(marker);
+      clearInsertionTarget();
+      dropTargetCard = cards.find(function (card) { return event.clientY <= card.getBoundingClientRect().bottom; }) || cards[cards.length - 1] || null;
+      if (dropTargetCard) {
+        const bounds = dropTargetCard.getBoundingClientRect();
+        dropAfterTarget = event.clientY >= bounds.top + bounds.height / 2;
+        dropTargetCard.classList.add(dropAfterTarget ? 'drop-after' : 'drop-before');
+      }
     });
     column.addEventListener('dragleave', function (event) {
-      if (!column.contains(event.relatedTarget)) column.classList.remove('is-drag-target');
+      if (!column.contains(event.relatedTarget)) {
+        column.classList.remove('is-drag-target');
+        clearInsertionTarget();
+      }
     });
     column.addEventListener('drop', function (event) {
       event.preventDefault();
       const targetColumn = column.dataset.column;
-      const nextCard = marker.nextElementSibling && marker.nextElementSibling.classList.contains('task-card') ? marker.nextElementSibling : null;
-      const beforeId = nextCard ? Number(nextCard.dataset.task) : null;
+      let beforeId = null;
+      if (dropTargetCard) {
+        if (!dropAfterTarget) {
+          beforeId = Number(dropTargetCard.dataset.task);
+        } else {
+          const cards = Array.from(column.querySelectorAll('.task-card:not(.dragging)'));
+          const targetIndex = cards.indexOf(dropTargetCard);
+          beforeId = cards[targetIndex + 1] ? Number(cards[targetIndex + 1].dataset.task) : null;
+        }
+      }
       clearTargets();
       if (dragId) moveTask(dragId, targetColumn, { beforeId: beforeId });
     });
