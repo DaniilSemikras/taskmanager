@@ -234,15 +234,18 @@ function saveAccounts() {
 function normalizeState(saved) {
   const source = saved && typeof saved === 'object' ? saved : {};
   const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
+  const dismissedMeetingNoteIds = Array.from(new Set((Array.isArray(source.dismissedMeetingNoteIds) ? source.dismissedMeetingNoteIds : []).map(String).filter(Boolean)));
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
       const responsibles = normalizeResponsibleNames(Array.isArray(task.responsibles) && task.responsibles.length ? task.responsibles : task.responsible);
       const attachments = (Array.isArray(task.attachments) ? task.attachments : []).filter(function (file) { return file && file.id && file.path; }).map(function (file) { return { id: String(file.id), name: String(file.name || 'file'), path: String(file.path), size: Number(file.size) || 0, type: String(file.type || ''), createdAt: file.createdAt || new Date().toISOString(), uploadedBy: String(file.uploadedBy || '') }; });
-      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
+      const column = automaticTaskColumn(task.column, responsibles);
+      return Object.assign({}, task, { column: column, completedAt: column === 'done' ? (task.completedAt || null) : null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
     completedMeetingIds: Array.from(new Set((Array.isArray(source.completedMeetingIds) ? source.completedMeetingIds : []).map(String).filter(Boolean))),
+    dismissedMeetingNoteIds: dismissedMeetingNoteIds,
     notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
       return { id: String(notification.id), recipientId: String(notification.recipientId), type: notification.type === 'mention' ? 'mention' : 'status', taskId: Number(notification.taskId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
     }).slice(0, 160),
@@ -405,6 +408,10 @@ function normalizeResponsibleNames(value) {
 }
 function taskResponsibleNames(task) {
   return normalizeResponsibleNames(Array.isArray(task && task.responsibles) && task.responsibles.length ? task.responsibles : task && task.responsible);
+}
+function automaticTaskColumn(requestedColumn, responsibles) {
+  if (requestedColumn === 'done') return 'done';
+  return normalizeResponsibleNames(responsibles).length ? 'doing' : 'todo';
 }
 function currentUserResponsibleNames() {
   if (!currentUser) return [];
@@ -698,6 +705,7 @@ async function removeCalendarEvent(id) {
   }
   calendarEvents = calendarEvents.filter(function (event) { return event.id !== Number(id); });
   state.completedMeetingIds = (state.completedMeetingIds || []).filter(function (eventId) { return String(eventId) !== String(id); });
+  state.dismissedMeetingNoteIds = (state.dismissedMeetingNoteIds || []).filter(function (eventId) { return String(eventId) !== String(id); });
   saveState();
   setSaveStatus('dataSaved');
   return true;
@@ -1036,7 +1044,8 @@ function renderResponsibleFilter() {
 }
 function notesForView() {
   const personalNotes = state.notes.filter(function (note) { return !note.eventId; });
-  const meetingNotes = calendarEvents.filter(function (event) { return Boolean((event.notes || '').trim()) || meetingHasEnded(event); }).map(function (event) {
+  const dismissed = state.dismissedMeetingNoteIds || [];
+  const meetingNotes = calendarEvents.filter(function (event) { return !dismissed.includes(String(event.id)) && (Boolean((event.notes || '').trim()) || meetingHasEnded(event)); }).map(function (event) {
     return { id: 'event-' + event.id, eventId: event.id, title: event.title, text: event.notes, createdAt: event.date, calendarEvent: true };
   });
   return personalNotes.concat(meetingNotes).sort(function (a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
@@ -1044,6 +1053,12 @@ function notesForView() {
 function calendarEventIdFromNoteId(id) {
   const match = /^event-(\d+)$/.exec(String(id || ''));
   return match ? Number(match[1]) : null;
+}
+function dismissMeetingNote(id) {
+  state.dismissedMeetingNoteIds = Array.from(new Set((state.dismissedMeetingNoteIds || []).concat(String(id))));
+}
+function restoreMeetingNote(id) {
+  state.dismissedMeetingNoteIds = (state.dismissedMeetingNoteIds || []).filter(function (eventId) { return String(eventId) !== String(id); });
 }
 function renderNotes() {
   const visibleNotes = notesForView();
@@ -1495,12 +1510,14 @@ function render() {
 }
 function moveTask(id, column) {
   const currentTask = state.tasks.find(function (task) { return task.id === Number(id); });
-  if (!currentTask || currentTask.column === column) return;
+  if (!currentTask) return;
+  const destination = automaticTaskColumn(column, taskResponsibleNames(currentTask));
+  if (currentTask.column === destination) return;
   addTaskNotifications('status', currentTask, taskResponsibleNames(currentTask).concat(taskMentionNames(currentTask)));
   state.tasks = state.tasks.map(function (task) {
     if (task.id !== Number(id)) return task;
-    const completedAt = column === 'done' && task.column !== 'done' ? new Date().toISOString() : (column === 'done' ? task.completedAt : null);
-    return Object.assign({}, task, { column: column, completedAt: completedAt });
+    const completedAt = destination === 'done' && task.column !== 'done' ? new Date().toISOString() : (destination === 'done' ? task.completedAt : null);
+    return Object.assign({}, task, { column: destination, completedAt: completedAt });
   });
   recordActivity('taskMoved', currentTask.title);
   saveState();
@@ -1807,6 +1824,7 @@ noteEditor.addEventListener('submit', async function (event) {
     const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
     if (!calendarEvent || !canEditCalendarEvent(calendarEvent)) return;
     if (!await saveCalendarEvent(Object.assign({}, calendarEvent, { title: details.title, notes: details.text }))) return;
+    restoreMeetingNote(eventId);
   } else if (openNoteId) {
     state.notes = state.notes.map(function (note) { return note.id === openNoteId ? Object.assign({}, note, details) : note; });
   } else {
@@ -1873,7 +1891,7 @@ taskEditor.addEventListener('submit', async function (event) {
   const form = new FormData(taskEditor);
   const description = form.get('description').trim();
   const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
-  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: form.get('column'), priority: form.get('priority') };
+  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: automaticTaskColumn(form.get('column'), responsibles), priority: form.get('priority') };
   const taskId = openTaskId || Date.now();
   const saveButton = document.getElementById('save-task-detail');
   saveButton.disabled = true;
@@ -1949,6 +1967,7 @@ eventEditor.addEventListener('submit', async function (event) {
     changedEvent = Object.assign({ id: Date.now(), createdBy: currentUser.id }, details);
   }
   if (!await saveCalendarEvent(changedEvent)) return;
+  if ((changedEvent.notes || '').trim()) restoreMeetingNote(changedEvent.id);
   recordActivity('meetingSaved', changedEvent.title);
   saveState();
   closeEventDetail();
@@ -2150,6 +2169,7 @@ document.addEventListener('click', async function (event) {
       const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
       if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
       deletedNoteTitle = calendarEvent.title;
+      dismissMeetingNote(eventId);
     } else {
       const note = state.notes.find(function (item) { return item.id === Number(button.dataset.deleteNote); });
       deletedNoteTitle = note ? note.title : '';
@@ -2167,7 +2187,10 @@ document.addEventListener('click', async function (event) {
       const task = { id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() };
       state.tasks.unshift(task);
       if (calendarEvent) {
-        if (canEditCalendarEvent(calendarEvent)) await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }));
+        if (canEditCalendarEvent(calendarEvent)) {
+          if (!await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
+          dismissMeetingNote(eventId);
+        }
       } else {
         state.notes = state.notes.filter(function (item) { return item.id !== note.id; });
       }
@@ -2224,6 +2247,7 @@ document.addEventListener('click', async function (event) {
       const calendarEvent = calendarEvents.find(function (item) { return item.id === eventId; });
       if (!calendarEvent || !canEditCalendarEvent(calendarEvent) || !await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
       deletedNoteTitle = calendarEvent.title;
+      dismissMeetingNote(eventId);
     } else {
       const note = state.notes.find(function (item) { return item.id === openNoteId; });
       deletedNoteTitle = note ? note.title : '';
@@ -2234,6 +2258,12 @@ document.addEventListener('click', async function (event) {
     closeNoteDetail();
     render();
   }
+});
+taskResponsibleOptions.addEventListener('change', function () {
+  if (taskEditor.elements.column.value === 'done') return;
+  const selected = normalizeResponsibleNames(new FormData(taskEditor).getAll('responsibles'));
+  taskEditor.elements.column.value = automaticTaskColumn(taskEditor.elements.column.value, selected);
+  if (window.refreshCustomSelects) window.refreshCustomSelects();
 });
 document.addEventListener('change', function (event) {
   if (event.target.dataset.move) moveTask(event.target.dataset.move, event.target.value);
