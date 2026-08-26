@@ -1385,8 +1385,11 @@ function renderSummaryCharts(totals, from, to) {
   });
   const activity = days.map(function (day) {
     const key = dateKey(day);
-    const created = state.tasks.filter(function (task) { return !task.archivedAt && safeDateKey(task.createdAt) === key && isDateInRange(task.createdAt, from, to); }).length;
-    const closed = state.tasks.filter(function (task) { return !task.archivedAt && task.completedAt && safeDateKey(task.completedAt) === key && isDateInRange(task.completedAt, from, to); }).length;
+    const created = state.tasks.filter(function (task) { return safeDateKey(task.createdAt) === key && isDateInRange(task.createdAt, from, to); }).length;
+    const closed = state.tasks.filter(function (task) {
+      const closedAt = task.completedAt || task.archivedAt;
+      return closedAt && safeDateKey(closedAt) === key && isDateInRange(closedAt, from, to);
+    }).length;
     return { day: day, created: created, closed: closed };
   });
   const maxValue = Math.max(1, ...activity.map(function (item) { return Math.max(item.created, item.closed); }));
@@ -1400,18 +1403,23 @@ function renderSummaryCharts(totals, from, to) {
     return '<div class="activity-day" title="' + escapeHtml(title) + '"><div class="activity-bars"><i class="created' + (item.created ? '' : ' is-empty') + '" style="height:' + createdHeight + '%" data-value="' + item.created + '"></i><i class="closed' + (item.closed ? '' : ' is-empty') + '" style="height:' + closedHeight + '%" data-value="' + item.closed + '"></i></div><span><b>' + escapeHtml(label) + '</b><small>' + numericDate + '</small></span></div>';
   }).join('');
 }
+function summaryTaskColumn(task) {
+  return task.archivedAt ? 'done' : task.column;
+}
 function renderSummary() {
   const totals = { todo: 0, doing: 0, done: 0 };
   const mode = summaryDateMode.value;
   const from = summaryDateFrom.value;
   const to = summaryDateTo.value;
   const reportTasks = state.tasks.filter(function (task) {
-    if (task.archivedAt) return false;
-    const reportDate = mode === 'completed' ? (task.completedAt || (task.column === 'done' ? task.createdAt : '')) : task.createdAt;
+    const reportDate = mode === 'completed' ? (task.completedAt || task.archivedAt || (summaryTaskColumn(task) === 'done' ? task.createdAt : '')) : task.createdAt;
     if (mode === 'completed' && !reportDate) return false;
     return isDateInRange(reportDate, from, to);
   });
-  reportTasks.forEach(function (task) { if (totals[task.column] !== undefined) totals[task.column] += 1; });
+  reportTasks.forEach(function (task) {
+    const column = summaryTaskColumn(task);
+    if (totals[column] !== undefined) totals[column] += 1;
+  });
   document.getElementById('summary-total').textContent = reportTasks.length + plural(reportTasks.length, t('taskOne'), t('taskFew'), t('taskMany'));
   const activeTasks = totals.todo + totals.doing;
   const highPriorityTasks = reportTasks.filter(function (task) { return taskPriority(task) === 'high'; }).length;
@@ -1427,7 +1435,7 @@ function renderSummary() {
     const responsibles = taskResponsibleNames(task);
     (responsibles.length ? responsibles : [t('notAssigned')]).forEach(function (name) {
       if (!people.has(name)) people.set(name, { name: name, todo: 0, doing: 0, done: 0 });
-      people.get(name)[task.column] += 1;
+      people.get(name)[summaryTaskColumn(task)] += 1;
     });
   });
   const rows = Array.from(people.values()).sort(function (a, b) { return (b.done + b.doing + b.todo) - (a.done + a.doing + a.todo) || a.name.localeCompare(b.name, t('locale')); });
@@ -1435,7 +1443,7 @@ function renderSummary() {
     const total = person.todo + person.doing + person.done;
     return '<tr><td><span class="summary-person"><i>' + escapeHtml(personInitials(person.name)) + '</i>' + escapeHtml(person.name) + '</span></td><td>' + person.todo + '</td><td>' + person.doing + '</td><td>' + person.done + '</td><td><b>' + total + '</b></td></tr>';
   }).join('') : '<tr><td colspan="5" class="summary-empty">' + t('emptyColumn') + '</td></tr>';
-  const doneTasks = reportTasks.filter(function (task) { return task.column === 'done'; }).sort(function (a, b) { return new Date(b.completedAt || b.createdAt || 0) - new Date(a.completedAt || a.createdAt || 0); });
+  const doneTasks = reportTasks.filter(function (task) { return summaryTaskColumn(task) === 'done'; }).sort(function (a, b) { return new Date(b.completedAt || b.archivedAt || b.createdAt || 0) - new Date(a.completedAt || a.archivedAt || a.createdAt || 0); });
   completedTasks.innerHTML = doneTasks.length ? '<div class="completed-list">' + doneTasks.map(function (task) {
     return '<div class="completed-task"><strong>✓ ' + escapeHtml(task.title) + '</strong><span>' + escapeHtml(taskResponsibleNames(task).join(', ') || t('notAssigned')) + '</span></div>';
   }).join('') + '</div>' : '<div class="summary-empty">' + t('noCompletedTasks') + '</div>';
