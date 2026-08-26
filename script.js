@@ -161,7 +161,7 @@ function normalizeState(saved) {
   const deletedEventIds = Array.from(new Set((Array.isArray(source.deletedEventIds) ? source.deletedEventIds : []).map(String).filter(Boolean)));
   return {
     tasks: (Array.isArray(source.tasks) ? source.tasks : []).map(function (task) {
-      return Object.assign({}, task, { completedAt: task.completedAt || (task.column === 'done' ? task.createdAt || null : null), archivedAt: task.archivedAt || null });
+      return Object.assign({}, task, { completedAt: task.completedAt || null, archivedAt: task.archivedAt || null });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -653,7 +653,8 @@ function archiveCompletedTasks() {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   let changed = false;
   state.tasks = state.tasks.map(function (task) {
-    if (task.archivedAt || task.column !== 'done' || !task.completedAt || new Date(task.completedAt).getTime() > cutoff) return task;
+    const completedAt = new Date(task.completedAt || '').getTime();
+    if (task.archivedAt || task.column !== 'done' || !Number.isFinite(completedAt) || completedAt > cutoff) return task;
     changed = true;
     return Object.assign({}, task, { archivedAt: new Date().toISOString() });
   });
