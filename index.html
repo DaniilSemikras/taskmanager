@@ -29,7 +29,8 @@
         <nav aria-label="Разделы">
           <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
           <button class="tab" data-tab="calendar"><span data-i18n="calendar">Календарь</span> <b id="event-count">0</b></button>
-          <button class="tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
+          <button class="tab" id="people-tab" data-tab="people"><span data-i18n="people">Участники</span> <b id="people-count">0</b></button>
+          <button class="tab" id="team-tab" data-tab="team" hidden><span data-i18n="myTeam">Моя команда</span></button>
           <button class="tab" id="admin-tab" data-tab="admin"><span data-i18n="admin">Адмін</span></button>
           <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
           <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
@@ -91,6 +92,14 @@
       <section class="people-list" id="people-list" aria-label="База участников"></section>
     </section>
 
+    <section class="screen" id="team-screen" hidden>
+      <div class="heading">
+        <div><p class="eyebrow" data-i18n="myTeam">МОЯ КОМАНДА</p><h1 id="my-team-name" data-i18n="myTeam">Моя команда</h1><p id="my-team-hint" data-i18n="teamViewHint">Тут лише учасники вашої команди та їхні контакти.</p></div>
+        <span class="task-count" id="my-team-total">0</span>
+      </div>
+      <section class="people-list team-members-list" id="my-team-members" aria-label="Моя команда"></section>
+    </section>
+
     <section class="screen" id="admin-screen" hidden>
       <div class="heading">
         <div><p class="eyebrow" data-i18n="adminArea">АДМІН-ПАНЕЛЬ</p><h1 data-i18n="teamManagement">Управління командами</h1><p data-i18n="teamManagementHint">Створюй команди та додавай до них учасників із бази.</p></div>
@@ -145,6 +154,6 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=team-access-1"></script>
+  <script src="script.js?v=team-access-2"></script>
 </body>
 </html>

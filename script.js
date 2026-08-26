@@ -41,6 +41,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   team: 'Team', noTeam: 'No team', linkedPerson: 'Linked person', accountRole: 'Role', accountAccessHint: 'Assign a role, team, and linked person profile.', saveAccess: 'Save access', teamCalendar: 'Team calendar', meetingTeamHint: 'Everyone on this team can see the meeting in their calendar.', accessSaved: 'Access updated', noCalendarTeam: 'Ask an administrator to assign you to a team before creating meetings.'
 });
+Object.assign(translations.uk, {
+  myTeam: 'Моя команда', teamViewHint: 'Тут лише учасники вашої команди та їхні контакти.', teamMembers: 'учасники команди', noTeamAssigned: 'Команду ще не призначено', noTeamAssignedHint: 'Попросіть адміністратора додати вас до команди.'
+});
+Object.assign(translations.en, {
+  myTeam: 'My team', teamViewHint: 'Only your team members and their contacts are shown here.', teamMembers: 'team members', noTeamAssigned: 'No team assigned yet', noTeamAssignedHint: 'Ask an administrator to add you to a team.'
+});
 const columns = [
   { id: 'todo', titleKey: 'todo' },
   { id: 'doing', titleKey: 'doing' },
@@ -60,6 +66,12 @@ const board = document.getElementById('board');
 const noteList = document.getElementById('note-list');
 const peopleList = document.getElementById('people-list');
 const peopleSearch = document.getElementById('people-search');
+const peopleTab = document.getElementById('people-tab');
+const teamTab = document.getElementById('team-tab');
+const myTeamName = document.getElementById('my-team-name');
+const myTeamHint = document.getElementById('my-team-hint');
+const myTeamTotal = document.getElementById('my-team-total');
+const myTeamMembers = document.getElementById('my-team-members');
 const teamsList = document.getElementById('teams-list');
 const responsibleFilter = document.getElementById('responsible-filter');
 const taskSearch = document.getElementById('task-search');
@@ -392,7 +404,9 @@ function startSession(account) {
 function updateAccessUi() {
   document.getElementById('current-user').textContent = currentUser ? currentUser.login : '';
   document.getElementById('admin-tab').hidden = !isAdmin();
-  if (!isAdmin() && !document.getElementById('admin-screen').hidden) showTab('board');
+  peopleTab.hidden = !isAdmin();
+  teamTab.hidden = isAdmin();
+  if (!isAdmin() && (!document.getElementById('admin-screen').hidden || !document.getElementById('people-screen').hidden)) showTab('team');
 }
 function setMobileMenu(open) {
   if (!mobileMenuToggle || !appbarMenu) return;
@@ -562,6 +576,27 @@ function renderPeople() {
     }).join('');
   }
   document.getElementById('responsible-list').innerHTML = state.people.map(function (person) { return '<option value="' + escapeHtml(person.name) + '"></option>'; }).join('');
+}
+function renderMyTeam() {
+  const team = teamForId(currentTeamId());
+  if (!team) {
+    myTeamName.textContent = t('noTeamAssigned');
+    myTeamHint.textContent = t('noTeamAssignedHint');
+    myTeamTotal.textContent = '0' + plural(0, t('personOne'), t('personFew'), t('personMany'));
+    myTeamMembers.innerHTML = '<div class="empty team-empty"><span>♧</span>' + t('noTeamAssignedHint') + '</div>';
+    return;
+  }
+  const memberIds = Array.isArray(team.memberIds) ? team.memberIds.map(Number) : [];
+  const members = memberIds.map(function (id) { return state.people.find(function (person) { return person.id === id; }); }).filter(Boolean);
+  const ownPerson = state.people.find(function (person) { return String(person.id) === String(currentUser && currentUser.personId || ''); });
+  if (ownPerson && !members.some(function (person) { return person.id === ownPerson.id; })) members.unshift(ownPerson);
+  myTeamName.textContent = team.name;
+  myTeamHint.textContent = t('teamViewHint');
+  myTeamTotal.textContent = members.length + plural(members.length, t('personOne'), t('personFew'), t('personMany'));
+  myTeamMembers.innerHTML = members.length ? members.map(function (person) {
+    const role = person.role ? '<span class="person-role">' + escapeHtml(person.role) + '</span>' : '';
+    return '<article class="person-card team-member-card"><header><span class="person-avatar">' + escapeHtml(personInitials(person.name)) + '</span><div><h3>' + escapeHtml(person.name) + '</h3>' + role + '</div></header><div class="person-data"><span><b>@</b>' + escapeHtml(person.email) + '</span></div></article>';
+  }).join('') : '<div class="empty team-empty"><span>♧</span>' + t('noTeamMembers') + '</div>';
 }
 function renderTeams() {
   document.getElementById('teams-total').textContent = state.teams.length + plural(state.teams.length, t('teamOne'), t('teamFew'), t('teamMany'));
@@ -858,6 +893,7 @@ function render() {
   renderBoard();
   renderNotes();
   renderPeople();
+  renderMyTeam();
   renderTeams();
   renderAccounts();
   renderCalendar();
@@ -965,9 +1001,12 @@ function bindDragAndDrop() {
 }
 function showTab(tab) {
   if (tab === 'admin' && !isAdmin()) return;
+  if (tab === 'people' && !isAdmin()) tab = 'team';
+  if (tab === 'team' && isAdmin()) tab = 'people';
   document.getElementById('board-screen').hidden = tab !== 'board';
   document.getElementById('calendar-screen').hidden = tab !== 'calendar';
   document.getElementById('people-screen').hidden = tab !== 'people';
+  document.getElementById('team-screen').hidden = tab !== 'team';
   document.getElementById('admin-screen').hidden = tab !== 'admin';
   document.getElementById('summary-screen').hidden = tab !== 'summary';
   document.getElementById('meetings-screen').hidden = tab !== 'meetings';
