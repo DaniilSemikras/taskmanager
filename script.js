@@ -2,6 +2,7 @@ const STORAGE_KEY = 'personal-trello-board-v1';
 const LANGUAGE_KEY = 'personal-trello-language-v1';
 const ACCOUNTS_KEY = 'personal-trello-accounts-v1';
 const SESSION_KEY = 'personal-trello-session-v1';
+const ACTIVE_TAB_KEY = 'personal-trello-active-tab-v1';
 const SUPABASE_URL = 'https://nwannsutuahqvoptnlro.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Ny1CR7Kj7M4GEmJ_oTcEIA_Gjvn2FM_';
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
@@ -399,6 +400,7 @@ function startSession(account) {
   authScreen.hidden = true;
   appShell.hidden = false;
   updateAccessUi();
+  showTab(savedTabForCurrentUser());
   render();
 }
 function updateAccessUi() {
@@ -999,6 +1001,20 @@ function bindDragAndDrop() {
     });
   });
 }
+function tabStorageKey() {
+  return ACTIVE_TAB_KEY + '-' + (currentUser && currentUser.id || 'default');
+}
+function savedTabForCurrentUser() {
+  let tab = 'board';
+  try {
+    const saved = localStorage.getItem(tabStorageKey());
+    if (['board', 'calendar', 'people', 'team', 'summary', 'meetings', 'admin'].includes(saved)) tab = saved;
+  } catch {}
+  if (!isAdmin() && tab === 'people') return 'team';
+  if (!isAdmin() && tab === 'admin') return 'board';
+  if (isAdmin() && tab === 'team') return 'people';
+  return tab;
+}
 function showTab(tab) {
   if (tab === 'admin' && !isAdmin()) return;
   if (tab === 'people' && !isAdmin()) tab = 'team';
@@ -1011,6 +1027,7 @@ function showTab(tab) {
   document.getElementById('summary-screen').hidden = tab !== 'summary';
   document.getElementById('meetings-screen').hidden = tab !== 'meetings';
   document.querySelectorAll('.tab').forEach(function (button) { button.classList.toggle('active', button.dataset.tab === tab); });
+  try { localStorage.setItem(tabStorageKey(), tab); } catch {}
 }
 function openTask(id) {
   const task = state.tasks.find(function (item) { return item.id === Number(id); });
