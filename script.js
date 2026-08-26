@@ -135,6 +135,8 @@ let currentUser = null;
 let saveStatusKey = 'dataBrowser';
 let databaseSaveTimer = null;
 let databaseWriteQueue = Promise.resolve();
+let saveToastTimer = null;
+let saveNotificationsEnabled = false;
 let archiveCheckTimer = null;
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
@@ -217,9 +219,23 @@ function updateSaveStatus() {
   saveStatus.textContent = t(saveStatusKey);
   saveStatus.dataset.state = saveStatusKey;
 }
+function showSaveToast(key) {
+  if (!saveStatus) return;
+  clearTimeout(saveToastTimer);
+  saveStatus.classList.remove('toast-visible');
+  requestAnimationFrame(function () { saveStatus.classList.add('toast-visible'); });
+  const duration = key === 'dataUnavailable' ? 6500 : (key === 'dataSaving' ? 3000 : 3600);
+  saveToastTimer = setTimeout(function () { saveStatus.classList.remove('toast-visible'); }, duration);
+}
+function enableSaveNotifications() {
+  saveNotificationsEnabled = true;
+  if (saveStatusKey === 'dataUnavailable') showSaveToast(saveStatusKey);
+}
 function setSaveStatus(key) {
+  const changed = saveStatusKey !== key;
   saveStatusKey = key;
   updateSaveStatus();
+  if (saveNotificationsEnabled && (changed || key === 'dataSaving' || key === 'dataSaved' || key === 'accessSaved')) showSaveToast(key);
 }
 function hasStoredContent() {
   return Boolean(accounts.length || state.tasks.length || state.notes.length || calendarEvents.length || state.people.length || state.teams.length);
@@ -498,6 +514,7 @@ function setAuthMode(mode) {
 }
 function startSession(account) {
   currentUser = account;
+  saveNotificationsEnabled = false;
   authScreen.hidden = true;
   appShell.hidden = false;
   updateAccessUi();
@@ -535,6 +552,7 @@ async function initializeAuth() {
   startSession(accountForUser(user));
   await hydrateWorkspace();
   render();
+  enableSaveNotifications();
 }
 function escapeHtml(value) {
   const element = document.createElement('span');
@@ -1339,6 +1357,7 @@ setupForm.addEventListener('submit', async function (event) {
   startSession(accountForUser(response.data.user));
   await hydrateWorkspace();
   render();
+  enableSaveNotifications();
 });
 loginForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -1354,6 +1373,7 @@ loginForm.addEventListener('submit', async function (event) {
   startSession(accountForUser(response.data.user));
   await hydrateWorkspace();
   render();
+  enableSaveNotifications();
 });
 noteEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
