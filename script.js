@@ -115,7 +115,6 @@ const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
 const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
 const taskResponsibleOptions = document.getElementById('task-responsible-options');
-const taskLinkPreview = document.getElementById('task-link-preview');
 const taskFileInput = document.getElementById('task-file-input');
 const taskFileList = document.getElementById('task-file-list');
 const taskFilesMessage = document.getElementById('task-files-message');
@@ -804,16 +803,13 @@ function textWithLinks(value) {
   let offset = 0;
   let match;
   while ((match = pattern.exec(text))) {
+    const trailing = (match[0].match(/[.,!?;:)\]}]+$/) || [''])[0];
+    const url = trailing ? match[0].slice(0, -trailing.length) : match[0];
     result += escapeHtml(text.slice(offset, match.index));
-    result += '<a class="inline-link" href="' + escapeHtml(match[0]) + '" target="_blank" rel="noopener noreferrer">link</a>';
+    result += '<a class="inline-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">link</a>' + escapeHtml(trailing);
     offset = match.index + match[0].length;
   }
   return result + escapeHtml(text.slice(offset));
-}
-function renderTaskLinkPreview() {
-  if (!taskLinkPreview || !taskEditor) return;
-  const links = Array.from(new Set(String(taskEditor.elements.description.value || '').match(/https?:\/\/[^\s<>"']+/gi) || []));
-  taskLinkPreview.innerHTML = links.map(function (url) { return '<a class="inline-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">link</a>'; }).join('');
 }
 function formatFileSize(bytes) {
   if (!bytes) return '';
@@ -1641,7 +1637,6 @@ function openTask(id) {
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
   updateTaskEditorUi();
-  renderTaskLinkPreview();
   renderTaskFiles(task);
   taskDetail.hidden = false;
 }
@@ -1653,7 +1648,6 @@ function openNewTask(column) {
   taskEditor.elements.column.value = column || 'todo';
   taskEditor.elements.priority.value = 'medium';
   updateTaskEditorUi();
-  renderTaskLinkPreview();
   renderTaskFiles(null);
   taskDetail.hidden = false;
 }
@@ -1913,7 +1907,7 @@ taskEditor.addEventListener('submit', async function (event) {
   closeTaskDetail();
   render();
 });
-taskEditor.elements.description.addEventListener('input', function () { renderTaskMentionSuggestions(); renderTaskLinkPreview(); });
+taskEditor.elements.description.addEventListener('input', renderTaskMentionSuggestions);
 taskEditor.elements.description.addEventListener('click', renderTaskMentionSuggestions);
 taskFileInput.addEventListener('change', function () {
   const selected = Array.from(taskFileInput.files || []);
@@ -1965,13 +1959,13 @@ document.addEventListener('click', async function (event) {
   if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
   if (notificationsPanel && !event.target.closest('#notification-wrap')) setNotificationsOpen(false);
   const card = event.target.closest('.task-card, .archive-card');
-  if (card && !event.target.closest('button, select')) {
+  if (card && !event.target.closest('button, select, a')) {
     if (card.dataset.swipeHandled) return;
     openTask(card.dataset.task);
     return;
   }
   const noteCard = event.target.closest('.note');
-  if (noteCard && !event.target.closest('button')) {
+  if (noteCard && !event.target.closest('button, a')) {
     openNote(noteCard.dataset.note);
     return;
   }

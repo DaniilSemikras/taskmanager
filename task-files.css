@@ -1,18 +1,16 @@
 .inline-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 5px;
-  border-radius: 5px;
+  display: inline;
+  padding: 0;
   color: #5547c2;
-  background: #eeebff;
+  background: transparent;
   font-weight: 800;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
-.inline-link:hover { background: #dfdaff; text-decoration: underline; }
+.inline-link:hover { color: #4033ad; background: transparent; }
 .task-description,.note > p { white-space: pre-wrap; }
-.task-link-preview { display: flex; flex-wrap: wrap; gap: 5px; margin-top: -9px; }
-.task-link-preview:empty { display: none; }
 
 .task-file-field {
   display: grid;
