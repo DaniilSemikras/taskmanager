@@ -21,6 +21,16 @@ body {
 .tab { color:#676273; font-size:14px; font-weight:750; }
 .tab.active { color:#5747cf; }
 .screen { padding-top:38px; }
+@media (min-width:1200px) {
+  .screen {
+    width:calc(100% - 64px);
+    max-width:1440px;
+    margin-inline:auto;
+    padding-right:0;
+    padding-left:0;
+  }
+  .appbar { padding-inline:max(32px,calc((100vw - 1440px) / 2)); }
+}
 .eyebrow { color:#777184; font-size:11px; font-weight:850; }
 .heading h1 { color:#211e35; font-size:36px; font-weight:820; }
 .heading p:last-child { color:#6d687a; font-size:14px; line-height:1.55; }
