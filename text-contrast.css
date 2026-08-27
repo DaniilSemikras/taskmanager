@@ -1,0 +1,12 @@
+html:not([data-theme="dark"]) {
+  --ink:#181622;
+  --muted:#5d5868;
+}
+html:not([data-theme="dark"]) body { color:#181622; }
+html:not([data-theme="dark"]) :is(.brand strong,.heading h1,.column-head h2,.task-card h3,.note h3,.analytics-card h2,.summary-panel h2,.completed-panel h2,.calendar-head h2,.mobile-agenda-head h3,.task-detail h2) { color:#201d2c; }
+html:not([data-theme="dark"]) :is(.heading p:last-child,.task-description,.note p,.event-hint,.mention-hint,.analytics-hint,.summary-stat small,.planning-group>header p,.team-card p,.person-card p,.account-access-hint) { color:#5d5868; }
+html:not([data-theme="dark"]) :is(.task-detail label,.task-responsible-picker>span,.task-file-field>header>span,.filter-search input,.task-filters select,.summary-filters select,.custom-select-button,.move-select,.assignee,.calendar-period,.date-input-display) { color:#403b4b; }
+html:not([data-theme="dark"]) :is(.eyebrow,.summary-panel header p,.analytics-card header p,.planning-group>header h3,.summary-table th) { color:#666071; }
+html:not([data-theme="dark"]) :is(input,textarea)::placeholder { color:#777180; opacity:1; }
+html:not([data-theme="dark"]) .date-input-display.placeholder { color:#6f6978; }
+html:not([data-theme="dark"]) .summary-table td { color:#403c4a; }
