@@ -102,8 +102,14 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   workloadHealth: 'WORK HEALTH', priorityDistribution: 'Priority distribution', teamPerformance: 'TEAM PERFORMANCE', teamMetricsHint: 'Completion and overdue work', overdue: 'Overdue', efficiency: 'Completion', completionKpi: 'Completion rate', onTimeRate: 'On time', averageCycle: 'Average cycle', tasksInRange: 'tasks in the selected period', completedOfTotal: 'completed out of all tasks', activeWorkHint: 'tasks still require work', overdueHint: 'active tasks past their deadline', deadlinesMet: 'deadlines met', noDeadlineData: 'no completed tasks with deadlines', averageToComplete: 'from creation to completion', assignedCoverage: 'have an assignee', priorityHint: 'Active tasks by importance', cycleNotAvailable: '—', completionDate: 'Completed'
 });
+Object.assign(translations.uk, {
+  todo: 'Заплановані', plannedTasks: 'Заплановані', assignedTasks: 'Розподілені', planningUnassignedHint: 'Потрібно призначити відповідального', planningAssignedHint: 'Відповідальний є, роботу ще не розпочато'
+});
+Object.assign(translations.en, {
+  todo: 'Planned', plannedTasks: 'Planned', assignedTasks: 'Assigned', planningUnassignedHint: 'An assignee is still needed', planningAssignedHint: 'Assigned, but work has not started yet'
+});
 const columns = [
-  { id: 'todo', titleKey: 'unassignedTasks' },
+  { id: 'todo', titleKey: 'plannedTasks' },
   { id: 'doing', titleKey: 'doing' },
   { id: 'done', titleKey: 'done' }
 ];
@@ -1229,6 +1235,12 @@ function taskOrderCompare(a, b) {
 function orderedTasksInColumn(column, excludedId) {
   return state.tasks.filter(function (task) { return !task.archivedAt && task.column === column && task.id !== Number(excludedId); }).sort(taskOrderCompare);
 }
+function orderedTasksInVisualGroup(task) {
+  return orderedTasksInColumn(task.column).filter(function (item) {
+    if (task.column !== 'todo') return true;
+    return Boolean(taskResponsibleNames(item).length) === Boolean(taskResponsibleNames(task).length);
+  });
+}
 function placeTaskInColumn(taskId, column, beforeId) {
   const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
   if (!task) return;
@@ -1240,13 +1252,13 @@ function placeTaskInColumn(taskId, column, beforeId) {
 function placeTaskByPriority(taskId) {
   const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
   if (!task) return;
-  const before = orderedTasksInColumn(task.column, task.id).find(function (item) { return priorityRank(item) >= priorityRank(task); });
+  const before = orderedTasksInVisualGroup(task).filter(function (item) { return item.id !== task.id; }).find(function (item) { return priorityRank(item) >= priorityRank(task); });
   placeTaskInColumn(task.id, task.column, before && before.id);
 }
 function moveTaskStep(taskId, direction) {
   const task = state.tasks.find(function (item) { return item.id === Number(taskId); });
   if (!task) return;
-  const ordered = orderedTasksInColumn(task.column);
+  const ordered = orderedTasksInVisualGroup(task);
   const index = ordered.findIndex(function (item) { return item.id === task.id; });
   const nextIndex = index + (direction < 0 ? -1 : 1);
   if (index < 0 || nextIndex < 0 || nextIndex >= ordered.length) return;
@@ -1306,7 +1318,7 @@ function taskMarkup(task) {
   const mentions = taskMentionNames(task);
   const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
   const files = Array.isArray(task.attachments) && task.attachments.length ? '<span class="task-files-count">📎 ' + task.attachments.length + '</span>' : '';
-  const ordered = orderedTasksInColumn(task.column);
+  const ordered = orderedTasksInVisualGroup(task);
   const orderIndex = ordered.findIndex(function (item) { return item.id === task.id; });
   const orderControls = '<span class="task-order-controls"><button type="button" draggable="false" data-task-order="-1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskUp') + '" title="' + t('moveTaskUp') + '"' + (orderIndex <= 0 ? ' disabled' : '') + '>↑</button><button type="button" draggable="false" data-task-order="1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskDown') + '" title="' + t('moveTaskDown') + '"' + (orderIndex < 0 || orderIndex >= ordered.length - 1 ? ' disabled' : '') + '>↓</button></span>';
   const details = completed ? '' : description + deadline + files + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
@@ -1370,7 +1382,19 @@ function renderBoard() {
   });
   board.innerHTML = columns.map(function (column) {
     const cards = filteredTasks.filter(function (task) { return task.column === column.id; }).sort(taskOrderCompare);
-    const inner = cards.length ? cards.map(taskMarkup).join('') : '<div class="empty-column">' + t('emptyColumn') + '</div>';
+    let inner;
+    if (column.id === 'todo') {
+      const groups = [
+        { key: 'unassigned', title: t('unassignedTasks'), hint: t('planningUnassignedHint'), tasks: cards.filter(function (task) { return !taskResponsibleNames(task).length; }) },
+        { key: 'assigned', title: t('assignedTasks'), hint: t('planningAssignedHint'), tasks: cards.filter(function (task) { return taskResponsibleNames(task).length; }) }
+      ];
+      inner = '<div class="planning-groups">' + groups.map(function (group) {
+        const groupCards = group.tasks.length ? group.tasks.map(taskMarkup).join('') : '<div class="planning-empty">' + t('emptyColumn') + '</div>';
+        return '<section class="planning-group ' + group.key + '"><header><div><h3>' + group.title + '<span>' + group.tasks.length + '</span></h3><p>' + group.hint + '</p></div></header><div class="planning-group-cards">' + groupCards + '</div></section>';
+      }).join('') + '</div>';
+    } else {
+      inner = cards.length ? cards.map(taskMarkup).join('') : '<div class="empty-column">' + t('emptyColumn') + '</div>';
+    }
     return '<section class="column" data-column="' + column.id + '"><header class="column-head"><h2>' + t(column.titleKey) + ' <span>' + cards.length + '</span></h2><button type="button" data-add-to="' + column.id + '" aria-label="' + t('addTask') + '">＋</button></header><div class="drop-hint">⇣ ' + t('dropTaskHere') + '</div><div class="column-cards" data-dropzone="' + column.id + '">' + inner + '</div></section>';
   }).join('');
   const shown = filteredTasks.length;
