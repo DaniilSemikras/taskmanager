@@ -11,6 +11,12 @@ body {
   font-size:15px;
   line-height:1.45;
 }
+@media (min-width:701px) {
+  html {
+    overflow-y:scroll;
+    scrollbar-gutter:stable;
+  }
+}
 .appbar {
   border-color:rgba(218,215,229,.9);
   background:rgba(255,255,255,.9);
