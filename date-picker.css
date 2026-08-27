@@ -60,7 +60,15 @@
 .date-picker-range-hint { flex: 1; color: #8a8696; font-size: 10px; font-weight: 700; text-align: center; }
 .date-picker-done { color: #fff !important; background: #6657dc !important; }
 body.date-picker-open { overflow: hidden; }
+.date-input-shell { position:relative; display:inline-block; width:100%; min-width:0; }
+.date-input-shell>input { width:100% !important; color:transparent !important; caret-color:transparent; }
+.date-input-display { position:absolute; z-index:1; top:50%; right:34px; left:11px; overflow:hidden; color:#494556; font-size:13px; line-height:1; text-overflow:ellipsis; white-space:nowrap; transform:translateY(-50%); pointer-events:none; }
+.date-input-display.placeholder { color:#8f8a99; }
+.custom-date-range .date-input-shell { width:112px; flex:0 0 112px; }
+html[data-theme="dark"] .date-input-display { color:#e2dfe9; }
+html[data-theme="dark"] .date-input-display.placeholder { color:#96909f; }
 @media (max-width: 700px) {
+  .date-input-display { font-size:16px; }
   .date-picker-popover,.date-picker-popover.range-picker {
     top: auto !important;
     right: 8px !important;

@@ -246,6 +246,8 @@ function applyLanguage() {
     if (element.isContentEditable) element.dataset.placeholder = value; else element.placeholder = value;
   });
   document.querySelectorAll('[data-i18n-aria]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+  document.querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(function (input) { input.lang = language === 'en' ? 'en-GB' : 'uk-UA'; });
+  if (window.refreshDatePickerLabels) window.refreshDatePickerLabels();
   document.getElementById('event-editor-title').textContent = t('meetingDetails');
   updateTaskEditorUi();
   updateNoteEditorUi();

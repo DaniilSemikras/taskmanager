@@ -59,8 +59,45 @@
   }
 
   function dispatchChange(input) {
+    updateDateDisplay(input);
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function datePlaceholder(input) {
+    const date = locale() === 'en-US' ? 'DD.MM.YYYY' : 'ДД.ММ.РРРР';
+    return input.type === 'datetime-local' ? date + ', ' + (locale() === 'en-US' ? 'HH:MM' : 'ГГ:ХХ') : date;
+  }
+
+  function updateDateDisplay(input) {
+    if (!input || !input._dateDisplay) return;
+    input.lang = locale();
+    const date = parseDate(input.value);
+    if (!date) {
+      input._dateDisplay.textContent = datePlaceholder(input);
+      input._dateDisplay.classList.add('placeholder');
+      return;
+    }
+    let label = pad(date.getDate()) + '.' + pad(date.getMonth() + 1) + '.' + date.getFullYear();
+    if (input.type === 'datetime-local') label += ', ' + inputTime(input, '09:00');
+    input._dateDisplay.textContent = label;
+    input._dateDisplay.classList.remove('placeholder');
+  }
+
+  function enhanceDateInput(input) {
+    if (input._dateDisplay) {
+      updateDateDisplay(input);
+      return;
+    }
+    const shell = document.createElement('span');
+    const display = document.createElement('span');
+    shell.className = 'date-input-shell';
+    display.className = 'date-input-display';
+    display.setAttribute('aria-hidden', 'true');
+    input.parentNode.insertBefore(shell, input);
+    shell.append(input, display);
+    input._dateDisplay = display;
+    updateDateDisplay(input);
   }
 
   function monthLabel(date) {
@@ -333,6 +370,7 @@
     rangeInputs.add(from);
     rangeInputs.add(to);
     [from, to].forEach(function (input) {
+      enhanceDateInput(input);
       input.readOnly = true;
       input.setAttribute('inputmode', 'none');
       input.addEventListener('pointerdown', function (event) {
@@ -350,6 +388,7 @@
 
   document.querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(function (input) {
     if (rangeInputs.has(input)) return;
+    enhanceDateInput(input);
     input.readOnly = true;
     input.setAttribute('inputmode', 'none');
     input.addEventListener('pointerdown', function (event) {
@@ -383,4 +422,8 @@
     if (!state || picker.hidden || window.innerWidth <= 700) return;
     positionPicker(state.type === 'single' ? state.input : state.anchor);
   }, true);
+  window.refreshDatePickerLabels = function () {
+    document.querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(updateDateDisplay);
+    if (state && !picker.hidden) render();
+  };
 })();
