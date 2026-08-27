@@ -2205,6 +2205,7 @@ function openTask(id) {
   setTaskDescriptionEditor(task.description || '');
   taskEditor.elements.dueDate.value = task.dueDate || '';
   taskEditor.elements.dueTime.value = task.dueTime || '';
+  updateTaskDeadlineTimeVisibility();
   renderTaskResponsibleOptions(taskResponsibleNames(task));
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
@@ -2216,6 +2217,7 @@ function openNewTask(column) {
   pendingTaskFiles = [];
   openTaskId = null;
   taskEditor.reset();
+  updateTaskDeadlineTimeVisibility();
   setTaskDescriptionEditor('');
   renderTaskResponsibleOptions('');
   taskEditor.elements.column.value = column || 'todo';
@@ -2231,6 +2233,14 @@ function updateTaskEditorUi() {
   document.getElementById('save-task-detail').textContent = creating ? t('createTask') : t('saveChanges');
   document.getElementById('delete-open-task').hidden = creating;
   document.getElementById('archive-open-task').hidden = creating || !task || task.column !== 'done' || Boolean(task.archivedAt);
+}
+function updateTaskDeadlineTimeVisibility() {
+  const control = document.getElementById('deadline-time-control');
+  if (!control) return;
+  const hasDate = Boolean(taskEditor.elements.dueDate.value);
+  control.hidden = !hasDate;
+  control.closest('.deadline-inputs').classList.toggle('has-date', hasDate);
+  if (!hasDate) taskEditor.elements.dueTime.value = '';
 }
 function closeTaskDetail() {
   pendingTaskFiles = [];
@@ -2868,6 +2878,8 @@ taskResponsibleOptions.addEventListener('change', function () {
   taskEditor.elements.column.value = automaticTaskColumn(taskEditor.elements.column.value, selected);
   if (window.refreshCustomSelects) window.refreshCustomSelects();
 });
+taskEditor.elements.dueDate.addEventListener('change', updateTaskDeadlineTimeVisibility);
+taskEditor.elements.dueDate.addEventListener('input', updateTaskDeadlineTimeVisibility);
 document.addEventListener('change', function (event) {
   if (event.target.dataset.move) moveTask(event.target.dataset.move, event.target.value);
 });
