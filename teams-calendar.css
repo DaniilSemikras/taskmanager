@@ -40,6 +40,9 @@
 .week-day-column { position:relative; height:672px; border-right:1px solid #e7e6ec; }
 .week-day-column.weekend { background:#f8f8fb; }
 .week-day-column.today { background:#f3f1ff; }
+.current-time-indicator { position:absolute; z-index:5; right:0; left:0; height:2px; background:#e05263; box-shadow:0 1px 2px rgba(160,43,59,.18); pointer-events:none; }
+.current-time-indicator::before { position:absolute; top:50%; left:-4px; width:8px; height:8px; border:2px solid #fff; border-radius:50%; content:""; background:#e05263; transform:translateY(-50%); box-shadow:0 1px 3px rgba(137,32,47,.25); }
+.current-time-indicator span { position:absolute; top:-17px; left:5px; padding:1px 4px; border-radius:4px; color:#b83d4d; background:#fff5f6; font-size:8px; font-weight:900; line-height:14px; font-variant-numeric:tabular-nums; }
 .week-day-column:last-child { border-right:0; }
 .week-slot { display:block; width:100%; height:48px; padding:0; border:0; border-bottom:1px solid #ebeaf0; background:transparent; }
 .week-slot:hover { background:rgba(102,87,220,.07); }

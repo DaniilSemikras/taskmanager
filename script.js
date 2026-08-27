@@ -212,6 +212,7 @@ function t(key) {
 }
 function updateSystemClock() {
   document.getElementById('system-clock').textContent = new Intl.DateTimeFormat(t('locale'), { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date());
+  updateCalendarCurrentTimeIndicator();
 }
 function applyLanguage() {
   document.documentElement.lang = language;
@@ -1659,6 +1660,38 @@ function renderMobileCalendar(days) {
     return '<button type="button" class="mobile-week-day ' + classes + '" data-mobile-day="' + key + '"><span class="mobile-weekday">' + weekdayFormat.format(day) + '</span><span class="mobile-date">' + day.getDate() + '</span></button>';
   }).join('') + '</div><div class="mobile-agenda"><header class="mobile-agenda-head"><h3>' + escapeHtml(agendaTitle) + '</h3><span>' + events.length + plural(events.length, t('eventOne'), t('eventFew'), t('eventMany')) + '</span></header><div class="mobile-agenda-list">' + eventList + '</div><button type="button" class="mobile-new-meeting" data-new-event-day="' + selectedCalendarDay + '" aria-label="' + t('newMeeting') + '"' + (canCreate ? '' : ' disabled title="' + escapeHtml(t('noCalendarTeam')) + '"') + '>＋</button></div>';
 }
+function calendarCurrentTimePosition(now) {
+  const minutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  return minutes >= 7 * 60 && minutes <= 21 * 60 ? (minutes - 7 * 60) * 0.8 : null;
+}
+function currentTimeIndicatorMarkup(day) {
+  const now = new Date();
+  const top = dateKey(day) === dateKey(now) ? calendarCurrentTimePosition(now) : null;
+  if (top === null) return '';
+  const label = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  return '<div class="current-time-indicator" style="top:' + top.toFixed(2) + 'px" aria-hidden="true"><span>' + label + '</span></div>';
+}
+function updateCalendarCurrentTimeIndicator() {
+  if (!weekGrid) return;
+  const now = new Date();
+  const todayColumn = weekGrid.querySelector('[data-calendar-day="' + dateKey(now) + '"]');
+  if (!todayColumn) return;
+  const top = calendarCurrentTimePosition(now);
+  let indicator = todayColumn.querySelector('.current-time-indicator');
+  if (top === null) {
+    if (indicator) indicator.remove();
+    return;
+  }
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.className = 'current-time-indicator';
+    indicator.setAttribute('aria-hidden', 'true');
+    indicator.innerHTML = '<span></span>';
+    todayColumn.appendChild(indicator);
+  }
+  indicator.style.top = top.toFixed(2) + 'px';
+  indicator.querySelector('span').textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+}
 function renderCalendar() {
   const canCreate = canCreateMeetings();
   const newMeetingButton = document.getElementById('new-meeting');
@@ -1701,7 +1734,7 @@ function renderCalendar() {
       const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
       return '<button type="button" class="week-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title + (meetingHasEnded(event) ? ' ✓' : '')) + '</strong>' + peopleLine + '</button>';
     }).join('');
-    return '<div class="week-day-column ' + classes + '">' + slots + events + '</div>';
+    return '<div class="week-day-column ' + classes + '" data-calendar-day="' + key + '">' + slots + events + currentTimeIndicatorMarkup(day) + '</div>';
   }).join('');
 }
 function safeDateKey(value) {
