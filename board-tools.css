@@ -2,7 +2,7 @@
 .new-task { min-height:34px; padding:0 12px; border:0; border-radius:8px; color:#fff; background:#6657dc; box-shadow:0 5px 12px rgba(102,87,220,.18); font-size:12px; font-weight:800; }
 .new-task:hover { background:#5647cb; }
 .close-note-detail { width:28px; height:28px; border:0; border-radius:7px; color:#9692a2; background:transparent; font-size:24px; line-height:1; }.close-note-detail:hover { color:#5e50cf; background:#f0eeff; }
-.task-filters { display:grid; grid-template-columns:minmax(200px,1.2fr) repeat(4,minmax(112px,.58fr)) minmax(330px,1.15fr) auto; gap:8px; align-items:center; margin:0 0 17px; padding:10px; border:1px solid #e4e2eb; border-radius:12px; background:#fff; }
+.task-filters { display:grid; grid-template-columns:minmax(200px,1.2fr) repeat(3,minmax(112px,.58fr)) minmax(330px,1.15fr) auto; gap:8px; align-items:center; margin:0 0 17px; padding:10px; border:1px solid #e4e2eb; border-radius:12px; background:#fff; }
 .task-filters select,.filter-search input { width:100%; min-height:34px; padding:0 9px; outline:0; border:1px solid #e4e2ea; border-radius:7px; color:#5d596a; background:#fcfcfe; font-size:11px; font-weight:600; }
 .task-filters select:focus,.filter-search input:focus { border-color:#a39aef; box-shadow:0 0 0 3px #f0efff; }
 .filter-search { display:flex; align-items:center; gap:5px; padding:0 9px; border:1px solid #e4e2ea; border-radius:7px; background:#fcfcfe; }

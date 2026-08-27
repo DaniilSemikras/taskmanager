@@ -116,7 +116,6 @@ const myTeamMembers = document.getElementById('my-team-members');
 const teamsList = document.getElementById('teams-list');
 const responsibleFilter = document.getElementById('responsible-filter');
 const taskSearch = document.getElementById('task-search');
-const statusFilter = document.getElementById('status-filter');
 const priorityFilter = document.getElementById('priority-filter');
 const onlyMyTasksInput = document.getElementById('only-my-tasks');
 const clearFilters = document.getElementById('clear-filters');
@@ -1298,7 +1297,6 @@ function setDatePreset(scope, preset) {
 }
 function renderBoard() {
   const responsible = responsibleFilter.value;
-  const status = statusFilter.value;
   const priority = priorityFilter.value;
   const search = taskSearch.value.trim().toLocaleLowerCase();
   const from = taskDateFrom.value;
@@ -1310,10 +1308,9 @@ function renderBoard() {
     const responsibles = taskResponsibleNames(task);
     const matchesResponsible = !responsible || (responsible === '__none__' ? !responsibles.length : responsibles.includes(responsible));
     const matchesOnlyMine = !onlyMyTasks || responsibles.some(function (name) { return ownResponsibleNames.includes(name); });
-    const matchesStatus = !status || task.column === status;
     const matchesPriority = !priority || taskPriority(task) === priority;
     const searchable = (task.title + ' ' + (task.description || '') + ' ' + responsibles.join(' ')).toLocaleLowerCase();
-    return matchesResponsible && matchesOnlyMine && matchesStatus && matchesPriority && isDateInRange(task.createdAt, from, to) && (!search || searchable.includes(search));
+    return matchesResponsible && matchesOnlyMine && matchesPriority && isDateInRange(task.createdAt, from, to) && (!search || searchable.includes(search));
   });
   board.innerHTML = columns.map(function (column) {
     const cards = filteredTasks.filter(function (task) { return task.column === column.id; }).sort(taskOrderCompare);
@@ -1322,7 +1319,7 @@ function renderBoard() {
   }).join('');
   const shown = filteredTasks.length;
   if (onlyMyTasksInput) onlyMyTasksInput.checked = onlyMyTasks;
-  const hasFilters = responsible || status || priority || search || from || to || onlyMyTasks;
+  const hasFilters = responsible || priority || search || from || to || onlyMyTasks;
   document.getElementById('task-count').textContent = hasFilters ? shown + ' ' + t('of') + ' ' + activeTaskCount : activeTaskCount + plural(activeTaskCount, t('taskOne'), t('taskFew'), t('taskMany'));
   bindDragAndDrop();
   updateDeadlineCountdowns();
@@ -1640,7 +1637,7 @@ function renderMobileCalendar(days) {
   }).join('') : '<p class="mobile-agenda-empty">' + t('noMeetingsDay') + '</p>';
   mobileTeamsCalendar.innerHTML = '<div class="mobile-week-strip">' + days.map(function (day) {
     const key = dateKey(day);
-    const classes = [key === selectedCalendarDay ? 'selected' : '', key === dateKey(new Date()) ? 'today' : '', calendarEvents.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
+    const classes = [key === selectedCalendarDay ? 'selected' : '', key === dateKey(new Date()) ? 'today' : '', day.getDay() === 0 || day.getDay() === 6 ? 'weekend' : '', calendarEvents.some(function (event) { return event.date && event.date.slice(0, 10) === key; }) ? 'has-event' : ''].filter(Boolean).join(' ');
     return '<button type="button" class="mobile-week-day ' + classes + '" data-mobile-day="' + key + '"><span class="mobile-weekday">' + weekdayFormat.format(day) + '</span><span class="mobile-date">' + day.getDate() + '</span></button>';
   }).join('') + '</div><div class="mobile-agenda"><header class="mobile-agenda-head"><h3>' + escapeHtml(agendaTitle) + '</h3><span>' + events.length + plural(events.length, t('eventOne'), t('eventFew'), t('eventMany')) + '</span></header><div class="mobile-agenda-list">' + eventList + '</div><button type="button" class="mobile-new-meeting" data-new-event-day="' + selectedCalendarDay + '" aria-label="' + t('newMeeting') + '"' + (canCreate ? '' : ' disabled title="' + escapeHtml(t('noCalendarTeam')) + '"') + '>＋</button></div>';
 }
@@ -1662,13 +1659,15 @@ function renderCalendar() {
   renderMobileCalendar(days);
   weekHeader.innerHTML = '<div class="week-time-corner"></div>' + days.map(function (day) {
     const key = dateKey(day);
-    return '<button type="button" class="week-day-head' + (key === today ? ' today' : '') + '" data-new-event-day="' + key + '"' + (canCreate ? '' : ' disabled') + '><span class="weekday-name">' + weekdayFormat.format(day) + '</span><span class="date-number">' + day.getDate() + '</span></button>';
+    const classes = [key === today ? 'today' : '', day.getDay() === 0 || day.getDay() === 6 ? 'weekend' : ''].filter(Boolean).join(' ');
+    return '<button type="button" class="week-day-head ' + classes + '" data-new-event-day="' + key + '"' + (canCreate ? '' : ' disabled') + '><span class="weekday-name">' + weekdayFormat.format(day) + '</span><span class="date-number">' + day.getDate() + '</span></button>';
   }).join('');
   timeAxis.innerHTML = Array.from({ length: 14 }, function (_, index) {
     return '<div class="time-label">' + String(index + 7).padStart(2, '0') + ':00</div>';
   }).join('');
   weekGrid.innerHTML = days.map(function (day) {
     const key = dateKey(day);
+    const classes = [key === today ? 'today' : '', day.getDay() === 0 || day.getDay() === 6 ? 'weekend' : ''].filter(Boolean).join(' ');
     const slots = Array.from({ length: 14 }, function (_, index) {
       return '<button type="button" class="week-slot" data-new-event-time="' + dateInputFor(day, index + 7) + '"' + (canCreate ? '' : ' disabled') + '></button>';
     }).join('');
@@ -1684,7 +1683,7 @@ function renderCalendar() {
       const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
       return '<button type="button" class="week-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title + (meetingHasEnded(event) ? ' ✓' : '')) + '</strong>' + peopleLine + '</button>';
     }).join('');
-    return '<div class="week-day-column">' + slots + events + '</div>';
+    return '<div class="week-day-column ' + classes + '">' + slots + events + '</div>';
   }).join('');
 }
 function safeDateKey(value) {
@@ -2540,7 +2539,6 @@ document.addEventListener('click', async function (event) {
   if (button.dataset.summaryPeriod) { setDatePreset('summary', button.dataset.summaryPeriod); return; }
   if (button.id === 'clear-filters') {
     taskSearch.value = '';
-    statusFilter.value = '';
     responsibleFilter.value = '';
     priorityFilter.value = '';
     onlyMyTasks = false;
@@ -2678,7 +2676,6 @@ function changeLanguage(value) {
 languageSwitch.addEventListener('change', function () { changeLanguage(languageSwitch.value); });
 authLanguageSwitch.addEventListener('change', function () { changeLanguage(authLanguageSwitch.value); });
 responsibleFilter.addEventListener('change', renderBoard);
-statusFilter.addEventListener('change', renderBoard);
 priorityFilter.addEventListener('change', renderBoard);
 onlyMyTasksInput.addEventListener('change', function () { onlyMyTasks = onlyMyTasksInput.checked; renderBoard(); });
 taskSearch.addEventListener('input', renderBoard);
