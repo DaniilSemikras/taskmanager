@@ -129,29 +129,6 @@ using (public.is_workspace_admin())
 with check (public.is_workspace_admin());
 grant select, update on public.profiles to authenticated;
 
--- Администратор может полностью удалить чужую учётную запись.
-create or replace function public.delete_workspace_account(target_user uuid)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  if auth.uid() is null or target_user is null or target_user = auth.uid() then
-    raise exception 'Account cannot be deleted';
-  end if;
-  if not public.is_workspace_admin() then
-    raise exception 'Administrator access required';
-  end if;
-  delete from auth.users where id = target_user;
-  if not found then
-    raise exception 'Account not found';
-  end if;
-end;
-$$;
-revoke all on function public.delete_workspace_account(uuid) from public;
-grant execute on function public.delete_workspace_account(uuid) to authenticated;
-
 drop policy if exists "Authenticated users update workspace" on public.workspace_state;
 create policy "Authenticated users update workspace"
 on public.workspace_state
