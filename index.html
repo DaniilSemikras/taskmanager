@@ -161,7 +161,7 @@
       <div class="mention-suggestions" id="task-mention-suggestions" hidden role="listbox"></div>
       <div class="task-responsible-picker"><span data-i18n="responsibles">Відповідальні</span><div class="responsible-options" id="task-responsible-options"></div></div>
       <div class="detail-fields">
-        <label><span data-i18n="deadline">Дедлайн</span><input name="dueDate" type="date"></label>
+        <label class="task-deadline-field"><span data-i18n="deadline">Дедлайн</span><span class="deadline-inputs"><input name="dueDate" type="date"><input name="dueTime" type="time" step="300" data-i18n-aria="deadlineTime" aria-label="Час дедлайну"></span></label>
         <label><span data-i18n="column">Колонка</span><select name="column"><option value="todo" data-i18n="todo">Нужно сделать</option><option value="doing" data-i18n="doing">В процессе</option><option value="done" data-i18n="done">Готово</option></select></label>
         <label><span data-i18n="priority">Приоритет</span><select name="priority"><option value="high" data-i18n="highPriority">Высокий</option><option value="medium" data-i18n="mediumPriority">Средний</option><option value="low" data-i18n="lowPriority">Низкий</option></select></label>
       </div>
@@ -188,7 +188,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=planning-groups-1"></script>
+  <script src="script.js?v=deadline-time-1"></script>
   <script src="date-picker.js?v=airline-calendar-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>

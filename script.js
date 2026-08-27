@@ -108,6 +108,8 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   todo: 'Planned', plannedTasks: 'Planned', assignedTasks: 'Assigned', planningUnassignedHint: 'An assignee is still needed', planningAssignedHint: 'Assigned, but work has not started yet'
 });
+Object.assign(translations.uk, { deadlineTime: 'Час дедлайну' });
+Object.assign(translations.en, { deadlineTime: 'Due time' });
 const columns = [
   { id: 'todo', titleKey: 'plannedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -289,7 +291,7 @@ function normalizeState(saved) {
       const attachments = (Array.isArray(task.attachments) ? task.attachments : []).filter(function (file) { return file && file.id && file.path; }).map(function (file) { return { id: String(file.id), name: String(file.name || 'file'), path: String(file.path), size: Number(file.size) || 0, type: String(file.type || ''), createdAt: file.createdAt || new Date().toISOString(), uploadedBy: String(file.uploadedBy || '') }; });
       const column = automaticTaskColumn(task.column, responsibles);
       const hasSortOrder = task.sortOrder !== null && task.sortOrder !== undefined && task.sortOrder !== '' && Number.isFinite(Number(task.sortOrder));
-      return Object.assign({}, task, { column: column, sortOrder: hasSortOrder ? Number(task.sortOrder) : null, completedAt: column === 'done' ? (task.completedAt || null) : null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
+      return Object.assign({}, task, { column: column, sortOrder: hasSortOrder ? Number(task.sortOrder) : null, completedAt: column === 'done' ? (task.completedAt || null) : null, archivedAt: task.archivedAt || null, dueDate: typeof task.dueDate === 'string' ? task.dueDate : '', dueTime: /^\d{2}:\d{2}$/.test(task.dueTime || '') ? task.dueTime : '', responsibles: responsibles, responsible: responsibles[0] || '', mentions: Array.from(new Set((Array.isArray(task.mentions) ? task.mentions : []).map(String).map(function (name) { return name.trim(); }).filter(Boolean))), attachments: attachments });
     }),
     notes: (Array.isArray(source.notes) ? source.notes : []).filter(function (note) { return !note.eventId || !deletedEventIds.includes(String(note.eventId)); }),
     events: (Array.isArray(source.events) ? source.events : []).filter(function (event) { return !deletedEventIds.includes(String(event.id)); }),
@@ -1268,22 +1270,27 @@ function moveTaskStep(taskId, direction) {
   saveState();
   render();
 }
-function taskDeadlineLabel(value) {
+function taskDeadlineTimestamp(value, time) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return NaN;
+  const normalizedTime = /^\d{2}:\d{2}$/.test(time || '') ? time : '23:59';
+  return new Date(value + 'T' + normalizedTime + (time ? ':00' : ':59.999')).getTime();
+}
+function taskDeadlineLabel(value, time) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
   const date = new Date(value + 'T00:00:00');
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(t('locale'), { day: 'numeric', month: 'short' }).format(date);
+  const dateLabel = new Intl.DateTimeFormat(t('locale'), { day: 'numeric', month: 'short' }).format(date);
+  return dateLabel + (/^\d{2}:\d{2}$/.test(time || '') ? ' · ' + time : '');
 }
 function taskDeadlineState(task) {
   if (!task.dueDate || task.column === 'done') return '';
   const today = eventDateInputValue(new Date()).slice(0, 10);
-  return task.dueDate < today ? ' overdue' : task.dueDate === today ? ' today' : '';
+  return taskDeadlineTimestamp(task.dueDate, task.dueTime) < Date.now() ? ' overdue' : task.dueDate === today ? ' today' : '';
 }
-function taskDeadlineCountdown(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
-  const deadline = new Date(value + 'T23:59:59.999');
-  if (Number.isNaN(deadline.getTime())) return '';
-  const difference = deadline.getTime() - Date.now();
+function taskDeadlineCountdown(value, time) {
+  const deadline = taskDeadlineTimestamp(value, time);
+  if (!Number.isFinite(deadline)) return '';
+  const difference = deadline - Date.now();
   const totalMinutes = Math.max(1, Math.floor(Math.abs(difference) / 60000));
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
@@ -1297,9 +1304,17 @@ function taskDeadlineCountdown(value) {
 function updateDeadlineCountdowns() {
   document.querySelectorAll('[data-deadline-countdown]').forEach(function (element) {
     const value = element.dataset.deadlineCountdown;
-    const deadline = new Date(value + 'T23:59:59.999');
-    element.textContent = taskDeadlineCountdown(value);
-    element.classList.toggle('overdue', !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now());
+    const time = element.dataset.deadlineTime || '';
+    const deadline = taskDeadlineTimestamp(value, time);
+    element.textContent = taskDeadlineCountdown(value, time);
+    element.classList.toggle('overdue', Number.isFinite(deadline) && deadline < Date.now());
+    const card = element.closest('.task-card');
+    if (card) {
+      const overdue = Number.isFinite(deadline) && deadline < Date.now() && !card.classList.contains('completed-card');
+      card.classList.toggle('overdue-card', overdue);
+      const badge = card.querySelector('.task-deadline');
+      if (badge) badge.classList.toggle('overdue', overdue);
+    }
   });
 }
 function priorityIndicator(priority) {
@@ -1311,8 +1326,8 @@ function taskMarkup(task) {
   const completed = task.column === 'done';
   const overdue = taskDeadlineState(task) === ' overdue';
   const description = task.description ? '<p class="task-description">' + textWithLinks(task.description) + '</p>' : '';
-  const deadlineLabel = taskDeadlineLabel(task.dueDate);
-  const deadline = deadlineLabel ? '<div class="task-deadline-wrap"><span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span><span class="task-deadline-countdown" data-deadline-countdown="' + escapeHtml(task.dueDate) + '">' + escapeHtml(taskDeadlineCountdown(task.dueDate)) + '</span></div>' : '';
+  const deadlineLabel = taskDeadlineLabel(task.dueDate, task.dueTime);
+  const deadline = deadlineLabel ? '<div class="task-deadline-wrap"><span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span><span class="task-deadline-countdown" data-deadline-countdown="' + escapeHtml(task.dueDate) + '" data-deadline-time="' + escapeHtml(task.dueTime || '') + '">' + escapeHtml(taskDeadlineCountdown(task.dueDate, task.dueTime)) + '</span></div>' : '';
   const responsibles = taskResponsibleNames(task);
   const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
   const mentions = taskMentionNames(task);
@@ -1895,7 +1910,7 @@ function summaryCompletionDate(task) {
 }
 function summaryIsOverdue(task) {
   if (summaryTaskColumn(task) === 'done' || !/^\d{4}-\d{2}-\d{2}$/.test(task.dueDate || '')) return false;
-  return task.dueDate < eventDateInputValue(new Date()).slice(0, 10);
+  return taskDeadlineTimestamp(task.dueDate, task.dueTime) < Date.now();
 }
 function summaryCycleHours(task) {
   const started = new Date(task.createdAt || '').getTime();
@@ -1928,7 +1943,7 @@ function renderSummary() {
   const assignedTasks = reportTasks.filter(function (task) { return taskResponsibleNames(task).length; }).length;
   const assignedPercent = reportTasks.length ? Math.round(assignedTasks / reportTasks.length * 100) : 0;
   const deadlineDone = reportTasks.filter(function (task) { return summaryTaskColumn(task) === 'done' && /^\d{4}-\d{2}-\d{2}$/.test(task.dueDate || '') && summaryCompletionDate(task); });
-  const onTimeDone = deadlineDone.filter(function (task) { return new Date(summaryCompletionDate(task)).getTime() <= new Date(task.dueDate + 'T23:59:59.999').getTime(); }).length;
+  const onTimeDone = deadlineDone.filter(function (task) { return new Date(summaryCompletionDate(task)).getTime() <= taskDeadlineTimestamp(task.dueDate, task.dueTime); }).length;
   const onTimePercent = deadlineDone.length ? Math.round(onTimeDone / deadlineDone.length * 100) : null;
   const cycleValues = reportTasks.map(summaryCycleHours).filter(Number.isFinite);
   const averageCycle = cycleValues.length ? cycleValues.reduce(function (sum, value) { return sum + value; }, 0) / cycleValues.length : null;
@@ -2189,6 +2204,7 @@ function openTask(id) {
   taskEditor.elements.title.value = task.title || '';
   setTaskDescriptionEditor(task.description || '');
   taskEditor.elements.dueDate.value = task.dueDate || '';
+  taskEditor.elements.dueTime.value = task.dueTime || '';
   renderTaskResponsibleOptions(taskResponsibleNames(task));
   taskEditor.elements.column.value = task.column || 'todo';
   taskEditor.elements.priority.value = taskPriority(task);
@@ -2433,7 +2449,7 @@ taskEditor.addEventListener('submit', async function (event) {
   const form = new FormData(taskEditor);
   const description = form.get('description').trim();
   const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
-  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), column: automaticTaskColumn(form.get('column'), responsibles), priority: form.get('priority') };
+  const details = { title: form.get('title').trim(), description: description, mentions: extractTaskMentions(description), responsibles: responsibles, responsible: responsibles[0] || '', dueDate: String(form.get('dueDate') || ''), dueTime: String(form.get('dueTime') || ''), column: automaticTaskColumn(form.get('column'), responsibles), priority: form.get('priority') };
   const taskId = openTaskId || Date.now();
   const saveButton = document.getElementById('save-task-detail');
   saveButton.disabled = true;
