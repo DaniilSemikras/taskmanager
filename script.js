@@ -96,6 +96,12 @@ Object.assign(translations.uk, {
 Object.assign(translations.en, {
   archiveTitle: 'Archive', archiveEyebrow: 'WORK HISTORY', archiveHint: 'Review completed tasks and restore them when needed.', archiveEmpty: 'The archive is empty.', archivedOn: 'Archived', restoreTask: 'Restore', archiveTaskOne: 'task', archiveTaskFew: 'tasks', archiveTaskMany: 'tasks', deadlineRemaining: 'Time left', deadlineOverdue: 'Overdue by', dayShort: 'd', hourShort: 'h', minuteShort: 'min', actionTaskRestored: 'restored a task from the archive', moveTaskUp: 'Move task up', moveTaskDown: 'Move task down'
 });
+Object.assign(translations.uk, {
+  workloadHealth: 'СТАН РОБОТИ', priorityDistribution: 'Розподіл пріоритетів', teamPerformance: 'ЕФЕКТИВНІСТЬ КОМАНДИ', teamMetricsHint: 'Виконання та прострочення', overdue: 'Прострочено', efficiency: 'Виконання', completionKpi: 'Рівень виконання', onTimeRate: 'Вчасно', averageCycle: 'Середній цикл', tasksInRange: 'завдань у вибраному періоді', completedOfTotal: 'виконано від загальної кількості', activeWorkHint: 'завдань потребують роботи', overdueHint: 'активних завдань поза дедлайном', deadlinesMet: 'дедлайнів дотримано', noDeadlineData: 'немає завершених задач із дедлайном', averageToComplete: 'від створення до виконання', assignedCoverage: 'призначено відповідальних', priorityHint: 'Активні завдання за рівнем важливості', cycleNotAvailable: '—', completionDate: 'Дата виконання'
+});
+Object.assign(translations.en, {
+  workloadHealth: 'WORK HEALTH', priorityDistribution: 'Priority distribution', teamPerformance: 'TEAM PERFORMANCE', teamMetricsHint: 'Completion and overdue work', overdue: 'Overdue', efficiency: 'Completion', completionKpi: 'Completion rate', onTimeRate: 'On time', averageCycle: 'Average cycle', tasksInRange: 'tasks in the selected period', completedOfTotal: 'completed out of all tasks', activeWorkHint: 'tasks still require work', overdueHint: 'active tasks past their deadline', deadlinesMet: 'deadlines met', noDeadlineData: 'no completed tasks with deadlines', averageToComplete: 'from creation to completion', assignedCoverage: 'have an assignee', priorityHint: 'Active tasks by importance', cycleNotAvailable: '—', completionDate: 'Completed'
+});
 const columns = [
   { id: 'todo', titleKey: 'unassignedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -171,6 +177,7 @@ const summaryCompletionChart = document.getElementById('summary-completion-chart
 const summaryCompletionLabel = document.getElementById('summary-completion-label');
 const summaryCompletionLegend = document.getElementById('summary-completion-legend');
 const summaryStatusChart = document.getElementById('summary-status-chart');
+const summaryPriorityChart = document.getElementById('summary-priority-chart');
 const summaryActivityChart = document.getElementById('summary-activity-chart');
 const summaryDateMode = document.getElementById('summary-date-mode');
 const summaryDateFrom = document.getElementById('summary-date-from');
@@ -1765,7 +1772,7 @@ function safeDateKey(value) {
   const date = new Date(value || '');
   return Number.isNaN(date.getTime()) ? '' : dateKey(date);
 }
-function renderSummaryCharts(totals, from, to) {
+function renderSummaryCharts(totals, from, to, reportTasks) {
   const total = totals.todo + totals.doing + totals.done;
   const donePercent = total ? Math.round(totals.done / total * 100) : 0;
   const active = totals.todo + totals.doing;
@@ -1785,6 +1792,15 @@ function renderSummaryCharts(totals, from, to) {
   ].map(function (item) {
     const percent = total ? Math.round(item.value / total * 100) : 0;
     return '<div class="status-chart-row ' + item.key + '"><div class="status-chart-label"><span><i></i>' + item.label + '</span><b>' + item.value + '</b></div><div class="status-chart-track"><i style="width:' + percent + '%"></i></div><small>' + percent + '%</small></div>';
+  }).join('');
+  const activeTasks = reportTasks.filter(function (task) { return summaryTaskColumn(task) !== 'done'; });
+  const priorities = ['high', 'medium', 'low'].map(function (key) {
+    return { key: key, value: activeTasks.filter(function (task) { return taskPriority(task) === key; }).length, label: t(key + 'Priority') };
+  });
+  const priorityMax = Math.max(1, ...priorities.map(function (item) { return item.value; }));
+  summaryPriorityChart.innerHTML = '<p>' + t('priorityHint') + '</p>' + priorities.map(function (item) {
+    const percent = Math.round(item.value / priorityMax * 100);
+    return '<div class="priority-chart-row ' + item.key + '"><div><span><i></i>' + item.label + '</span><b>' + item.value + '</b></div><div class="priority-chart-track"><i style="width:' + percent + '%"></i></div></div>';
   }).join('');
   const end = to ? dateFromKey(to) : new Date();
   end.setHours(0, 0, 0, 0);
@@ -1814,6 +1830,23 @@ function renderSummaryCharts(totals, from, to) {
 function summaryTaskColumn(task) {
   return task.archivedAt ? 'done' : task.column;
 }
+function summaryCompletionDate(task) {
+  return task.completedAt || task.archivedAt || '';
+}
+function summaryIsOverdue(task) {
+  if (summaryTaskColumn(task) === 'done' || !/^\d{4}-\d{2}-\d{2}$/.test(task.dueDate || '')) return false;
+  return task.dueDate < eventDateInputValue(new Date()).slice(0, 10);
+}
+function summaryCycleHours(task) {
+  const started = new Date(task.createdAt || '').getTime();
+  const finished = new Date(summaryCompletionDate(task)).getTime();
+  return Number.isFinite(started) && Number.isFinite(finished) && finished >= started ? (finished - started) / 3600000 : null;
+}
+function summaryDuration(hours) {
+  if (!Number.isFinite(hours)) return t('cycleNotAvailable');
+  if (hours < 24) return Math.max(1, Math.round(hours)) + ' ' + t('hourShort');
+  return (hours / 24).toFixed(hours < 240 ? 1 : 0) + ' ' + t('dayShort');
+}
 function renderSummary() {
   const totals = { todo: 0, doing: 0, done: 0 };
   const mode = summaryDateMode.value;
@@ -1830,30 +1863,46 @@ function renderSummary() {
   });
   document.getElementById('summary-total').textContent = reportTasks.length + plural(reportTasks.length, t('taskOne'), t('taskFew'), t('taskMany'));
   const activeTasks = totals.todo + totals.doing;
-  const highPriorityTasks = reportTasks.filter(function (task) { return taskPriority(task) === 'high'; }).length;
+  const completionPercent = reportTasks.length ? Math.round(totals.done / reportTasks.length * 100) : 0;
+  const overdueTasks = reportTasks.filter(summaryIsOverdue).length;
+  const assignedTasks = reportTasks.filter(function (task) { return taskResponsibleNames(task).length; }).length;
+  const assignedPercent = reportTasks.length ? Math.round(assignedTasks / reportTasks.length * 100) : 0;
+  const deadlineDone = reportTasks.filter(function (task) { return summaryTaskColumn(task) === 'done' && /^\d{4}-\d{2}-\d{2}$/.test(task.dueDate || '') && summaryCompletionDate(task); });
+  const onTimeDone = deadlineDone.filter(function (task) { return new Date(summaryCompletionDate(task)).getTime() <= new Date(task.dueDate + 'T23:59:59.999').getTime(); }).length;
+  const onTimePercent = deadlineDone.length ? Math.round(onTimeDone / deadlineDone.length * 100) : null;
+  const cycleValues = reportTasks.map(summaryCycleHours).filter(Number.isFinite);
+  const averageCycle = cycleValues.length ? cycleValues.reduce(function (sum, value) { return sum + value; }, 0) / cycleValues.length : null;
   summaryStats.innerHTML = [
-    { key: 'total', value: reportTasks.length, label: t('total') },
-    { key: 'active', value: activeTasks, label: t('activeTasks') },
-    { key: 'done', value: totals.done, label: t('done') },
-    { key: 'high', value: highPriorityTasks, label: t('highPriorityTasks') }
-  ].map(function (item) { return '<article class="summary-stat ' + item.key + '"><b>' + item.value + '</b><span>' + item.label + '</span></article>'; }).join('');
-  renderSummaryCharts(totals, from, to);
+    { key: 'total', icon: 'Σ', value: reportTasks.length, label: t('total'), hint: t('tasksInRange'), progress: assignedPercent, footer: assignedPercent + '% ' + t('assignedCoverage') },
+    { key: 'completion', icon: '✓', value: completionPercent + '%', label: t('completionKpi'), hint: totals.done + ' / ' + reportTasks.length + ' · ' + t('completedOfTotal'), progress: completionPercent },
+    { key: 'active', icon: '↗', value: activeTasks, label: t('activeTasks'), hint: t('activeWorkHint'), progress: reportTasks.length ? Math.round(activeTasks / reportTasks.length * 100) : 0 },
+    { key: 'overdue', icon: '!', value: overdueTasks, label: t('overdue'), hint: t('overdueHint'), progress: activeTasks ? Math.round(overdueTasks / activeTasks * 100) : 0 },
+    { key: 'ontime', icon: '◷', value: onTimePercent === null ? '—' : onTimePercent + '%', label: t('onTimeRate'), hint: deadlineDone.length ? onTimeDone + ' / ' + deadlineDone.length + ' · ' + t('deadlinesMet') : t('noDeadlineData'), progress: onTimePercent || 0 },
+    { key: 'cycle', icon: '⌁', value: summaryDuration(averageCycle), label: t('averageCycle'), hint: t('averageToComplete'), progress: 0 }
+  ].map(function (item) {
+    return '<article class="summary-stat ' + item.key + '"><header><span class="summary-stat-icon">' + item.icon + '</span><span>' + item.label + '</span></header><b>' + item.value + '</b><small>' + item.hint + '</small>' + (item.footer ? '<em>' + item.footer + '</em>' : '') + (item.key === 'cycle' ? '' : '<div class="summary-stat-track"><i style="width:' + Math.min(100, item.progress) + '%"></i></div>') + '</article>';
+  }).join('');
+  renderSummaryCharts(totals, from, to, reportTasks);
   const people = new Map();
   reportTasks.forEach(function (task) {
     const responsibles = taskResponsibleNames(task);
     (responsibles.length ? responsibles : [t('notAssigned')]).forEach(function (name) {
-      if (!people.has(name)) people.set(name, { name: name, todo: 0, doing: 0, done: 0 });
+      if (!people.has(name)) people.set(name, { name: name, todo: 0, doing: 0, done: 0, overdue: 0 });
       people.get(name)[summaryTaskColumn(task)] += 1;
+      if (summaryIsOverdue(task)) people.get(name).overdue += 1;
     });
   });
   const rows = Array.from(people.values()).sort(function (a, b) { return (b.done + b.doing + b.todo) - (a.done + a.doing + a.todo) || a.name.localeCompare(b.name, t('locale')); });
   summaryByPerson.innerHTML = rows.length ? rows.map(function (person) {
     const total = person.todo + person.doing + person.done;
-    return '<tr><td><span class="summary-person"><i>' + escapeHtml(personInitials(person.name)) + '</i>' + escapeHtml(person.name) + '</span></td><td>' + person.todo + '</td><td>' + person.doing + '</td><td>' + person.done + '</td><td><b>' + total + '</b></td></tr>';
-  }).join('') : '<tr><td colspan="5" class="summary-empty">' + t('emptyColumn') + '</td></tr>';
+    const efficiency = total ? Math.round(person.done / total * 100) : 0;
+    return '<tr><td><span class="summary-person"><i>' + escapeHtml(personInitials(person.name)) + '</i>' + escapeHtml(person.name) + '</span></td><td>' + person.todo + '</td><td>' + person.doing + '</td><td><strong class="metric-done">' + person.done + '</strong></td><td><strong class="metric-overdue">' + person.overdue + '</strong></td><td><div class="person-efficiency"><span><i style="width:' + efficiency + '%"></i></span><b>' + efficiency + '%</b></div></td><td><b>' + total + '</b></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="summary-empty">' + t('emptyColumn') + '</td></tr>';
   const doneTasks = reportTasks.filter(function (task) { return summaryTaskColumn(task) === 'done'; }).sort(function (a, b) { return new Date(b.completedAt || b.archivedAt || b.createdAt || 0) - new Date(a.completedAt || a.archivedAt || a.createdAt || 0); });
   completedTasks.innerHTML = doneTasks.length ? '<div class="completed-list">' + doneTasks.map(function (task) {
-    return '<div class="completed-task"><strong>✓ ' + escapeHtml(task.title) + '</strong><span>' + escapeHtml(taskResponsibleNames(task).join(', ') || t('notAssigned')) + '</span></div>';
+    const completedAt = summaryCompletionDate(task);
+    const date = completedAt ? new Intl.DateTimeFormat(t('locale'), { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(completedAt)) : '';
+    return '<div class="completed-task"><div><strong><i>✓</i>' + escapeHtml(task.title) + '</strong><span>' + escapeHtml(taskResponsibleNames(task).join(', ') || t('notAssigned')) + '</span></div><small>' + (date ? t('completionDate') + ': ' + escapeHtml(date) : '') + (summaryCycleHours(task) !== null ? '<b>' + summaryDuration(summaryCycleHours(task)) + '</b>' : '') + '</small></div>';
   }).join('') + '</div>' : '<div class="summary-empty">' + t('noCompletedTasks') + '</div>';
 }
 function plural(number, one, few, many) {

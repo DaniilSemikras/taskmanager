@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="theme.css?v=current-time-line-1">
   <link rel="stylesheet" href="custom-select.css?v=rounded-selects-1">
   <link rel="stylesheet" href="design-refresh.css?v=readable-ui-1">
+  <link rel="stylesheet" href="summary-pro.css?v=summary-pro-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -142,9 +143,10 @@
       <section class="analytics-dashboard" aria-label="Аналітика задач">
         <article class="analytics-card completion-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="completionRate">Виконано</h2></div><span id="summary-completion-label">0%</span></header><div class="completion-content"><div class="completion-donut" id="summary-completion-chart"><div><b>0%</b><span data-i18n="done">Готово</span></div></div><div class="completion-legend" id="summary-completion-legend"></div></div></article>
         <article class="analytics-card status-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="statusDistribution">Розподіл за статусами</h2></div><span class="analytics-hint" data-i18n="analyticsHint">Дані оновлюються разом із фільтром періоду.</span></header><div class="status-chart" id="summary-status-chart"></div></article>
+        <article class="analytics-card priority-card"><header><div><p data-i18n="workloadHealth">Стан роботи</p><h2 data-i18n="priorityDistribution">Пріоритети</h2></div></header><div class="priority-chart" id="summary-priority-chart"></div></article>
       </section>
       <section class="analytics-card activity-card"><header><div><p data-i18n="analyticsProgress">Прогрес</p><h2 data-i18n="taskActivity">Активність за 7 днів</h2></div><div class="chart-legend"><span class="created"><i></i><b data-i18n="createdTasks">Створено</b></span><span class="closed"><i></i><b data-i18n="closedTasks">Завершено</b></span></div></header><div class="activity-chart" id="summary-activity-chart"></div></section>
-      <section class="summary-panel"><header><h2 data-i18n="byPerson">По участникам</h2><span data-i18n="doneTasks">Выполненные задачи</span></header><div class="summary-table-wrap"><table class="summary-table"><thead><tr><th data-i18n="person">Участник</th><th data-i18n="todo">Нужно сделать</th><th data-i18n="doing">В процессе</th><th data-i18n="done">Готово</th><th data-i18n="total">Всего</th></tr></thead><tbody id="summary-by-person"></tbody></table></div></section>
+      <section class="summary-panel"><header><div><p data-i18n="teamPerformance">Ефективність команди</p><h2 data-i18n="byPerson">За учасниками</h2></div><span data-i18n="teamMetricsHint">Виконання та прострочення</span></header><div class="summary-table-wrap"><table class="summary-table"><thead><tr><th data-i18n="person">Учасник</th><th data-i18n="todo">Нерозподілені</th><th data-i18n="doing">У процесі</th><th data-i18n="done">Готово</th><th data-i18n="overdue">Прострочено</th><th data-i18n="efficiency">Виконання</th><th data-i18n="total">Усього</th></tr></thead><tbody id="summary-by-person"></tbody></table></div></section>
       <section class="completed-panel"><header><h2 data-i18n="completedList">Что уже сделано</h2></header><div id="completed-tasks"></div></section>
     </section>
   </main>
@@ -185,7 +187,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=delete-account-2"></script>
+  <script src="script.js?v=summary-pro-1"></script>
   <script src="date-picker.js?v=airline-calendar-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>
