@@ -5,6 +5,14 @@ body { font-size:17px; }
 .task-count { font-size:15px; }
 .brand strong { font-size:20px; }
 .tab { font-size:15px; }
+.appbar { height:74px; }
+.menu-controls { gap:10px; }
+#current-user { max-width:170px; font-size:14px; }
+.user-menu>button { min-height:38px; padding:0 12px; border-radius:10px; font-size:13px; }
+.user-menu .notification-button { width:38px; min-height:38px; font-size:17px; }
+.notification-button b { min-width:18px; height:18px; font-size:10px; }
+.menu-controls>.theme-toggle { width:38px; min-width:38px; height:38px; border-radius:11px; font-size:19px; }
+.language-switch .custom-select-button { min-width:72px; min-height:38px; padding:0 11px; border-radius:11px; font-size:13px; }
 .column-head h2 { font-size:18px; }
 .column-head h2 span { font-size:12px; }
 .task-card h3 { font-size:16px; }
@@ -51,4 +59,8 @@ body { font-size:17px; }
   .task-description { font-size:14px; }
   .tab { font-size:14px; }
   .column-head h2 { font-size:17px; }
+  .appbar { height:64px; }
+  .user-menu>button { min-height:36px; font-size:12px; }
+  .menu-controls>.theme-toggle,.user-menu .notification-button { width:36px; min-width:36px; height:36px; min-height:36px; }
+  .language-switch .custom-select-button { min-height:36px; font-size:12px; }
 }
