@@ -154,7 +154,7 @@
     <form class="task-detail" id="task-editor">
       <header class="detail-head"><div><p class="eyebrow" data-i18n="taskCard">КАРТОЧКА ЗАДАЧИ</p><h2 id="task-editor-title">Редактирование</h2></div><button type="button" class="close-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
       <label><span data-i18n="taskName">Название задачи</span><input name="title" required autocomplete="off"></label>
-      <section class="task-description-field"><header><span data-i18n="description">Описание</span><button type="button" class="task-link-button" id="task-link-button">🔗 <span data-i18n="insertLink">Ссылка</span></button></header><div class="task-rich-editor" id="task-description-editor" contenteditable="true" role="textbox" aria-multiline="true" data-i18n-aria="description" aria-label="Описание" data-i18n-placeholder="taskDescPlaceholder" data-placeholder="Что именно нужно сделать?"></div><textarea name="description" id="task-description-value" hidden></textarea><div class="task-link-popover" id="task-link-popover" hidden><label><span data-i18n="linkText">Текст</span><input id="task-link-text" autocomplete="off" placeholder="link"></label><label><span data-i18n="linkAddress">Адрес</span><input id="task-link-address" type="url" inputmode="url" autocomplete="off" placeholder="https://..."></label><footer><button type="button" id="cancel-task-link" data-i18n="cancel">Отмена</button><button type="button" id="apply-task-link" data-i18n="applyLink">Применить</button></footer></div></section>
+      <section class="task-description-field"><header><span data-i18n="description">Описание</span><button type="button" class="task-link-button" id="task-link-button">🔗 <span data-i18n="insertLink">Ссылка</span></button></header><div class="task-rich-editor" id="task-description-editor" contenteditable="true" role="textbox" aria-multiline="true" data-i18n-aria="description" aria-label="Описание" data-i18n-placeholder="taskDescPlaceholder" data-placeholder="Что именно нужно сделать?"></div><textarea name="description" id="task-description-value" hidden></textarea><div class="task-link-popover" id="task-link-popover" hidden><label><span data-i18n="linkText">Текст</span><input id="task-link-text" autocomplete="off" placeholder="YouTube"></label><label><span data-i18n="linkAddress">Адрес</span><input id="task-link-address" type="url" inputmode="url" autocomplete="off" placeholder="https://..."></label><footer><button type="button" id="cancel-task-link" data-i18n="cancel">Отмена</button><button type="button" id="apply-task-link" data-i18n="applyLink">Применить</button></footer></div></section>
       <section class="task-file-field"><header><span data-i18n="attachments">Вкладення</span><label class="task-file-picker">＋ <span data-i18n="addFiles">Додати файли</span><input id="task-file-input" type="file" multiple></label></header><div class="task-file-list" id="task-file-list"></div><small id="task-files-message"></small></section>
       <p class="mention-hint" data-i18n="mentionPeople">Введіть @, щоб відмітити учасника</p>
       <div class="mention-suggestions" id="task-mention-suggestions" hidden role="listbox"></div>
@@ -187,7 +187,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=summary-pro-1"></script>
+  <script src="script.js?v=service-link-labels-1"></script>
   <script src="date-picker.js?v=airline-calendar-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>

@@ -710,12 +710,46 @@ function normalizeLinkAddress(value) {
     return '';
   }
 }
+function linkServiceName(address) {
+  const normalized = normalizeLinkAddress(address);
+  if (!normalized) return 'Link';
+  try {
+    const url = new URL(normalized);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    const matches = function (domain) { return host === domain || host.endsWith('.' + domain); };
+    if (matches('youtube.com') || matches('youtu.be')) return 'YouTube';
+    if (matches('docs.google.com')) {
+      if (url.pathname.startsWith('/spreadsheets')) return 'Google Sheets';
+      if (url.pathname.startsWith('/presentation')) return 'Google Slides';
+      if (url.pathname.startsWith('/forms')) return 'Google Forms';
+      return 'Google Docs';
+    }
+    if (matches('drive.google.com')) return 'Google Drive';
+    const services = [
+      ['github.com', 'GitHub'], ['gitlab.com', 'GitLab'], ['figma.com', 'Figma'], ['notion.so', 'Notion'],
+      ['trello.com', 'Trello'], ['atlassian.net', 'Atlassian'], ['slack.com', 'Slack'], ['discord.com', 'Discord'],
+      ['teams.microsoft.com', 'Microsoft Teams'], ['sharepoint.com', 'SharePoint'], ['onedrive.live.com', 'OneDrive'],
+      ['zoom.us', 'Zoom'], ['dropbox.com', 'Dropbox'], ['spotify.com', 'Spotify'], ['linkedin.com', 'LinkedIn'],
+      ['instagram.com', 'Instagram'], ['facebook.com', 'Facebook'], ['twitter.com', 'X'], ['x.com', 'X'],
+      ['tiktok.com', 'TikTok'], ['telegram.me', 'Telegram'], ['t.me', 'Telegram']
+    ];
+    const service = services.find(function (item) { return matches(item[0]); });
+    if (service) return service[1];
+    const parts = host.split('.');
+    const commonSecondLevel = ['co', 'com', 'net', 'org'];
+    const index = parts.length > 2 && commonSecondLevel.includes(parts[parts.length - 2]) ? parts.length - 3 : Math.max(0, parts.length - 2);
+    return (parts[index] || host).split(/[-_]/).filter(Boolean).map(function (part) { return part.charAt(0).toUpperCase() + part.slice(1); }).join(' ') || 'Link';
+  } catch {
+    return 'Link';
+  }
+}
 function createTaskEditorLink(text, address) {
   const link = document.createElement('a');
   link.href = normalizeLinkAddress(address);
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  link.textContent = String(text || '').trim() || 'link';
+  const label = String(text || '').trim();
+  link.textContent = !label || label.toLowerCase() === 'link' ? linkServiceName(address) : label;
   return link;
 }
 function taskDescriptionFragment(value, convertRawLinks) {
@@ -732,7 +766,7 @@ function taskDescriptionFragment(value, convertRawLinks) {
     } else if (convertRawLinks) {
       const trailing = (match[3].match(/[.,!?;:)\]}]+$/) || [''])[0];
       const url = trailing ? match[3].slice(0, -trailing.length) : match[3];
-      fragment.appendChild(createTaskEditorLink('link', url));
+      fragment.appendChild(createTaskEditorLink('', url));
       if (trailing) fragment.appendChild(document.createTextNode(trailing));
     } else {
       fragment.appendChild(document.createTextNode(match[3]));
@@ -875,7 +909,7 @@ function openTaskLinkEditor(anchor) {
   editingTaskLink = anchor || null;
   if (!anchor) saveTaskDescriptionSelection();
   const selectedText = !anchor && savedTaskDescriptionRange ? savedTaskDescriptionRange.toString().trim() : '';
-  taskLinkText.value = anchor ? anchor.textContent : (selectedText || 'link');
+  taskLinkText.value = anchor ? anchor.textContent : selectedText;
   taskLinkAddress.value = anchor ? anchor.href : '';
   taskLinkAddress.setCustomValidity('');
   taskLinkPopover.hidden = false;
@@ -893,7 +927,7 @@ function applyTaskLink() {
     taskLinkAddress.reportValidity();
     return;
   }
-  const label = taskLinkText.value.trim() || 'link';
+  const label = taskLinkText.value.trim() || linkServiceName(address);
   if (editingTaskLink && taskDescriptionEditor.contains(editingTaskLink)) {
     editingTaskLink.href = address;
     editingTaskLink.textContent = label;
@@ -914,7 +948,7 @@ function convertTypedTaskUrl() {
   const range = setTaskDescriptionSelection(start, caret);
   range.deleteContents();
   const fragment = document.createDocumentFragment();
-  fragment.appendChild(createTaskEditorLink('link', url));
+  fragment.appendChild(createTaskEditorLink('', url));
   fragment.appendChild(document.createTextNode(' '));
   savedTaskDescriptionRange = range;
   insertTaskDescriptionFragment(fragment);
