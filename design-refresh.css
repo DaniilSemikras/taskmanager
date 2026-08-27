@@ -1,0 +1,89 @@
+:root {
+  --ink:#211f32;
+  --muted:#686476;
+  --line:#dedce7;
+  --page:#f4f3f8;
+}
+body {
+  color:var(--ink);
+  background:radial-gradient(circle at 8% 0,rgba(112,91,225,.09),transparent 28%),var(--page);
+  font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.45;
+}
+.appbar {
+  border-color:rgba(218,215,229,.9);
+  background:rgba(255,255,255,.9);
+  box-shadow:0 5px 22px rgba(45,38,79,.06);
+  backdrop-filter:blur(18px);
+}
+.brand strong { color:#27243a; font-size:18px; font-weight:850; }
+.tab { color:#676273; font-size:14px; font-weight:750; }
+.tab.active { color:#5747cf; }
+.screen { padding-top:38px; }
+.eyebrow { color:#777184; font-size:11px; font-weight:850; }
+.heading h1 { color:#211e35; font-size:36px; font-weight:820; }
+.heading p:last-child { color:#6d687a; font-size:14px; line-height:1.55; }
+.task-count { border-radius:10px; font-size:13px; }
+button { font-weight:750; }
+:is(input,select,textarea) { color:#363244; }
+:is(.task-filters select,.filter-search input,.summary-filters>select,.add-account input,.add-account select,.account-access-controls select,.task-detail input,.task-detail select,.task-detail textarea,.event-detail input,.event-detail select,.event-detail textarea) { font-size:13px; }
+:is(.new-task,.task-filters button,.summary-filters>button,.add-account button,.account-access-controls button,.save-detail,.cancel-detail,.delete-task) { font-size:12px; }
+.custom-select-button,.custom-select-option { font-size:13px; }
+.language-switch .custom-select-button,.move-select .custom-select-button { font-size:11px; }
+.task-filters,.account-management,.analytics-card,.summary-panel,.completed-panel,.teams-calendar,.week-calendar,.note,.person-card,.team-card {
+  border-color:#dfdce8;
+  box-shadow:0 9px 28px rgba(49,42,82,.055);
+}
+.column { border-color:#dfdde7; background:rgba(235,233,241,.8); }
+.column-head h2 { color:#393548; font-size:15px; font-weight:820; }
+.column-head h2 span { font-size:11px; }
+.task-card { border-radius:12px; box-shadow:0 5px 15px rgba(38,32,66,.07); }
+.task-card h3 { color:#2f2b3e; font-size:15px; font-weight:820; line-height:1.4; }
+.task-card.completed-card h3 { font-size:14px; }
+.task-description { color:#5f5a6b; font-size:13px; line-height:1.55; }
+.assignee,.task-mentions span { font-size:11px; }
+.task-deadline,.task-deadline-countdown,.task-files-count { font-size:11px; }
+.move-select { font-size:11px; }
+.note h3,.person-card h3,.team-card h2 { color:#312d40; font-size:16px; }
+.note p,.person-data,.team-member { color:#5f5a6b; font-size:13px; }
+.note time,.person-card small,.team-card header span { color:#777283; font-size:11px; }
+.account-management h2,.admin-activity h2,.admin-feed-panel h3,.analytics-card h2,.summary-panel h2,.completed-panel h2 { color:#312d40; font-size:17px; }
+.account-access-hint,.activity-overview-hint,.analytics-hint { color:#6f6a7b; font-size:12px; }
+.account-row strong { color:#312d40; font-size:14px; }
+.account-row span,.account-control-label { color:#706b7c; font-size:11px; }
+.summary-stat b { font-size:30px; }
+.summary-stat span,.summary-table td,.completed-task { font-size:13px; }
+.summary-table th { font-size:11px; }
+.week-day-head .weekday-name,.time-label,.mini-weekdays span { color:#777283; font-size:11px; }
+.week-day-head .date-number { font-size:14px; }
+.week-event strong { font-size:11px; }
+.week-event span { font-size:10px; }
+.mobile-agenda-head span,.mobile-agenda-empty { font-size:13px; }
+.mobile-agenda-event strong { font-size:14px; }
+.mobile-agenda-event small,.mobile-agenda-event time { font-size:12px; }
+.task-detail label,.event-detail label,.auth-card label { color:#4f4a5d; font-size:12px; }
+.detail-head h2 { color:#282439; font-size:24px; }
+.auth-card h1 { font-size:27px; }
+.auth-card>p:not(.auth-message) { color:#6f6a7b; font-size:13px; }
+html[data-theme="dark"] {
+  --ink:#f1eef8;
+  --muted:#b9b4c3;
+  --line:#45414f;
+  --page:#15141b;
+}
+html[data-theme="dark"] body { background:radial-gradient(circle at 8% 0,rgba(115,92,225,.15),transparent 28%),#15141b; }
+html[data-theme="dark"] .appbar { border-color:#393541; background:rgba(27,25,34,.9); box-shadow:0 6px 24px rgba(0,0,0,.18); }
+html[data-theme="dark"] :is(.brand strong,.heading h1,.detail-head h2,.account-management h2,.admin-activity h2,.admin-feed-panel h3,.analytics-card h2,.summary-panel h2,.completed-panel h2,.note h3,.person-card h3,.team-card h2) { color:#f4f1fa; }
+html[data-theme="dark"] :is(.heading p:last-child,.task-description,.note p,.person-data,.team-member,.account-access-hint,.activity-overview-hint,.analytics-hint) { color:#c0bbc9; }
+html[data-theme="dark"] :is(.eyebrow,.note time,.account-row span,.account-control-label,.week-day-head .weekday-name,.time-label) { color:#a9a4b3; }
+@media (max-width:700px) {
+  body { font-size:14px; }
+  .screen { padding-top:26px; }
+  .heading h1 { font-size:30px; }
+  .heading p:last-child { font-size:13px; }
+  .task-card h3 { font-size:15px; }
+  .task-description { font-size:13px; }
+  .appbar-menu { background:rgba(255,255,255,.97); backdrop-filter:blur(18px); }
+  html[data-theme="dark"] .appbar-menu { background:rgba(31,29,39,.97); }
+}
