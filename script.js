@@ -73,6 +73,12 @@ Object.assign(translations.en, {
   attachments: 'Attachments', addFiles: 'Add files', downloadFile: 'Open', removeFile: 'Delete', pendingUpload: 'Will upload after saving', filesHint: 'Up to 10 MB per file', fileTooLarge: 'The file is too large. Maximum size is 10 MB.', fileUploadFailed: 'Could not upload the file. Check storage.', uploadingFiles: 'Uploading files…'
 });
 Object.assign(translations.uk, {
+  insertLink: 'Посилання', linkText: 'Текст для показу', linkAddress: 'Адреса', applyLink: 'Застосувати'
+});
+Object.assign(translations.en, {
+  insertLink: 'Link', linkText: 'Text to display', linkAddress: 'Address', applyLink: 'Apply'
+});
+Object.assign(translations.uk, {
   archiveTitle: 'Архів', archiveEyebrow: 'ІСТОРІЯ РОБОТИ', archiveHint: 'Переглядай завершені завдання та відновлюй їх за потреби.', archiveEmpty: 'Архів поки порожній.', archivedOn: 'В архіві з', restoreTask: 'Відновити', archiveTaskOne: 'завдання', archiveTaskFew: 'завдання', archiveTaskMany: 'завдань', deadlineRemaining: 'Залишилось', deadlineOverdue: 'Прострочено на', dayShort: 'д', hourShort: 'год', minuteShort: 'хв', actionTaskRestored: 'відновив(ла) завдання з архіву', moveTaskUp: 'Підняти завдання вище', moveTaskDown: 'Опустити завдання нижче'
 });
 Object.assign(translations.en, {
@@ -120,6 +126,12 @@ const taskCustomRange = document.getElementById('task-custom-range');
 const taskEditor = document.getElementById('task-editor');
 const taskDetail = document.getElementById('task-detail');
 const taskMentionSuggestions = document.getElementById('task-mention-suggestions');
+const taskDescriptionEditor = document.getElementById('task-description-editor');
+const taskDescriptionValue = document.getElementById('task-description-value');
+const taskLinkButton = document.getElementById('task-link-button');
+const taskLinkPopover = document.getElementById('task-link-popover');
+const taskLinkText = document.getElementById('task-link-text');
+const taskLinkAddress = document.getElementById('task-link-address');
 const taskResponsibleOptions = document.getElementById('task-responsible-options');
 const taskFileInput = document.getElementById('task-file-input');
 const taskFileList = document.getElementById('task-file-list');
@@ -168,6 +180,8 @@ let taskDatePreset = 'all';
 let summaryDatePreset = 'all';
 let peopleEditId = null;
 let selectedParticipantIds = [];
+let savedTaskDescriptionRange = null;
+let editingTaskLink = null;
 let language = localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'uk';
 let state = normalizeState(loadState());
 let accounts = [];
@@ -200,7 +214,10 @@ function applyLanguage() {
   languageSwitch.value = language;
   authLanguageSwitch.value = language;
   document.querySelectorAll('[data-i18n]').forEach(function (element) { element.textContent = t(element.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) { element.placeholder = t(element.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function (element) {
+    const value = t(element.dataset.i18nPlaceholder);
+    if (element.isContentEditable) element.dataset.placeholder = value; else element.placeholder = value;
+  });
   document.querySelectorAll('[data-i18n-aria]').forEach(function (element) { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
   document.getElementById('event-editor-title').textContent = t('meetingDetails');
   updateTaskEditorUi();
@@ -664,13 +681,119 @@ function extractTaskMentions(description) {
     return false;
   });
 }
+function normalizeLinkAddress(value) {
+  let address = String(value || '').trim();
+  if (!address) return '';
+  if (!/^https?:\/\//i.test(address)) address = 'https://' + address;
+  try {
+    const parsed = new URL(address);
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+  } catch {
+    return '';
+  }
+}
+function createTaskEditorLink(text, address) {
+  const link = document.createElement('a');
+  link.href = normalizeLinkAddress(address);
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = String(text || '').trim() || 'link';
+  return link;
+}
+function taskDescriptionFragment(value, convertRawLinks) {
+  const fragment = document.createDocumentFragment();
+  const text = String(value || '');
+  const pattern = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s<>"']+)/gi;
+  let offset = 0;
+  let match;
+  while ((match = pattern.exec(text))) {
+    const prefix = text.slice(offset, match.index);
+    if (prefix) fragment.appendChild(document.createTextNode(prefix));
+    if (match[1]) {
+      fragment.appendChild(createTaskEditorLink(match[1], match[2]));
+    } else if (convertRawLinks) {
+      const trailing = (match[3].match(/[.,!?;:)\]}]+$/) || [''])[0];
+      const url = trailing ? match[3].slice(0, -trailing.length) : match[3];
+      fragment.appendChild(createTaskEditorLink('link', url));
+      if (trailing) fragment.appendChild(document.createTextNode(trailing));
+    } else {
+      fragment.appendChild(document.createTextNode(match[3]));
+    }
+    offset = match.index + match[0].length;
+  }
+  const suffix = text.slice(offset);
+  if (suffix) fragment.appendChild(document.createTextNode(suffix));
+  return fragment;
+}
+function setTaskDescriptionEditor(value) {
+  taskDescriptionEditor.replaceChildren(taskDescriptionFragment(value, true));
+  syncTaskDescriptionValue();
+}
+function serializeTaskDescriptionNode(node) {
+  if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || '';
+  if (node.nodeName === 'BR') return '\n';
+  if (node.nodeName === 'A') {
+    const address = normalizeLinkAddress(node.getAttribute('href'));
+    const label = String(node.textContent || 'link').replace(/[\[\]]/g, '').trim() || 'link';
+    return address ? '[' + label + '](' + address + ')' : label;
+  }
+  let text = Array.from(node.childNodes).map(serializeTaskDescriptionNode).join('');
+  if ((node.nodeName === 'DIV' || node.nodeName === 'P') && node.nextSibling && !text.endsWith('\n')) text += '\n';
+  return text;
+}
+function syncTaskDescriptionValue() {
+  taskDescriptionValue.value = Array.from(taskDescriptionEditor.childNodes).map(serializeTaskDescriptionNode).join('').replace(/\u00a0/g, ' ');
+}
+function taskDescriptionVisibleText() {
+  return String(taskDescriptionEditor.innerText || '').replace(/\r/g, '');
+}
+function currentTaskDescriptionRange() {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return null;
+  const range = selection.getRangeAt(0);
+  return taskDescriptionEditor.contains(range.commonAncestorContainer) ? range : null;
+}
+function saveTaskDescriptionSelection() {
+  const range = currentTaskDescriptionRange();
+  if (range) savedTaskDescriptionRange = range.cloneRange();
+}
+function taskDescriptionCaretOffset() {
+  const range = currentTaskDescriptionRange();
+  if (!range) return taskDescriptionVisibleText().length;
+  const before = range.cloneRange();
+  before.selectNodeContents(taskDescriptionEditor);
+  before.setEnd(range.endContainer, range.endOffset);
+  return before.toString().length;
+}
+function taskDescriptionPoint(offset) {
+  const walker = document.createTreeWalker(taskDescriptionEditor, NodeFilter.SHOW_TEXT);
+  let remaining = Math.max(0, offset);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (remaining <= node.nodeValue.length) return { node: node, offset: remaining };
+    remaining -= node.nodeValue.length;
+  }
+  return { node: taskDescriptionEditor, offset: taskDescriptionEditor.childNodes.length };
+}
+function setTaskDescriptionSelection(start, end) {
+  const startPoint = taskDescriptionPoint(start);
+  const endPoint = taskDescriptionPoint(end === undefined ? start : end);
+  const range = document.createRange();
+  range.setStart(startPoint.node, startPoint.offset);
+  range.setEnd(endPoint.node, endPoint.offset);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+  savedTaskDescriptionRange = range.cloneRange();
+  return range;
+}
 function taskMentionContext() {
-  const description = taskEditor && taskEditor.elements.description;
-  if (!description || typeof description.selectionStart !== 'number') return null;
-  const before = description.value.slice(0, description.selectionStart);
+  if (!taskDescriptionEditor) return null;
+  const caret = taskDescriptionCaretOffset();
+  const before = taskDescriptionVisibleText().slice(0, caret);
   const match = before.match(/(?:^|\s)@([^\n@]*)$/);
   if (!match) return null;
-  return { start: before.length - match[1].length - 1, end: description.selectionStart, query: match[1].trim() };
+  return { start: before.length - match[1].length - 1, end: caret, query: match[1].trim() };
 }
 function hideTaskMentionSuggestions() {
   if (!taskMentionSuggestions) return;
@@ -693,14 +816,90 @@ function renderTaskMentionSuggestions() {
 }
 function insertTaskMention(name) {
   const context = taskMentionContext();
-  const description = taskEditor && taskEditor.elements.description;
-  if (!context || !description) return;
+  if (!context || !taskDescriptionEditor) return;
   const mention = '@' + name + ' ';
-  description.value = description.value.slice(0, context.start) + mention + description.value.slice(context.end);
+  const range = setTaskDescriptionSelection(context.start, context.end);
+  range.deleteContents();
+  const text = document.createTextNode(mention);
+  range.insertNode(text);
   const caret = context.start + mention.length;
-  description.focus();
-  description.setSelectionRange(caret, caret);
+  taskDescriptionEditor.focus();
+  setTaskDescriptionSelection(caret);
+  syncTaskDescriptionValue();
   hideTaskMentionSuggestions();
+}
+function insertTaskDescriptionFragment(fragment) {
+  if (fragment.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
+    const wrapper = document.createDocumentFragment();
+    wrapper.appendChild(fragment);
+    fragment = wrapper;
+  }
+  let range = savedTaskDescriptionRange && taskDescriptionEditor.contains(savedTaskDescriptionRange.commonAncestorContainer) ? savedTaskDescriptionRange : currentTaskDescriptionRange();
+  if (!range) {
+    range = document.createRange();
+    range.selectNodeContents(taskDescriptionEditor);
+    range.collapse(false);
+  }
+  range.deleteContents();
+  const lastNode = fragment.lastChild;
+  range.insertNode(fragment);
+  if (lastNode) {
+    range.setStartAfter(lastNode);
+    range.collapse(true);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    savedTaskDescriptionRange = range.cloneRange();
+  }
+  syncTaskDescriptionValue();
+}
+function openTaskLinkEditor(anchor) {
+  editingTaskLink = anchor || null;
+  if (!anchor) saveTaskDescriptionSelection();
+  const selectedText = !anchor && savedTaskDescriptionRange ? savedTaskDescriptionRange.toString().trim() : '';
+  taskLinkText.value = anchor ? anchor.textContent : (selectedText || 'link');
+  taskLinkAddress.value = anchor ? anchor.href : '';
+  taskLinkAddress.setCustomValidity('');
+  taskLinkPopover.hidden = false;
+  (anchor || selectedText ? taskLinkAddress : taskLinkText).focus();
+}
+function closeTaskLinkEditor() {
+  taskLinkPopover.hidden = true;
+  taskLinkAddress.setCustomValidity('');
+  editingTaskLink = null;
+}
+function applyTaskLink() {
+  const address = normalizeLinkAddress(taskLinkAddress.value);
+  if (!address) {
+    taskLinkAddress.setCustomValidity(t('linkAddress'));
+    taskLinkAddress.reportValidity();
+    return;
+  }
+  const label = taskLinkText.value.trim() || 'link';
+  if (editingTaskLink && taskDescriptionEditor.contains(editingTaskLink)) {
+    editingTaskLink.href = address;
+    editingTaskLink.textContent = label;
+    syncTaskDescriptionValue();
+  } else {
+    insertTaskDescriptionFragment(createTaskEditorLink(label, address));
+  }
+  closeTaskLinkEditor();
+  taskDescriptionEditor.focus();
+}
+function convertTypedTaskUrl() {
+  const caret = taskDescriptionCaretOffset();
+  const before = taskDescriptionVisibleText().slice(0, caret);
+  const match = before.match(/(https?:\/\/[^\s]+)\s$/i);
+  if (!match) return;
+  const url = match[1];
+  const start = caret - url.length - 1;
+  const range = setTaskDescriptionSelection(start, caret);
+  range.deleteContents();
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(createTaskEditorLink('link', url));
+  fragment.appendChild(document.createTextNode(' '));
+  savedTaskDescriptionRange = range;
+  insertTaskDescriptionFragment(fragment);
 }
 function teamName(id) {
   const team = teamForId(id);
@@ -858,15 +1057,19 @@ function escapeHtml(value) {
 }
 function textWithLinks(value) {
   const text = String(value || '');
-  const pattern = /https?:\/\/[^\s<>"']+/gi;
+  const pattern = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s<>"']+)/gi;
   let result = '';
   let offset = 0;
   let match;
   while ((match = pattern.exec(text))) {
-    const trailing = (match[0].match(/[.,!?;:)\]}]+$/) || [''])[0];
-    const url = trailing ? match[0].slice(0, -trailing.length) : match[0];
     result += escapeHtml(text.slice(offset, match.index));
-    result += '<a class="inline-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">link</a>' + escapeHtml(trailing);
+    if (match[1]) {
+      result += '<a class="inline-link" href="' + escapeHtml(match[2]) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(match[1]) + '</a>';
+    } else {
+      const trailing = (match[3].match(/[.,!?;:)\]}]+$/) || [''])[0];
+      const url = trailing ? match[3].slice(0, -trailing.length) : match[3];
+      result += '<a class="inline-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">link</a>' + escapeHtml(trailing);
+    }
     offset = match.index + match[0].length;
   }
   return result + escapeHtml(text.slice(offset));
@@ -1223,9 +1426,15 @@ function renderTeams() {
   }
   teamsList.innerHTML = state.teams.map(function (team) {
     const memberIds = Array.isArray(team.memberIds) ? team.memberIds.map(Number) : [];
-    const members = memberIds.map(function (id) { return state.people.find(function (person) { return person.id === id; }); }).filter(Boolean);
-    const available = state.people.filter(function (person) { return !memberIds.includes(person.id); });
-    const memberList = members.length ? '<div class="team-members">' + members.map(function (person) { return '<div class="team-member"><span>' + escapeHtml(person.name) + '</span><button type="button" data-remove-team-member="' + team.id + '" data-person="' + person.id + '" aria-label="' + t('delete') + '">×</button></div>'; }).join('') + '</div>' : '';
+    const members = teamMembersFor(team.id);
+    const memberKeys = new Set(members.map(function (member) { return member.key; }));
+    const accountMemberKeys = new Set(accounts.filter(function (account) { return String(account.teamId || '') === String(team.id); }).map(function (account) { return account.personId ? 'person:' + account.personId : 'account:' + account.id; }));
+    const available = state.people.filter(function (person) { return !memberKeys.has('person:' + person.id); });
+    const memberList = members.length ? '<div class="team-members">' + members.map(function (person) {
+      const removable = person.key.startsWith('person:') && memberIds.includes(Number(person.id)) && !accountMemberKeys.has(person.key);
+      const removeButton = removable ? '<button type="button" data-remove-team-member="' + team.id + '" data-person="' + person.id + '" aria-label="' + t('delete') + '">×</button>' : '';
+      return '<div class="team-member"><span>' + escapeHtml(person.name) + '</span>' + removeButton + '</div>';
+    }).join('') + '</div>' : '';
     const addMember = available.length ? '<div class="team-add-member"><select data-team-picker="' + team.id + '"><option value="">' + t('selectPerson') + '</option>' + available.map(function (person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + '</option>'; }).join('') + '</select><button type="button" data-add-team-member="' + team.id + '">＋ ' + t('addMember') + '</button></div>' : '';
     return '<article class="team-card"><header><div><h2>' + escapeHtml(team.name) + '</h2><span>' + members.length + plural(members.length, t('personOne'), t('personFew'), t('personMany')) + '</span></div><button type="button" class="delete-team" data-delete-team="' + team.id + '">' + t('deleteTeam') + '</button></header>' + memberList + addMember + '</article>';
   }).join('');
@@ -1795,7 +2004,7 @@ function openTask(id) {
   pendingTaskFiles = [];
   openTaskId = task.id;
   taskEditor.elements.title.value = task.title || '';
-  taskEditor.elements.description.value = task.description || '';
+  setTaskDescriptionEditor(task.description || '');
   taskEditor.elements.dueDate.value = task.dueDate || '';
   renderTaskResponsibleOptions(taskResponsibleNames(task));
   taskEditor.elements.column.value = task.column || 'todo';
@@ -1808,6 +2017,7 @@ function openNewTask(column) {
   pendingTaskFiles = [];
   openTaskId = null;
   taskEditor.reset();
+  setTaskDescriptionEditor('');
   renderTaskResponsibleOptions('');
   taskEditor.elements.column.value = column || 'todo';
   taskEditor.elements.priority.value = 'medium';
@@ -1828,6 +2038,7 @@ function closeTaskDetail() {
   if (taskFileInput) taskFileInput.value = '';
   openTaskId = null;
   hideTaskMentionSuggestions();
+  closeTaskLinkEditor();
   taskDetail.hidden = true;
 }
 function openNewNote() {
@@ -2035,6 +2246,7 @@ accountForm.addEventListener('submit', async function (event) {
 });
 taskEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
+  syncTaskDescriptionValue();
   const form = new FormData(taskEditor);
   const description = form.get('description').trim();
   const responsibles = normalizeResponsibleNames(form.getAll('responsibles'));
@@ -2073,8 +2285,39 @@ taskEditor.addEventListener('submit', async function (event) {
   closeTaskDetail();
   render();
 });
-taskEditor.elements.description.addEventListener('input', renderTaskMentionSuggestions);
-taskEditor.elements.description.addEventListener('click', renderTaskMentionSuggestions);
+taskDescriptionEditor.addEventListener('input', function () {
+  if (!taskDescriptionVisibleText().trim() && !taskDescriptionEditor.querySelector('a')) taskDescriptionEditor.replaceChildren();
+  syncTaskDescriptionValue();
+  saveTaskDescriptionSelection();
+  renderTaskMentionSuggestions();
+});
+taskDescriptionEditor.addEventListener('click', function (event) {
+  const link = event.target.closest('a');
+  if (link) {
+    event.preventDefault();
+    openTaskLinkEditor(link);
+    return;
+  }
+  saveTaskDescriptionSelection();
+  renderTaskMentionSuggestions();
+});
+taskDescriptionEditor.addEventListener('keyup', function (event) {
+  saveTaskDescriptionSelection();
+  if (event.key === ' ') convertTypedTaskUrl();
+});
+taskDescriptionEditor.addEventListener('paste', function (event) {
+  const text = event.clipboardData && event.clipboardData.getData('text/plain');
+  if (!text || !/https?:\/\//i.test(text)) return;
+  event.preventDefault();
+  saveTaskDescriptionSelection();
+  insertTaskDescriptionFragment(taskDescriptionFragment(text, true));
+});
+taskLinkButton.addEventListener('mousedown', saveTaskDescriptionSelection);
+taskLinkButton.addEventListener('click', function () { openTaskLinkEditor(null); });
+document.getElementById('cancel-task-link').addEventListener('click', closeTaskLinkEditor);
+document.getElementById('apply-task-link').addEventListener('click', applyTaskLink);
+taskLinkAddress.addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); applyTaskLink(); } });
+taskLinkText.addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); applyTaskLink(); } });
 taskFileInput.addEventListener('change', function () {
   const selected = Array.from(taskFileInput.files || []);
   const valid = selected.filter(function (file) { return file.size <= 10 * 1024 * 1024; });

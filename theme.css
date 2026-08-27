@@ -209,6 +209,15 @@ html[data-theme="dark"] :is(.admin-feed-item p,.notification-item p) { color: #b
 html[data-theme="dark"] .save-status[data-state="dataUnavailable"] { color: #f0a09b; border-color: #704744; background: #302322; }
 
 html[data-theme="dark"] .participant-suggestion { color: #ddd8e6; background: #24222d; }
+html[data-theme="dark"] .task-rich-editor { color:#e7e3ef; border-color:var(--line); background:#201e28; }
+html[data-theme="dark"] .task-rich-editor:focus { border-color:#776be0; box-shadow:0 0 0 3px rgba(102,87,220,.18); }
+html[data-theme="dark"] .task-rich-editor a { color:#bcb4ff; }
+html[data-theme="dark"] .task-link-button { color:#c8c1ff; border-color:#50496f; background:#312d49; }
+html[data-theme="dark"] .task-link-popover { border-color:#45414f; background:#28252f; box-shadow:0 18px 42px rgba(0,0,0,.38); }
+html[data-theme="dark"] .task-link-popover label span { color:#aaa5b5; }
+html[data-theme="dark"] .task-link-popover input { color:#ece8f4; border-color:#494553; background:#201e28; }
+html[data-theme="dark"] .task-link-popover footer button { color:#c1bccb; border-color:#494553; background:#211f28; }
+html[data-theme="dark"] .task-link-popover footer button:last-child { color:#fff; border-color:#7365e2; background:#6657dc; }
 html[data-theme="dark"] .participant-suggestion:hover,
 html[data-theme="dark"] .mention-suggestions button:hover { background: #312d49; }
 html[data-theme="dark"] .mention-suggestions button { color: #ded9e8; background: transparent; }
