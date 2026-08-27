@@ -79,6 +79,12 @@ Object.assign(translations.en, {
   insertLink: 'Link', linkText: 'Text to display', linkAddress: 'Address', applyLink: 'Apply'
 });
 Object.assign(translations.uk, {
+  deleteAccount: 'Видалити акаунт', confirmDeleteAccount: 'Видалити акаунт {login}? Користувач більше не зможе увійти.', accountDeleted: 'Акаунт видалено', actionAccountDeleted: 'видалив(ла) користувача'
+});
+Object.assign(translations.en, {
+  deleteAccount: 'Delete account', confirmDeleteAccount: 'Delete the account {login}? This user will no longer be able to sign in.', accountDeleted: 'Account deleted', actionAccountDeleted: 'deleted a user'
+});
+Object.assign(translations.uk, {
   notesHint: 'Веди нотатки прямо під час зустрічі — місце з’явиться автоматично на початку.', noNotes: 'Нотаток поки немає. Вони з’являться, коли почнеться зустріч.'
 });
 Object.assign(translations.en, {
@@ -517,7 +523,7 @@ function activityTypeLabel(type) {
   const labels = {
     taskCreated: 'actionTaskCreated', taskUpdated: 'actionTaskUpdated', taskMoved: 'actionTaskMoved', taskDeleted: 'actionTaskDeleted', taskArchived: 'actionTaskArchived', taskAutoArchived: 'actionTaskAutoArchived', taskRestored: 'actionTaskRestored',
     noteSaved: 'actionNoteSaved', noteDeleted: 'actionNoteDeleted', meetingSaved: 'actionMeetingSaved', meetingDeleted: 'actionMeetingDeleted', meetingCompleted: 'actionMeetingCompleted',
-    personSaved: 'actionPersonSaved', personDeleted: 'actionPersonDeleted', teamCreated: 'actionTeamCreated', teamChanged: 'actionTeamChanged', teamDeleted: 'actionTeamDeleted', accessChanged: 'actionAccessChanged', accountCreated: 'actionAccountCreated', notificationDeleted: 'actionNotificationDeleted', notificationsRead: 'actionNotificationsRead'
+    personSaved: 'actionPersonSaved', personDeleted: 'actionPersonDeleted', teamCreated: 'actionTeamCreated', teamChanged: 'actionTeamChanged', teamDeleted: 'actionTeamDeleted', accessChanged: 'actionAccessChanged', accountCreated: 'actionAccountCreated', accountDeleted: 'actionAccountDeleted', notificationDeleted: 'actionNotificationDeleted', notificationsRead: 'actionNotificationsRead'
   };
   return t(labels[type] || type);
 }
@@ -1452,7 +1458,8 @@ function renderAccounts() {
     const roleKey = account.role === 'admin' ? 'administrator' : 'member';
     const ownAccount = Boolean(currentUser && account.id === currentUser.id);
     const roleOptions = '<option value="member"' + (account.role !== 'admin' ? ' selected' : '') + '>' + t('member') + '</option><option value="admin"' + (account.role === 'admin' ? ' selected' : '') + '>' + t('administrator') + '</option>';
-    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div><div class="account-access-controls"><label class="account-control-label"><span>' + t('accountRole') + '</span><select data-account-role="' + account.id + '"' + (ownAccount ? ' disabled' : '') + '>' + roleOptions + '</select></label><label class="account-control-label"><span>' + t('team') + '</span><select data-account-team="' + account.id + '">' + teamOptions(account.teamId, true) + '</select></label><button type="button" data-save-account-access="' + account.id + '">' + t('saveAccess') + '</button></div></article>';
+    const deleteButton = ownAccount ? '' : '<button type="button" class="delete-account" data-delete-account="' + account.id + '">' + t('deleteAccount') + '</button>';
+    return '<article class="account-row"><div><strong>' + escapeHtml(account.login) + '</strong><span>' + escapeHtml(account.email || '') + '</span><span class="role-badge ' + (account.role === 'admin' ? '' : 'member') + '">' + t(roleKey) + '</span></div><div class="account-access-controls"><label class="account-control-label"><span>' + t('accountRole') + '</span><select data-account-role="' + account.id + '"' + (ownAccount ? ' disabled' : '') + '>' + roleOptions + '</select></label><label class="account-control-label"><span>' + t('team') + '</span><select data-account-team="' + account.id + '">' + teamOptions(account.teamId, true) + '</select></label><div class="account-access-actions"><button type="button" data-save-account-access="' + account.id + '">' + t('saveAccess') + '</button>' + deleteButton + '</div></div></article>';
   }).join('');
 }
 function syncPersonTeamMembership(personId, teamId) {
@@ -1496,6 +1503,23 @@ async function saveAccountAccess(accountId) {
     updateAccessUi();
   }
   setSaveStatus('accessSaved');
+  render();
+}
+async function deleteAccount(accountId) {
+  if (!isAdmin() || !supabaseClient || !currentUser || accountId === currentUser.id) return;
+  const account = accounts.find(function (item) { return item.id === accountId; });
+  if (!account || !window.confirm(t('confirmDeleteAccount').replace('{login}', account.login))) return;
+  setSaveStatus('dataSaving');
+  const response = await supabaseClient.rpc('delete_workspace_account', { target_user: accountId });
+  if (response.error) {
+    setSaveStatus('dataUnavailable');
+    return;
+  }
+  state.notifications = (state.notifications || []).filter(function (notification) { return notification.recipientId !== String(accountId); });
+  recordActivity('accountDeleted', account.login);
+  await saveState(true);
+  await refreshAccounts();
+  setSaveStatus('accountDeleted');
   render();
 }
 async function setLinkedAccountsTeam(personId, teamId) {
@@ -2496,6 +2520,10 @@ document.addEventListener('click', async function (event) {
   }
   if (button.dataset.saveAccountAccess) {
     await saveAccountAccess(button.dataset.saveAccountAccess);
+    return;
+  }
+  if (button.dataset.deleteAccount) {
+    await deleteAccount(button.dataset.deleteAccount);
     return;
   }
   if (button.dataset.editPerson) {
