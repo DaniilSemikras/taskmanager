@@ -1,37 +1,39 @@
-body { font-size:16px; }
-.heading h1 { font-size:clamp(35px,2.15vw,40px); }
-.heading p:last-child { font-size:15px; }
+body { font-size:17px; }
+.heading h1 { font-size:clamp(38px,2.35vw,44px); }
+.heading p:last-child { font-size:16px; }
 .eyebrow { font-size:12px; }
-.task-count { font-size:14px; }
-.column-head h2 { font-size:16px; }
+.task-count { font-size:15px; }
+.brand strong { font-size:20px; }
+.tab { font-size:15px; }
+.column-head h2 { font-size:18px; }
 .column-head h2 span { font-size:12px; }
-.task-card h3 { font-size:14px; }
-.task-card.completed-card h3 { font-size:13px; }
-.task-description { font-size:12px; line-height:1.55; }
-.assignee,.task-mentions span,.task-files-count { font-size:11px; }
-.task-deadline { font-size:11px; }
-.task-deadline-countdown { font-size:10px; }
-.planning-group>header h3 { font-size:12px; }
-.planning-group>header p,.planning-empty { font-size:10px; }
-:is(.filter-search input,.task-filters select,.summary-filters>select,.summary-filters>button,.custom-select-button,.custom-select-option) { font-size:14px; }
-:is(.new-task,.task-filters button,.add-account button,.account-access-controls button,.save-detail,.cancel-detail,.delete-task,.archive-task) { font-size:13px; }
-.period-chips button,#summary-screen .period-chips button { font-size:12px; }
-.task-detail label,.task-responsible-picker>span,.task-file-field>header>span { font-size:12px; }
-.task-detail :is(input,select,textarea),.task-rich-editor { font-size:14px; }
-.mention-hint { font-size:11px; }
+.task-card h3 { font-size:16px; }
+.task-card.completed-card h3 { font-size:15px; }
+.task-description { font-size:14px; line-height:1.55; }
+.assignee,.task-mentions span,.task-files-count { font-size:13px; }
+.task-deadline { font-size:12px; }
+.task-deadline-countdown { font-size:12px; }
+.planning-group>header h3 { font-size:14px; }
+.planning-group>header p,.planning-empty { font-size:12px; }
+:is(.filter-search input,.task-filters select,.summary-filters>select,.summary-filters>button,.custom-select-button,.custom-select-option) { font-size:15px; }
+:is(.new-task,.task-filters button,.add-account button,.account-access-controls button,.save-detail,.cancel-detail,.delete-task,.archive-task) { font-size:14px; }
+.period-chips button,#summary-screen .period-chips button { font-size:13px; }
+.task-detail label,.task-responsible-picker>span,.task-file-field>header>span { font-size:14px; }
+.task-detail :is(input,select,textarea),.task-rich-editor { font-size:16px; }
+.mention-hint { font-size:13px; }
 .note h3 { font-size:16px; }
 .note p { font-size:14px; }
 .note time { font-size:11px; }
 .person-card h3,.team-card h3,.account-management h2,.admin-activity h2 { font-size:17px; }
 .person-card p,.team-card p,.account-access-hint { font-size:13px; }
-#summary-screen .summary-stat header>span { font-size:13px; }
-#summary-screen .summary-stat small { font-size:12px; }
-#summary-screen .analytics-card h2 { font-size:17px; }
+#summary-screen .summary-stat header>span { font-size:14px; }
+#summary-screen .summary-stat small { font-size:13px; }
+#summary-screen .analytics-card h2 { font-size:19px; }
 #summary-screen .analytics-card header p { font-size:10px; }
 #summary-screen .completion-legend-row,#summary-screen .status-chart-label,#summary-screen .priority-chart-row>div:first-child { font-size:12px; }
 #summary-screen .summary-table th { font-size:11px; }
-#summary-screen .summary-table td { font-size:13px; }
-#summary-screen .completed-task { font-size:13px; }
+#summary-screen .summary-table td { font-size:15px; }
+#summary-screen .completed-task { font-size:15px; }
 .calendar-period strong,.mobile-agenda-head h3 { font-size:18px; }
 .mobile-agenda-event strong { font-size:14px; }
 .mobile-agenda-event small,.mobile-agenda-event time { font-size:12px; }
@@ -41,12 +43,12 @@ body { font-size:16px; }
 .date-picker-footer button,.date-picker-time { font-size:11px; }
 
 @media (max-width:700px) {
-  body { font-size:15px; }
-  .heading h1 { font-size:30px; }
-  .heading p:last-child { font-size:14px; }
+  body { font-size:16px; }
+  .heading h1 { font-size:32px; }
+  .heading p:last-child { font-size:15px; }
   .eyebrow { font-size:11px; }
-  .task-card h3 { font-size:14px; }
-  .task-description { font-size:13px; }
-  .tab { font-size:13px; }
-  .column-head h2 { font-size:16px; }
+  .task-card h3 { font-size:16px; }
+  .task-description { font-size:14px; }
+  .tab { font-size:14px; }
+  .column-head h2 { font-size:17px; }
 }
