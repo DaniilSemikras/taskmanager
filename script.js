@@ -1242,6 +1242,7 @@ function priorityIndicator(priority) {
 function taskMarkup(task) {
   const priority = taskPriority(task);
   const completed = task.column === 'done';
+  const overdue = taskDeadlineState(task) === ' overdue';
   const description = task.description ? '<p class="task-description">' + textWithLinks(task.description) + '</p>' : '';
   const deadlineLabel = taskDeadlineLabel(task.dueDate);
   const deadline = deadlineLabel ? '<div class="task-deadline-wrap"><span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span><span class="task-deadline-countdown" data-deadline-countdown="' + escapeHtml(task.dueDate) + '">' + escapeHtml(taskDeadlineCountdown(task.dueDate)) + '</span></div>' : '';
@@ -1254,7 +1255,7 @@ function taskMarkup(task) {
   const orderIndex = ordered.findIndex(function (item) { return item.id === task.id; });
   const orderControls = '<span class="task-order-controls"><button type="button" draggable="false" data-task-order="-1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskUp') + '" title="' + t('moveTaskUp') + '"' + (orderIndex <= 0 ? ' disabled' : '') + '>↑</button><button type="button" draggable="false" data-task-order="1" data-task-id="' + task.id + '" aria-label="' + t('moveTaskDown') + '" title="' + t('moveTaskDown') + '"' + (orderIndex < 0 || orderIndex >= ordered.length - 1 ? ' disabled' : '') + '>↓</button></span>';
   const details = completed ? '' : description + deadline + files + mentionMarkup + '<div class="card-meta">' + assignee + '</div><footer class="task-footer"><select class="move-select" data-move="' + task.id + '" aria-label="' + t('moveTask') + '">' + options(task.column) + '</select><button class="delete" data-delete-task="' + task.id + '" aria-label="' + t('deleteTask') + '">×</button></footer>';
-  return '<article class="task-card' + (completed ? ' completed-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><header class="task-card-head">' + priorityIndicator(priority) + '<h3>' + escapeHtml(task.title) + '</h3>' + orderControls + '</header>' + details + '</article>';
+  return '<article class="task-card' + (completed ? ' completed-card' : '') + (overdue ? ' overdue-card' : '') + ' priority-' + priority + '" draggable="true" data-task="' + task.id + '"><header class="task-card-head">' + priorityIndicator(priority) + '<h3>' + escapeHtml(task.title) + '</h3>' + orderControls + '</header>' + details + '</article>';
 }
 function localDateValue(iso) {
   if (!iso || Number.isNaN(new Date(iso).getTime())) return '';
