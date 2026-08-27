@@ -717,6 +717,7 @@ function linkServiceName(address) {
     const url = new URL(normalized);
     const host = url.hostname.toLowerCase().replace(/^www\./, '');
     const matches = function (domain) { return host === domain || host.endsWith('.' + domain); };
+    if (host.includes('activityinfo')) return 'AI';
     if (matches('youtube.com') || matches('youtu.be')) return 'YouTube';
     if (matches('docs.google.com')) {
       if (url.pathname.startsWith('/spreadsheets')) return 'Google Sheets';
@@ -749,7 +750,8 @@ function createTaskEditorLink(text, address) {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   const label = String(text || '').trim();
-  link.textContent = !label || label.toLowerCase() === 'link' ? linkServiceName(address) : label;
+  const serviceName = linkServiceName(address);
+  link.textContent = serviceName === 'AI' || !label || label.toLowerCase() === 'link' || /^activity[\s-]*info$/i.test(label) ? serviceName : label;
   return link;
 }
 function taskDescriptionFragment(value, convertRawLinks) {
