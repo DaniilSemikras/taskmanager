@@ -10,7 +10,7 @@
   <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml">
   <script src="theme.js?v=theme-1"></script>
   <link rel="stylesheet" href="style.css?v=dark-audit-1">
-  <link rel="stylesheet" href="teams-calendar.css?v=meeting-duration-1">
+  <link rel="stylesheet" href="teams-calendar.css?v=automatic-meeting-team-1">
   <link rel="stylesheet" href="people-directory.css?v=meeting-invites-1">
   <link rel="stylesheet" href="board-tools.css?v=priority-colors-1">
   <link rel="stylesheet" href="summary-dates.css?v=manual-archive-1">
@@ -174,7 +174,7 @@
     <form class="task-detail event-detail" id="event-editor">
       <header class="detail-head"><div><p class="eyebrow" data-i18n="meetingCard">ВСТРЕЧА</p><h2 id="event-editor-title">Детали встречи</h2></div><button type="button" class="close-event-detail" data-i18n-aria="close" aria-label="Закрыть">×</button></header>
       <label><span data-i18n="meetingTitle">Название встречи</span><input name="title" required autocomplete="off"></label>
-      <div class="detail-fields meeting-times"><label><span data-i18n="startTime">Начало</span><input name="date" required type="datetime-local"></label><label><span data-i18n="endTime">Окончание</span><input name="end" required type="datetime-local"></label><label><span data-i18n="team">Команда</span><select name="teamId" id="meeting-team"></select></label></div>
+      <div class="detail-fields meeting-times"><label><span data-i18n="startTime">Начало</span><input name="date" required type="datetime-local"></label><label><span data-i18n="endTime">Окончание</span><input name="end" required type="datetime-local"></label></div><select name="teamId" id="meeting-team" hidden aria-hidden="true"></select>
       <div class="meeting-duration-options" id="meeting-duration-options"><span data-i18n="meetingDuration">Тривалість</span><div><button type="button" data-meeting-duration="30"><span data-i18n="duration30">30 хв</span></button><button type="button" data-meeting-duration="60"><span data-i18n="duration60">1 година</span></button><button type="button" data-meeting-duration="90"><span data-i18n="duration90">1,5 години</span></button><button type="button" data-meeting-duration="120"><span data-i18n="duration120">2 години</span></button></div></div>
       <label><span data-i18n="participants">Участники</span><div class="participant-picker" id="participant-picker"><div class="participant-tags" id="participant-tags"></div><input id="participant-search" autocomplete="off" data-i18n-placeholder="participantsPlaceholder" placeholder="Найти по имени или почте"><div class="participant-suggestions" id="participant-suggestions" hidden></div></div><input name="participantIds" type="hidden"><small class="participant-notification-hint" data-i18n="meetingParticipantsHint">Позначені учасники отримають сповіщення.</small></label>
       <label><span data-i18n="meetingNotes">Заметки встречи</span><textarea name="notes" data-i18n-placeholder="eventNotesPlaceholder" placeholder="Пиши всё важное: решения, идеи, договорённости, следующие шаги."></textarea></label>
@@ -191,7 +191,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=meeting-duration-1"></script>
+  <script src="script.js?v=meeting-duration-fix-1"></script>
   <script src="date-picker.js?v=default-today-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>

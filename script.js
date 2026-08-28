@@ -1038,7 +1038,8 @@ function teamOptions(selectedId, includeEmpty) {
 function renderMeetingTeamPicker(selectedId) {
   if (!meetingTeam) return;
   const ownTeam = currentTeamId();
-  const selected = isAdmin() ? String(selectedId || '') : String(selectedId || ownTeam);
+  const fallbackTeam = state.teams[0] && String(state.teams[0].id) || '';
+  const selected = isAdmin() ? String(selectedId || ownTeam || fallbackTeam) : String(selectedId || ownTeam);
   if (isAdmin()) {
     meetingTeam.innerHTML = teamOptions(selected, true);
   } else {
@@ -2298,7 +2299,7 @@ function openNewEvent(startValue) {
   eventEditor.elements.end.value = eventDateInputValue(end);
   selectedMeetingDuration = 60;
   updateMeetingDurationSelection();
-  renderMeetingTeamPicker(isAdmin() ? '' : currentTeamId());
+  renderMeetingTeamPicker(currentTeamId());
   participantSearch.value = '';
   setSelectedParticipants([]);
   updateEventEditorAccess(null);
@@ -2345,6 +2346,7 @@ function applyMeetingDuration(minutes) {
   updateMeetingDurationSelection();
   if (Number.isNaN(start.getTime())) return;
   eventEditor.elements.end.value = eventDateInputValue(new Date(start.getTime() + selectedMeetingDuration * 60000));
+  if (window.refreshDatePickerLabels) window.refreshDatePickerLabels();
 }
 document.querySelectorAll('.close-detail, .cancel-detail').forEach(function (button) {
   button.addEventListener('click', closeTaskDetail);
