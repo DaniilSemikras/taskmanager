@@ -112,6 +112,9 @@ Object.assign(translations.uk, { deadlineTime: 'Час дедлайну' });
 Object.assign(translations.en, { deadlineTime: 'Due time' });
 Object.assign(translations.uk, { meetingDuration: 'Тривалість', duration30: '30 хв', duration60: '1 година', duration90: '1,5 години', duration120: '2 години' });
 Object.assign(translations.en, { meetingDuration: 'Duration', duration30: '30 min', duration60: '1 hour', duration90: '1.5 hours', duration120: '2 hours' });
+Object.assign(translations.uk, { myColor: 'Мій колір', chooseMyColor: 'Обрати мій колір', busy: 'Зайнятий', available: 'Вільний', participantBusy: 'Учасник уже має зустріч у цей час' });
+Object.assign(translations.en, { myColor: 'My colour', chooseMyColor: 'Choose my colour', busy: 'Busy', available: 'Available', participantBusy: 'This participant already has a meeting at this time' });
+const USER_COLOR_PALETTE = ['#6757dc', '#2878d0', '#1693a5', '#1f9d72', '#c79418', '#e1772f', '#d64f78', '#8b5cc7'];
 const columns = [
   { id: 'todo', titleKey: 'plannedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -198,6 +201,11 @@ const authLanguageSwitch = document.getElementById('auth-language-switch');
 const saveStatus = document.getElementById('save-status');
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const appbarMenu = document.getElementById('appbar-menu');
+const userColorWrap = document.getElementById('user-color-wrap');
+const userColorControl = document.getElementById('user-color-control');
+const userColorPopover = document.getElementById('user-color-popover');
+const userColorOptions = document.getElementById('user-color-options');
+const currentUserColor = document.getElementById('current-user-color');
 let dragId = null;
 let openTaskId = null;
 let pendingTaskFiles = [];
@@ -310,6 +318,7 @@ function normalizeState(saved) {
       return { id: String(item.id), actorId: String(item.actorId || ''), actorName: String(item.actorName || ''), type: String(item.type), title: String(item.title || ''), createdAt: item.createdAt || new Date().toISOString() };
     }).slice(0, 320),
     deletedEventIds: deletedEventIds,
+    userColors: source.userColors && typeof source.userColors === 'object' ? Object.fromEntries(Object.entries(source.userColors).filter(function (entry) { return /^#[0-9a-f]{6}$/i.test(String(entry[1] || '')); })) : {},
     people: (Array.isArray(source.people) ? source.people : []).map(function (person) {
       return { id: person.id, name: person.name || '', email: person.email || '', role: person.role || '' };
     }),
@@ -469,6 +478,45 @@ function normalizeResponsibleNames(value) {
 }
 function taskResponsibleNames(task) {
   return normalizeResponsibleNames(Array.isArray(task && task.responsibles) && task.responsibles.length ? task.responsibles : task && task.responsible);
+}
+function fallbackUserColor(value) {
+  const text = String(value || 'user');
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+  return USER_COLOR_PALETTE[Math.abs(hash) % USER_COLOR_PALETTE.length];
+}
+function userColorForAccount(account) {
+  if (!account) return fallbackUserColor('user');
+  return state.userColors[String(account.id)] || fallbackUserColor(account.login || account.id);
+}
+function accountForResponsibleName(name) {
+  const target = String(name || '').trim().toLocaleLowerCase();
+  return accounts.find(function (account) {
+    const person = state.people.find(function (item) { return String(item.id) === String(account.personId || ''); });
+    return String(account.login || '').trim().toLocaleLowerCase() === target || Boolean(person && String(person.name || '').trim().toLocaleLowerCase() === target);
+  });
+}
+function responsibleColor(name) {
+  const account = accountForResponsibleName(name);
+  return account ? userColorForAccount(account) : fallbackUserColor(name);
+}
+function accountForMeetingParticipant(participantId) {
+  const normalized = normalizeMeetingParticipantId(participantId);
+  if (normalized.startsWith('account:')) return accounts.find(function (account) { return String(account.id) === normalized.slice(8); });
+  const personId = normalized.startsWith('person:') ? normalized.slice(7) : '';
+  return accounts.find(function (account) { return String(account.personId || '') === personId; }) || null;
+}
+function colorForTeamMember(member) {
+  const account = accountForMeetingParticipant(member && member.key);
+  return account ? userColorForAccount(account) : fallbackUserColor(member && member.name);
+}
+function renderUserColorPicker() {
+  if (!currentUser || !currentUserColor || !userColorOptions) return;
+  const selected = userColorForAccount(currentUser);
+  currentUserColor.style.background = selected;
+  userColorOptions.innerHTML = USER_COLOR_PALETTE.map(function (color) {
+    return '<button type="button" class="user-color-option' + (color === selected ? ' selected' : '') + '" data-user-color="' + color + '" style="--user-color:' + color + '" aria-label="' + t('chooseMyColor') + '"></button>';
+  }).join('');
 }
 function automaticTaskColumn(requestedColumn) {
   return ['todo', 'doing', 'done'].includes(requestedColumn) ? requestedColumn : 'todo';
@@ -1335,7 +1383,7 @@ function taskMarkup(task) {
   const deadlineLabel = taskDeadlineLabel(task.dueDate, task.dueTime);
   const deadline = deadlineLabel ? '<div class="task-deadline-wrap"><span class="task-deadline' + taskDeadlineState(task) + '">◷ ' + escapeHtml(deadlineLabel) + '</span><span class="task-deadline-countdown" data-deadline-countdown="' + escapeHtml(task.dueDate) + '" data-deadline-time="' + escapeHtml(task.dueTime || '') + '">' + escapeHtml(taskDeadlineCountdown(task.dueDate, task.dueTime)) + '</span></div>' : '';
   const responsibles = taskResponsibleNames(task);
-  const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
+  const assignee = responsibles.length ? responsibles.map(function (name) { return '<span class="assignee" style="--person-color:' + responsibleColor(name) + '">' + escapeHtml(name) + '</span>'; }).join('') : '<span class="assignee empty">' + t('notAssigned') + '</span>';
   const mentions = taskMentionNames(task);
   const mentionMarkup = mentions.length ? '<div class="task-mentions">' + mentions.map(function (name) { return '<span>@' + escapeHtml(name) + '</span>'; }).join('') + '</div>' : '';
   const files = Array.isArray(task.attachments) && task.attachments.length ? '<span class="task-files-count">📎 ' + task.attachments.length + '</span>' : '';
@@ -1513,7 +1561,7 @@ function renderMyTeam() {
   myTeamTotal.textContent = members.length + plural(members.length, t('personOne'), t('personFew'), t('personMany'));
   myTeamMembers.innerHTML = members.length ? members.map(function (person) {
     const role = person.role ? '<span class="person-role">' + escapeHtml(person.role) + '</span>' : '';
-    return '<article class="person-card team-member-card"><header><span class="person-avatar">' + escapeHtml(personInitials(person.name)) + '</span><div><h3>' + escapeHtml(person.name) + '</h3>' + role + '</div></header><div class="person-data"><span><b>@</b>' + escapeHtml(person.email) + '</span></div></article>';
+    return '<article class="person-card team-member-card"><header><span class="person-avatar member-color-avatar" style="--person-color:' + colorForTeamMember(person) + '">' + escapeHtml(personInitials(person.name)) + '</span><div><h3>' + escapeHtml(person.name) + '</h3>' + role + '</div></header><div class="person-data"><span><b>@</b>' + escapeHtml(person.email) + '</span></div></article>';
   }).join('') : '<div class="empty team-empty"><span>♧</span>' + t('noTeamMembers') + '</div>';
 }
 function renderTeams() {
@@ -1531,7 +1579,7 @@ function renderTeams() {
     const memberList = members.length ? '<div class="team-members">' + members.map(function (person) {
       const removable = person.key.startsWith('person:') && memberIds.includes(Number(person.id)) && !accountMemberKeys.has(person.key);
       const removeButton = removable ? '<button type="button" data-remove-team-member="' + team.id + '" data-person="' + person.id + '" aria-label="' + t('delete') + '">×</button>' : '';
-      return '<div class="team-member"><span>' + escapeHtml(person.name) + '</span>' + removeButton + '</div>';
+      return '<div class="team-member"><span><i class="participant-color-dot" style="--person-color:' + colorForTeamMember(person) + '"></i>' + escapeHtml(person.name) + '</span>' + removeButton + '</div>';
     }).join('') + '</div>' : '';
     const addMember = available.length ? '<div class="team-add-member"><select data-team-picker="' + team.id + '"><option value="">' + t('selectPerson') + '</option>' + available.map(function (person) { return '<option value="' + person.id + '">' + escapeHtml(person.name) + '</option>'; }).join('') + '</select><button type="button" data-add-team-member="' + team.id + '">＋ ' + t('addMember') + '</button></div>' : '';
     return '<article class="team-card"><header><div><h2>' + escapeHtml(team.name) + '</h2><span>' + members.length + plural(members.length, t('personOne'), t('personFew'), t('personMany')) + '</span></div><button type="button" class="delete-team" data-delete-team="' + team.id + '">' + t('deleteTeam') + '</button></header>' + memberList + addMember + '</article>';
@@ -1630,8 +1678,41 @@ function meetingParticipantPeople() {
   const selectedTeamId = String(meetingTeam && meetingTeam.value || currentTeamId() || '');
   if (!selectedTeamId) return [];
   return teamMembersFor(selectedTeamId).map(function (member) {
-    return { id: normalizeMeetingParticipantId(member.key), name: member.name, email: member.email || '', role: member.role || '' };
+    const id = normalizeMeetingParticipantId(member.key);
+    const account = accountForMeetingParticipant(id);
+    return { id: id, name: member.name, email: member.email || '', role: member.role || '', color: account ? userColorForAccount(account) : fallbackUserColor(member.name) };
   });
+}
+function meetingEditorRange() {
+  const start = new Date(eventEditor.elements.date.value).getTime();
+  const end = new Date(eventEditor.elements.end.value).getTime();
+  return Number.isFinite(start) && Number.isFinite(end) && end > start ? { start: start, end: end } : null;
+}
+function participantAccountIds(participantId) {
+  const normalized = normalizeMeetingParticipantId(participantId);
+  if (normalized.startsWith('account:')) return [normalized.slice(8)];
+  const personId = normalized.startsWith('person:') ? normalized.slice(7) : '';
+  return accounts.filter(function (account) { return String(account.personId || '') === personId; }).map(function (account) { return String(account.id); });
+}
+function eventIncludesParticipant(calendarEvent, participantId) {
+  const targetId = normalizeMeetingParticipantId(participantId);
+  const accountIds = participantAccountIds(targetId);
+  if (accountIds.includes(String(calendarEvent.createdBy || ''))) return true;
+  return (calendarEvent.participantIds || []).map(normalizeMeetingParticipantId).some(function (eventParticipantId) {
+    if (eventParticipantId === targetId) return true;
+    const eventAccountIds = participantAccountIds(eventParticipantId);
+    return eventAccountIds.some(function (id) { return accountIds.includes(id); });
+  });
+}
+function meetingParticipantBusyEvent(participantId) {
+  const range = meetingEditorRange();
+  if (!range) return null;
+  return calendarEvents.find(function (calendarEvent) {
+    if (Number(calendarEvent.id) === Number(openEventId)) return false;
+    const start = new Date(calendarEvent.date).getTime();
+    const end = meetingEnd(calendarEvent).getTime();
+    return Number.isFinite(start) && Number.isFinite(end) && start < range.end && end > range.start && eventIncludesParticipant(calendarEvent, participantId);
+  }) || null;
 }
 function selectedPeople() {
   const members = meetingParticipantPeople();
@@ -1641,11 +1722,15 @@ function renderParticipantPicker() {
   const query = participantSearch.value.trim().toLocaleLowerCase();
   const availablePeople = meetingParticipantPeople();
   const matches = availablePeople.filter(function (person) { return !selectedParticipantIds.includes(person.id) && (!query || contactMatches(person, query)); }).slice(0, 7);
-  participantTags.innerHTML = selectedPeople().map(function (person) { return '<span class="participant-tag">' + escapeHtml(person.name) + '<button type="button" data-remove-participant="' + person.id + '" aria-label="' + t('delete') + '">×</button></span>'; }).join('');
+  participantTags.innerHTML = selectedPeople().map(function (person) {
+    const busy = Boolean(meetingParticipantBusyEvent(person.id));
+    return '<span class="participant-tag' + (busy ? ' busy' : '') + '"><i class="participant-color-dot" style="--person-color:' + person.color + '"></i><span>' + escapeHtml(person.name) + '</span>' + (busy ? '<small>' + t('busy') + '</small>' : '') + '<button type="button" data-remove-participant="' + person.id + '" aria-label="' + t('delete') + '">×</button></span>';
+  }).join('');
   eventEditor.elements.participantIds.value = selectedParticipantIds.join(',');
   participantSuggestions.innerHTML = matches.length ? matches.map(function (person) {
     const details = [person.email, person.role].filter(Boolean).join(' · ');
-    return '<button type="button" class="participant-suggestion" data-add-participant="' + person.id + '"><strong>' + escapeHtml(person.name) + '</strong><span>' + escapeHtml(details) + '</span></button>';
+    const busy = Boolean(meetingParticipantBusyEvent(person.id));
+    return '<button type="button" class="participant-suggestion' + (busy ? ' busy' : '') + '" data-add-participant="' + person.id + '"><i class="participant-color-dot" style="--person-color:' + person.color + '"></i><span class="participant-copy"><strong>' + escapeHtml(person.name) + '</strong><span>' + escapeHtml(details) + '</span></span><em>' + t(busy ? 'busy' : 'available') + '</em></button>';
   }).join('') : '<div class="participant-suggestion"><span>' + t('noParticipantsFound') + '</span></div>';
   participantSuggestions.hidden = !document.activeElement || document.activeElement !== participantSearch;
 }
@@ -2090,6 +2175,7 @@ function scheduleArchiveCheck() {
 }
 function render() {
   if (archiveCompletedTasks()) saveState();
+  renderUserColorPicker();
   renderResponsibleFilter();
   renderBoard();
   renderArchive();
@@ -2417,6 +2503,7 @@ function applyMeetingDuration(minutes) {
   if (Number.isNaN(start.getTime())) return;
   eventEditor.elements.end.value = eventDateInputValue(new Date(start.getTime() + selectedMeetingDuration * 60000));
   if (window.refreshDatePickerLabels) window.refreshDatePickerLabels();
+  renderParticipantPicker();
 }
 document.querySelectorAll('.close-detail, .cancel-detail').forEach(function (button) {
   button.addEventListener('click', closeTaskDetail);
@@ -2639,10 +2726,12 @@ document.getElementById('meeting-duration-options').addEventListener('click', fu
 });
 eventEditor.elements.date.addEventListener('change', function () {
   if (selectedMeetingDuration) applyMeetingDuration(selectedMeetingDuration);
+  renderParticipantPicker();
 });
 eventEditor.elements.end.addEventListener('change', function () {
   selectedMeetingDuration = meetingDurationFromInputs();
   updateMeetingDurationSelection();
+  renderParticipantPicker();
 });
 eventEditor.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -2680,6 +2769,10 @@ eventEditor.addEventListener('submit', async function (event) {
 document.addEventListener('click', async function (event) {
   if (appbarMenu && appbarMenu.classList.contains('open') && !event.target.closest('#appbar-menu, #mobile-menu-toggle')) setMobileMenu(false);
   if (notificationsPanel && !event.target.closest('#notification-wrap')) setNotificationsOpen(false);
+  if (userColorPopover && !event.target.closest('#user-color-wrap')) {
+    userColorPopover.hidden = true;
+    userColorControl.setAttribute('aria-expanded', 'false');
+  }
   const card = event.target.closest('.task-card, .archive-card');
   if (card && !event.target.closest('button, select, a')) {
     if (card.dataset.swipeHandled) return;
@@ -2695,6 +2788,21 @@ document.addEventListener('click', async function (event) {
   if (!button) return;
   if (button.id === 'mobile-menu-toggle') {
     setMobileMenu(!appbarMenu.classList.contains('open'));
+    return;
+  }
+  if (button.id === 'user-color-control') {
+    userColorPopover.hidden = !userColorPopover.hidden;
+    userColorControl.setAttribute('aria-expanded', String(!userColorPopover.hidden));
+    return;
+  }
+  if (button.dataset.userColor) {
+    state.userColors[String(currentUser.id)] = button.dataset.userColor;
+    userColorPopover.hidden = true;
+    userColorControl.setAttribute('aria-expanded', 'false');
+    saveState();
+    renderUserColorPicker();
+    renderBoard();
+    renderParticipantPicker();
     return;
   }
   if (button.id === 'notification-button') {
@@ -2830,9 +2938,15 @@ document.addEventListener('click', async function (event) {
     return;
   }
   if (button.dataset.addParticipant) {
-    selectedParticipantIds.push(normalizeMeetingParticipantId(button.dataset.addParticipant));
+    const participantId = normalizeMeetingParticipantId(button.dataset.addParticipant);
+    const busyEvent = meetingParticipantBusyEvent(participantId);
+    selectedParticipantIds.push(participantId);
     participantSearch.value = '';
     setSelectedParticipants(selectedParticipantIds);
+    if (busyEvent) {
+      setSaveStatus('participantBusy');
+      showSaveToast('participantBusy');
+    }
     return;
   }
   if (button.dataset.removeParticipant) {

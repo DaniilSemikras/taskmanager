@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="planning-groups.css?v=planning-groups-1">
   <link rel="stylesheet" href="text-contrast.css?v=darker-text-1">
   <link rel="stylesheet" href="typography-scale.css?v=consistent-dialog-buttons-1">
+  <link rel="stylesheet" href="team-presence.css?v=team-presence-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -53,7 +54,7 @@
           <button class="tab" data-tab="summary"><span data-i18n="summary">Сводка</span></button>
           <button class="tab" data-tab="meetings"><span data-i18n="afterMeeting">После встречи</span> <b id="meeting-count">0</b></button>
         </nav>
-        <div class="menu-controls"><div class="user-menu"><span id="current-user"></span><div class="notification-wrap" id="notification-wrap"><button type="button" class="notification-button" id="notification-button" data-i18n-aria="notifications" aria-label="Сповіщення" aria-expanded="false" aria-controls="notifications-panel"><i aria-hidden="true">🔔</i><b id="notification-count" hidden>0</b></button><section class="notification-popover" id="notifications-panel" hidden><header><strong data-i18n="notifications">Сповіщення</strong><button type="button" id="mark-notifications-read" data-i18n="markAllRead">Прочитати все</button></header><div class="notification-list" id="notifications-list"></div></section></div><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div><span class="save-status" id="save-status" role="status"></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Темна тема" title="Темна тема"><span aria-hidden="true">☾</span></button><select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select></div>
+        <div class="menu-controls"><div class="user-menu"><div class="user-color-wrap" id="user-color-wrap"><button type="button" class="user-color-control" id="user-color-control" data-i18n-aria="chooseMyColor" aria-label="Обрати мій колір" aria-expanded="false"><i id="current-user-color" aria-hidden="true"></i><span id="current-user"></span></button><section class="user-color-popover" id="user-color-popover" hidden><strong data-i18n="myColor">Мій колір</strong><div id="user-color-options"></div></section></div><div class="notification-wrap" id="notification-wrap"><button type="button" class="notification-button" id="notification-button" data-i18n-aria="notifications" aria-label="Сповіщення" aria-expanded="false" aria-controls="notifications-panel"><i aria-hidden="true">🔔</i><b id="notification-count" hidden>0</b></button><section class="notification-popover" id="notifications-panel" hidden><header><strong data-i18n="notifications">Сповіщення</strong><button type="button" id="mark-notifications-read" data-i18n="markAllRead">Прочитати все</button></header><div class="notification-list" id="notifications-list"></div></section></div><button type="button" id="logout-button" data-i18n="signOut">Вийти</button></div><span class="save-status" id="save-status" role="status"></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Темна тема" title="Темна тема"><span aria-hidden="true">☾</span></button><select class="language-switch" id="language-switch" aria-label="Language"><option value="uk">UA</option><option value="en">EN</option></select></div>
       </div>
     </header>
 
@@ -191,7 +192,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=persistent-meeting-notes-1"></script>
+  <script src="script.js?v=team-presence-1"></script>
   <script src="date-picker.js?v=default-today-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>
