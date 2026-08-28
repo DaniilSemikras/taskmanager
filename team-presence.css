@@ -9,7 +9,7 @@
 .user-menu #user-color-options .user-color-option { position:relative; width:30px; min-width:30px; height:30px; min-height:30px; padding:0; border:2px solid transparent; border-radius:50%; background:var(--user-color); box-shadow:inset 0 0 0 3px #fff; }
 .user-menu #user-color-options .user-color-option.selected { border-color:#29243b; transform:scale(1.08); }
 .task-card .assignee:not(.empty):before { width:11px; height:11px; color:transparent; content:""; background:var(--person-color,#6757dc); box-shadow:0 0 0 3px color-mix(in srgb,var(--person-color,#6757dc) 18%,transparent); }
-.task-card .card-meta { height:auto; min-height:24px !important; overflow:visible; padding:2px 1px; }
+.task-card .card-meta { display:flex; align-items:center; flex-wrap:wrap; column-gap:12px; row-gap:5px; height:auto; min-height:24px !important; overflow:visible; padding:2px 1px; }
 .task-card .assignee { height:auto; min-height:20px; overflow:visible; line-height:1.4; }
 .participant-tag { gap:7px; border:1px solid color-mix(in srgb,var(--person-color,#6757dc) 18%,#dedbea); }
 .participant-tag>span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
