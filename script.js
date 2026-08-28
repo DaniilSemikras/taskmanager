@@ -1844,10 +1844,80 @@ function renderCalendar() {
       const people = participantsFor(event);
       const peopleText = people.length ? '👥 ' + people.slice(0, 2).join(', ') + (people.length > 2 ? ' +' + (people.length - 2) : '') : event.date.slice(11, 16) + ' – ' + eventDateInputValue(end).slice(11, 16);
       const peopleLine = '<span>' + escapeHtml([event.teamId ? teamName(event.teamId) : '', peopleText].filter(Boolean).join(' · ')) + '</span>';
-      return '<button type="button" class="week-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '" style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title + (meetingHasEnded(event) ? ' ✓' : '')) + '</strong>' + peopleLine + '</button>';
+      const draggable = canEditCalendarEvent(event) ? ' draggable="true"' : '';
+      return '<button type="button" class="week-event' + (meetingHasEnded(event) ? ' completed' : '') + '" data-open-event="' + event.id + '"' + draggable + ' style="top:' + top + 'px;height:' + height + 'px" title="' + escapeHtml(event.title) + '"><strong>' + escapeHtml(event.date.slice(11, 16)) + ' · ' + escapeHtml(event.title + (meetingHasEnded(event) ? ' ✓' : '')) + '</strong>' + peopleLine + '</button>';
     }).join('');
     return '<div class="week-day-column ' + classes + '" data-calendar-day="' + key + '">' + slots + events + currentTimeIndicatorMarkup(day) + '</div>';
   }).join('');
+  bindCalendarDragAndDrop();
+}
+async function moveCalendarEventTo(eventId, dayKey, minutes) {
+  const calendarEvent = calendarEvents.find(function (item) { return item.id === Number(eventId); });
+  if (!calendarEvent || !canEditCalendarEvent(calendarEvent)) return;
+  const oldStart = new Date(calendarEvent.date);
+  const duration = Math.max(30, Math.round((meetingEnd(calendarEvent).getTime() - oldStart.getTime()) / 60000));
+  const newStart = dateFromKey(dayKey);
+  newStart.setHours(0, Number(minutes), 0, 0);
+  const changedEvent = Object.assign({}, calendarEvent, { date: eventDateInputValue(newStart), end: eventDateInputValue(new Date(newStart.getTime() + duration * 60000)) });
+  if (!await saveCalendarEvent(changedEvent)) return;
+  recordActivity('meetingSaved', changedEvent.title);
+  saveState();
+  renderCalendar();
+  scheduleMeetingEndCheck();
+}
+function bindCalendarDragAndDrop() {
+  let draggedEventId = null;
+  let draggedDuration = 60;
+  function clearCalendarDragTargets() {
+    weekGrid.querySelectorAll('.week-day-column.drag-target').forEach(function (column) { column.classList.remove('drag-target'); });
+    weekGrid.querySelectorAll('.meeting-drop-preview').forEach(function (preview) { preview.remove(); });
+  }
+  weekGrid.querySelectorAll('.week-event[draggable="true"]').forEach(function (card) {
+    card.addEventListener('dragstart', function (event) {
+      const calendarEvent = calendarEvents.find(function (item) { return item.id === Number(card.dataset.openEvent); });
+      if (!calendarEvent) return;
+      draggedEventId = calendarEvent.id;
+      draggedDuration = Math.max(30, Math.round((meetingEnd(calendarEvent).getTime() - new Date(calendarEvent.date).getTime()) / 60000));
+      card.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(draggedEventId));
+    });
+    card.addEventListener('dragend', function () {
+      card.classList.remove('dragging');
+      draggedEventId = null;
+      clearCalendarDragTargets();
+    });
+  });
+  weekGrid.querySelectorAll('.week-day-column').forEach(function (column) {
+    column.addEventListener('dragover', function (event) {
+      if (!draggedEventId) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      clearCalendarDragTargets();
+      column.classList.add('drag-target');
+      const bounds = column.getBoundingClientRect();
+      const rawMinutes = 7 * 60 + (event.clientY - bounds.top) / 0.8;
+      const latestStart = Math.max(7 * 60, 21 * 60 - draggedDuration);
+      const minutes = Math.max(7 * 60, Math.min(latestStart, Math.round(rawMinutes / 15) * 15));
+      const preview = document.createElement('div');
+      preview.className = 'meeting-drop-preview';
+      preview.dataset.dropMinutes = String(minutes);
+      preview.style.top = ((minutes - 7 * 60) * 0.8) + 'px';
+      preview.style.height = Math.max(28, Math.min(672 - (minutes - 7 * 60) * 0.8, draggedDuration * 0.8 - 4)) + 'px';
+      preview.textContent = String(Math.floor(minutes / 60)).padStart(2, '0') + ':' + String(minutes % 60).padStart(2, '0');
+      column.appendChild(preview);
+    });
+    column.addEventListener('drop', function (event) {
+      if (!draggedEventId) return;
+      event.preventDefault();
+      const preview = column.querySelector('.meeting-drop-preview');
+      const minutes = preview ? Number(preview.dataset.dropMinutes) : 7 * 60;
+      const eventId = draggedEventId;
+      const day = column.dataset.calendarDay;
+      clearCalendarDragTargets();
+      moveCalendarEventTo(eventId, day, minutes);
+    });
+  });
 }
 function safeDateKey(value) {
   const date = new Date(value || '');

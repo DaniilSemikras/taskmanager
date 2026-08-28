@@ -50,6 +50,10 @@
 .week-slot:disabled:hover { background:transparent; }
 .week-event { position:absolute; z-index:2; left:4px; right:4px; overflow:hidden; padding:6px 7px; border:0; border-left:3px solid #6657dc; border-radius:5px; color:#40378f; background:#e8e5ff; box-shadow:0 1px 3px rgba(75,63,151,.12); text-align:left; }
 .week-event:hover { z-index:3; background:#dcd7ff; }.week-event.completed { border-left-color:#68ad8c; color:#417561; background:#eaf7f0; }.week-event.completed:hover { background:#ddf0e5; }
+.week-event[draggable="true"] { cursor:grab; }.week-event[draggable="true"]:active { cursor:grabbing; }.week-event.dragging { opacity:.35; }
+.week-day-column.drag-target { background:rgba(102,87,220,.09); box-shadow:inset 0 0 0 2px rgba(102,87,220,.34); }
+.meeting-drop-preview { position:absolute; z-index:6; right:4px; left:4px; padding:6px 8px; border:2px dashed #6757dc; border-radius:7px; color:#5548bf; background:rgba(239,237,255,.9); box-shadow:0 7px 18px rgba(72,58,162,.16); font-size:11px; font-weight:900; pointer-events:none; }
+html[data-theme="dark"] .week-day-column.drag-target { background:rgba(117,101,231,.14); }html[data-theme="dark"] .meeting-drop-preview { border-color:#8c7df4; color:#e2ddff; background:rgba(63,55,92,.94); }
 .week-event strong,.week-event span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .week-event strong { font-size:10px; line-height:1.25; }
 .week-event span { margin-top:2px; color:#6e68a2; font-size:9px; }
