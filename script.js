@@ -2453,6 +2453,7 @@ function openNewEvent(startValue) {
   eventEditor.reset();
   eventEditor.elements.date.value = eventDateInputValue(start);
   eventEditor.elements.end.value = eventDateInputValue(end);
+  if (window.refreshDatePickerLabels) window.refreshDatePickerLabels();
   selectedMeetingDuration = 60;
   updateMeetingDurationSelection();
   renderMeetingTeamPicker(currentTeamId());
@@ -2468,6 +2469,7 @@ function openEvent(id) {
   eventEditor.elements.title.value = event.title || '';
   eventEditor.elements.date.value = event.date || eventDateInputValue(new Date());
   eventEditor.elements.end.value = eventDateInputValue(meetingEnd(event));
+  if (window.refreshDatePickerLabels) window.refreshDatePickerLabels();
   selectedMeetingDuration = meetingDurationFromInputs();
   updateMeetingDurationSelection();
   renderMeetingTeamPicker(event.teamId);
