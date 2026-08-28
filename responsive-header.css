@@ -13,6 +13,7 @@
   .tab.active:after { display:none; }
   .menu-controls { display:flex; align-items:center; gap:9px; margin:0; padding:10px 3px 2px; border-top:1px solid #efedf3; }
   .user-menu { flex:1; margin:0; }
+  .appbar-menu .user-menu #current-user { display:block; max-width:180px; }
   .save-status { display:none; }
 }
 
