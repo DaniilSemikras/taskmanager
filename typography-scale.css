@@ -50,6 +50,34 @@ body { font-size:17px; }
 .date-picker-weekdays span { font-size:10px; }
 .date-picker-footer button,.date-picker-time { font-size:11px; }
 
+@media (min-width:1400px) {
+  body { font-size:18px; }
+  .heading h1 { font-size:46px; }
+  .heading p:last-child { font-size:18px; }
+  .eyebrow { font-size:13px; }
+  .brand strong { font-size:21px; }
+  .tab { padding-inline:15px; font-size:16px; }
+  #current-user { font-size:15px; }
+  .task-count { font-size:16px; }
+  .column-head h2 { font-size:20px; }
+  .task-card h3 { font-size:18px; }
+  .task-card.completed-card h3 { font-size:17px; }
+  .task-description { font-size:15px; }
+  .assignee,.task-mentions span,.task-files-count { font-size:14px; }
+  .task-deadline,.task-deadline-countdown { font-size:13px; }
+  .planning-group>header h3 { font-size:15px; }
+  .planning-group>header p,.planning-empty { font-size:13px; }
+  :is(.filter-search input,.task-filters select,.summary-filters>select,.summary-filters>button,.custom-select-button,.custom-select-option) { font-size:16px; }
+  :is(.new-task,.task-filters button,.add-account button,.account-access-controls button,.save-detail,.cancel-detail,.delete-task,.archive-task) { font-size:15px; }
+  .period-chips button,#summary-screen .period-chips button { font-size:14px; }
+  .note h3 { font-size:18px; }
+  .note p { font-size:16px; }
+  #summary-screen .summary-stat header>span { font-size:15px; }
+  #summary-screen .summary-stat small { font-size:14px; }
+  #summary-screen .analytics-card h2 { font-size:20px; }
+  #summary-screen .summary-table td { font-size:16px; }
+}
+
 @media (max-width:700px) {
   body { font-size:16px; }
   .heading h1 { font-size:32px; }
