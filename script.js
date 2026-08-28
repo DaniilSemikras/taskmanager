@@ -206,6 +206,8 @@ const userColorControl = document.getElementById('user-color-control');
 const userColorPopover = document.getElementById('user-color-popover');
 const userColorOptions = document.getElementById('user-color-options');
 const currentUserColor = document.getElementById('current-user-color');
+const tabletCurrentUser = document.getElementById('tablet-current-user');
+const tabletUserColor = document.getElementById('tablet-user-color');
 let dragId = null;
 let openTaskId = null;
 let pendingTaskFiles = [];
@@ -514,6 +516,7 @@ function renderUserColorPicker() {
   if (!currentUser || !currentUserColor || !userColorOptions) return;
   const selected = userColorForAccount(currentUser);
   currentUserColor.style.background = selected;
+  if (tabletUserColor) tabletUserColor.style.background = selected;
   userColorOptions.innerHTML = USER_COLOR_PALETTE.map(function (color) {
     return '<button type="button" class="user-color-option' + (color === selected ? ' selected' : '') + '" data-user-color="' + color + '" style="--user-color:' + color + '" aria-label="' + t('chooseMyColor') + '"></button>';
   }).join('');
@@ -1135,6 +1138,7 @@ function startSession(account) {
 }
 function updateAccessUi() {
   document.getElementById('current-user').textContent = currentUser ? currentUser.login : '';
+  if (tabletCurrentUser) tabletCurrentUser.textContent = currentUser ? currentUser.login : '';
   document.getElementById('admin-tab').hidden = !isAdmin();
   peopleTab.hidden = true;
   teamTab.hidden = isAdmin();

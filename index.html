@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="text-contrast.css?v=darker-text-1">
   <link rel="stylesheet" href="typography-scale.css?v=consistent-dialog-buttons-1">
   <link rel="stylesheet" href="team-presence.css?v=team-presence-3">
-  <link rel="stylesheet" href="responsive-header.css?v=tablet-menu-2">
+  <link rel="stylesheet" href="responsive-header.css?v=tablet-menu-3">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -43,7 +43,7 @@
   <main class="app" id="app-shell" hidden>
     <header class="appbar">
       <div class="brand"><span>☼</span><strong data-i18n="brand">моя доска</strong></div>
-      <button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="appbar-menu"><span></span><span></span><span></span></button>
+      <div class="tablet-user-badge" id="tablet-user-badge"><i id="tablet-user-color" aria-hidden="true"></i><span id="tablet-current-user"></span></div><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="appbar-menu"><span></span><span></span><span></span></button>
       <div class="appbar-menu" id="appbar-menu">
         <nav aria-label="Разделы">
           <button class="tab active" data-tab="board"><span data-i18n="board">Доска</span></button>
@@ -193,7 +193,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=calendar-cell-date-1"></script>
+  <script src="script.js?v=tablet-user-1"></script>
   <script src="date-picker.js?v=default-today-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>
