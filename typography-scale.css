@@ -49,6 +49,7 @@ body { font-size:17px; }
 .date-picker-day { font-size:13px; }
 .date-picker-weekdays span { font-size:10px; }
 .date-picker-footer button,.date-picker-time { font-size:11px; }
+.detail-actions button { min-height:42px; padding-inline:14px; font-family:inherit; font-size:14px; font-weight:800; line-height:1; }
 
 @media (min-width:1400px) {
   body { font-size:18px; }
@@ -76,6 +77,7 @@ body { font-size:17px; }
   #summary-screen .summary-stat small { font-size:14px; }
   #summary-screen .analytics-card h2 { font-size:20px; }
   #summary-screen .summary-table td { font-size:16px; }
+  .detail-actions button { font-size:15px; }
 }
 
 @media (max-width:700px) {
@@ -91,4 +93,5 @@ body { font-size:17px; }
   .user-menu>button { min-height:36px; font-size:12px; }
   .menu-controls>.theme-toggle,.user-menu .notification-button { width:36px; min-width:36px; height:36px; min-height:36px; }
   .language-switch .custom-select-button { min-height:36px; font-size:12px; }
+  .detail-actions button { min-height:42px; font-size:14px; }
 }
