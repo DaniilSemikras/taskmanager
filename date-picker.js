@@ -218,7 +218,6 @@
       time.dataset.action = 'time';
       footer.appendChild(timeWrap);
       const doneButton = button('date-picker-done', copy.done, 'done');
-      doneButton.disabled = !parseDate(state.input.value);
       footer.appendChild(doneButton);
     } else {
       footer.appendChild(button('', copy.today, 'today'));
@@ -350,6 +349,7 @@
       }
       closePicker();
     } else if (action === 'done') {
+      if (state.type === 'single' && !parseDate(state.input.value)) chooseDate(dateKey(new Date()));
       closePicker();
     }
   });
