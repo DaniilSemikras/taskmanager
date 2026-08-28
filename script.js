@@ -110,6 +110,8 @@ Object.assign(translations.en, {
 });
 Object.assign(translations.uk, { deadlineTime: 'Час дедлайну' });
 Object.assign(translations.en, { deadlineTime: 'Due time' });
+Object.assign(translations.uk, { meetingDuration: 'Тривалість', duration30: '30 хв', duration60: '1 година', duration90: '1,5 години', duration120: '2 години' });
+Object.assign(translations.en, { meetingDuration: 'Duration', duration30: '30 min', duration60: '1 hour', duration90: '1.5 hours', duration120: '2 hours' });
 const columns = [
   { id: 'todo', titleKey: 'plannedTasks' },
   { id: 'doing', titleKey: 'doing' },
@@ -200,6 +202,7 @@ let dragId = null;
 let openTaskId = null;
 let pendingTaskFiles = [];
 let openEventId = null;
+let selectedMeetingDuration = 60;
 let openNoteId = null;
 let onlyMyTasks = false;
 let taskDatePreset = 'all';
@@ -2293,6 +2296,8 @@ function openNewEvent(startValue) {
   eventEditor.reset();
   eventEditor.elements.date.value = eventDateInputValue(start);
   eventEditor.elements.end.value = eventDateInputValue(end);
+  selectedMeetingDuration = 60;
+  updateMeetingDurationSelection();
   renderMeetingTeamPicker(isAdmin() ? '' : currentTeamId());
   participantSearch.value = '';
   setSelectedParticipants([]);
@@ -2306,6 +2311,8 @@ function openEvent(id) {
   eventEditor.elements.title.value = event.title || '';
   eventEditor.elements.date.value = event.date || eventDateInputValue(new Date());
   eventEditor.elements.end.value = eventDateInputValue(meetingEnd(event));
+  selectedMeetingDuration = meetingDurationFromInputs();
+  updateMeetingDurationSelection();
   renderMeetingTeamPicker(event.teamId);
   participantSearch.value = '';
   const matchingIds = Array.isArray(event.participantIds) ? event.participantIds : participantsFor(event).map(function (name) {
@@ -2320,6 +2327,24 @@ function openEvent(id) {
 function closeEventDetail() {
   openEventId = null;
   eventDetail.hidden = true;
+}
+function meetingDurationFromInputs() {
+  const start = new Date(eventEditor.elements.date.value).getTime();
+  const end = new Date(eventEditor.elements.end.value).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+  return Math.round((end - start) / 60000);
+}
+function updateMeetingDurationSelection() {
+  document.querySelectorAll('[data-meeting-duration]').forEach(function (button) {
+    button.classList.toggle('active', Number(button.dataset.meetingDuration) === selectedMeetingDuration);
+  });
+}
+function applyMeetingDuration(minutes) {
+  const start = new Date(eventEditor.elements.date.value);
+  selectedMeetingDuration = Number(minutes);
+  updateMeetingDurationSelection();
+  if (Number.isNaN(start.getTime())) return;
+  eventEditor.elements.end.value = eventDateInputValue(new Date(start.getTime() + selectedMeetingDuration * 60000));
 }
 document.querySelectorAll('.close-detail, .cancel-detail').forEach(function (button) {
   button.addEventListener('click', closeTaskDetail);
@@ -2535,6 +2560,17 @@ taskMentionSuggestions.addEventListener('mousedown', function (event) {
 taskMentionSuggestions.addEventListener('click', function (event) {
   const option = event.target.closest('[data-task-mention]');
   if (option) insertTaskMention(option.dataset.taskMention);
+});
+document.getElementById('meeting-duration-options').addEventListener('click', function (event) {
+  const button = event.target.closest('[data-meeting-duration]');
+  if (button) applyMeetingDuration(button.dataset.meetingDuration);
+});
+eventEditor.elements.date.addEventListener('change', function () {
+  if (selectedMeetingDuration) applyMeetingDuration(selectedMeetingDuration);
+});
+eventEditor.elements.end.addEventListener('change', function () {
+  selectedMeetingDuration = meetingDurationFromInputs();
+  updateMeetingDurationSelection();
 });
 eventEditor.addEventListener('submit', async function (event) {
   event.preventDefault();

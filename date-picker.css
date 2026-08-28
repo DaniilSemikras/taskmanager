@@ -59,6 +59,7 @@
 .date-picker-time input { width: 105px; min-height: 34px; padding: 5px 8px; border: 1px solid #dedbea; border-radius: 7px; color: #3d394d; background: #fff; font-size: 16px; }
 .date-picker-range-hint { flex: 1; color: #8a8696; font-size: 10px; font-weight: 700; text-align: center; }
 .date-picker-done { color: #fff !important; background: #6657dc !important; }
+.date-picker-done:disabled { cursor:not-allowed; color:#aaa6b3 !important; background:#eceaf0 !important; box-shadow:none; opacity:.72; }
 body.date-picker-open { overflow: hidden; }
 .date-input-shell { position:relative; display:inline-block; width:100%; min-width:0; }
 .date-input-shell>input { width:100% !important; color:transparent !important; caret-color:transparent; }

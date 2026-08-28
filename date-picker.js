@@ -214,10 +214,12 @@
       timeWrap.className = 'date-picker-time';
       timeWrap.append(document.createTextNode(copy.time), time);
       time.type = 'time';
-      time.value = state.timeInput ? (state.timeInput.value || state.fallbackTime) : inputTime(state.input, state.fallbackTime);
+      time.value = state.pendingTime || (state.timeInput ? state.timeInput.value : inputTime(state.input, state.fallbackTime)) || state.fallbackTime;
       time.dataset.action = 'time';
       footer.appendChild(timeWrap);
-      footer.appendChild(button('date-picker-done', copy.done, 'done'));
+      const doneButton = button('date-picker-done', copy.done, 'done');
+      doneButton.disabled = !parseDate(state.input.value);
+      footer.appendChild(doneButton);
     } else {
       footer.appendChild(button('', copy.today, 'today'));
     }
@@ -247,7 +249,8 @@
       input: input,
       timeInput: timeInput,
       hasTime: input.type === 'datetime-local' || Boolean(timeInput),
-      fallbackTime: input.dataset.defaultTime || (input.name === 'end' ? '10:00' : '09:00')
+      fallbackTime: input.dataset.defaultTime || (input.name === 'end' ? '10:00' : '09:00'),
+      pendingTime: timeInput ? timeInput.value : inputTime(input, '')
     };
     visibleMonth = startOfMonth(chosen);
     picker.hidden = false;
@@ -279,10 +282,10 @@
     if (state.type === 'single') {
       if (state.timeInput) {
         state.input.value = key;
-        if (!state.timeInput.value) state.timeInput.value = state.fallbackTime;
+        if (!state.timeInput.value) state.timeInput.value = state.pendingTime || state.fallbackTime;
         dispatchChange(state.timeInput);
       } else {
-        state.input.value = state.hasTime ? dateTimeValue(date, inputTime(state.input, state.fallbackTime)) : key;
+        state.input.value = state.hasTime ? dateTimeValue(date, state.pendingTime || inputTime(state.input, state.fallbackTime)) : key;
       }
       dispatchChange(state.input);
       if (state.hasTime) {
@@ -353,13 +356,15 @@
 
   picker.addEventListener('change', function (event) {
     if (!state || state.type !== 'single' || event.target.dataset.action !== 'time') return;
+    state.pendingTime = event.target.value || state.fallbackTime;
     if (state.timeInput) {
-      state.timeInput.value = event.target.value || state.fallbackTime;
+      state.timeInput.value = state.pendingTime;
       dispatchChange(state.timeInput);
       return;
     }
-    const selected = parseDate(state.input.value) || new Date();
-    state.input.value = dateTimeValue(selected, event.target.value || state.fallbackTime);
+    const selected = parseDate(state.input.value);
+    if (!selected) return;
+    state.input.value = dateTimeValue(selected, state.pendingTime);
     dispatchChange(state.input);
   });
 
