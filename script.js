@@ -2899,12 +2899,7 @@ document.addEventListener('click', async function (event) {
       const task = { id: Date.now(), title: note.title, description: note.text, responsibles: [], responsible: '', priority: 'medium', column: 'todo', createdAt: new Date().toISOString() };
       state.tasks.unshift(task);
       placeTaskByPriority(task.id);
-      if (calendarEvent) {
-        if (canEditCalendarEvent(calendarEvent)) {
-          if (!await saveCalendarEvent(Object.assign({}, calendarEvent, { notes: '' }))) return;
-          dismissMeetingNote(eventId);
-        }
-      } else {
+      if (!calendarEvent) {
         state.notes = state.notes.filter(function (item) { return item.id !== note.id; });
       }
       recordActivity('taskCreated', task.title);
