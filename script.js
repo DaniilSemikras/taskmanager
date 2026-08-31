@@ -3303,15 +3303,16 @@ teamChatForm.addEventListener('submit', async function (event) {
   const button = teamChatForm.querySelector('button[type="submit"]');
   button.disabled = true;
   const response = await supabaseClient.from('team_messages').insert({ team_id: teamId, body: body, created_by: currentUser.id }).select('id, team_id, body, created_by, created_at').single();
-  button.disabled = false;
   if (response.error) {
+    button.disabled = false;
     renderTeamChat(true);
     return;
   }
-  if (addChatMentionNotifications(body)) saveState();
+  if (addChatMentionNotifications(body)) await saveState(true);
   teamChatForm.reset();
   renderChatMentionSuggestions();
   await hydrateTeamMessages(false);
+  button.disabled = false;
 });
 teamChatForm.elements.message.addEventListener('input', renderChatMentionSuggestions);
 teamChatForm.elements.message.addEventListener('focus', renderChatMentionSuggestions);
