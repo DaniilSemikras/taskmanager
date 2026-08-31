@@ -13,8 +13,8 @@
 .team-message header time { margin-left:auto; color:#9994a5; font-size:10px; font-variant-numeric:tabular-nums; }
 .team-message p { margin:0; color:#302c3e; font-size:14px; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; }
 .team-chat-form { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:10px; padding:14px; border-top:1px solid #e9e6ef; background:#fff; }
-.team-chat-compose { position:relative; min-width:0; }
-.team-chat-form textarea { min-height:48px; max-height:130px; resize:none; border-radius:12px; font-family:inherit; line-height:1.4; }
+.team-chat-compose { position:relative; width:100%; min-width:0; }
+.team-chat-form textarea { width:100%; min-height:48px; max-height:130px; box-sizing:border-box; resize:none; border-radius:12px; font-family:inherit; line-height:1.4; }
 .team-chat-mention-suggestions { position:absolute; right:0; bottom:calc(100% + 7px); left:0; z-index:8; overflow:auto; max-height:190px; padding:6px; border:1px solid #ded9ec; border-radius:12px; background:#fff; box-shadow:0 14px 30px rgba(45,38,80,.16); }
 .team-chat-mention-suggestions[hidden] { display:none; }
 .team-chat-mention-suggestions button { display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border:0; border-radius:8px; color:#4c475d; background:transparent; text-align:left; }
