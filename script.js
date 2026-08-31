@@ -114,6 +114,8 @@ Object.assign(translations.uk, { meetingDuration: 'Тривалість', durati
 Object.assign(translations.en, { meetingDuration: 'Duration', duration30: '30 min', duration60: '1 hour', duration90: '1.5 hours', duration120: '2 hours' });
 Object.assign(translations.uk, { myColor: 'Мій колір', chooseMyColor: 'Обрати мій колір', busy: 'Зайнятий', available: 'Вільний', participantBusy: 'Учасник уже має зустріч у цей час' });
 Object.assign(translations.en, { myColor: 'My colour', chooseMyColor: 'Choose my colour', busy: 'Busy', available: 'Available', participantBusy: 'This participant already has a meeting at this time' });
+Object.assign(translations.uk, { teamChatEyebrow: 'КОМАНДНИЙ ЧАТ', teamChat: 'Чат команди', teamChatPrivate: 'Лише для вашої команди', teamChatPlaceholder: 'Напишіть повідомлення команді…', sendMessage: 'Надіслати', noTeamMessages: 'Повідомлень ще немає. Почніть розмову.', teamChatUnavailable: 'Чат поки недоступний. Перевірте налаштування бази.', unknownUser: 'Користувач' });
+Object.assign(translations.en, { teamChatEyebrow: 'TEAM CHAT', teamChat: 'Team chat', teamChatPrivate: 'Your team only', teamChatPlaceholder: 'Write a message to your team…', sendMessage: 'Send', noTeamMessages: 'No messages yet. Start the conversation.', teamChatUnavailable: 'Chat is currently unavailable. Check the database setup.', unknownUser: 'User' });
 const USER_COLOR_PALETTE = ['#6757dc', '#2878d0', '#1693a5', '#1f9d72', '#c79418', '#e1772f', '#d64f78', '#8b5cc7'];
 const columns = [
   { id: 'todo', titleKey: 'plannedTasks' },
@@ -144,6 +146,10 @@ const myTeamName = document.getElementById('my-team-name');
 const myTeamHint = document.getElementById('my-team-hint');
 const myTeamTotal = document.getElementById('my-team-total');
 const myTeamMembers = document.getElementById('my-team-members');
+const teamChat = document.getElementById('team-chat');
+const teamChatMessages = document.getElementById('team-chat-messages');
+const teamChatForm = document.getElementById('team-chat-form');
+const teamChatStatus = document.getElementById('team-chat-status');
 const teamsList = document.getElementById('teams-list');
 const responsibleFilter = document.getElementById('responsible-filter');
 const taskSearch = document.getElementById('task-search');
@@ -233,12 +239,14 @@ let saveNotificationsEnabled = false;
 let archiveCheckTimer = null;
 let meetingEndTimer = null;
 let notificationPollTimer = null;
+let teamChatPollTimer = null;
 let notificationAudioContext = null;
 let notificationTrackingReady = false;
 let knownNotificationIds = new Set();
 let calendarCursor = startOfWeek(new Date());
 let selectedCalendarDay = dateKey(new Date());
 let calendarEvents = [];
+let teamMessages = [];
 let authMode = 'login';
 
 function t(key) {
@@ -1048,8 +1056,10 @@ async function hydrateCalendarEvents() {
 async function hydrateWorkspace() {
   await hydrateDatabase();
   await hydrateCalendarEvents();
+  await hydrateTeamMessages(false);
   initializeNotificationTracking();
   startNotificationPolling();
+  startTeamChatPolling();
 }
 async function saveCalendarEvent(event) {
   if (!supabaseClient || !currentUser) return false;
@@ -1127,6 +1137,7 @@ function setAuthMode(mode) {
 }
 function startSession(account) {
   stopNotificationPolling();
+  stopTeamChatPolling();
   currentUser = account;
   saveNotificationsEnabled = false;
   onlyMyTasks = false;
@@ -1567,6 +1578,75 @@ function renderMyTeam() {
     const role = person.role ? '<span class="person-role">' + escapeHtml(person.role) + '</span>' : '';
     return '<article class="person-card team-member-card"><header><span class="person-avatar member-color-avatar" style="--person-color:' + colorForTeamMember(person) + '">' + escapeHtml(personInitials(person.name)) + '</span><div><h3>' + escapeHtml(person.name) + '</h3>' + role + '</div></header><div class="person-data"><span><b>@</b>' + escapeHtml(person.email) + '</span></div></article>';
   }).join('') : '<div class="empty team-empty"><span>♧</span>' + t('noTeamMembers') + '</div>';
+}
+function teamMessageAuthor(message) {
+  return accounts.find(function (account) { return String(account.id) === String(message.createdBy || ''); }) || null;
+}
+function teamMessageTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const today = dateKey(new Date()) === dateKey(date);
+  return new Intl.DateTimeFormat(t('locale'), today ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+function renderTeamChat(error) {
+  if (!teamChat || !teamChatMessages || !teamChatForm) return;
+  const teamId = currentTeamId();
+  const input = teamChatForm.elements.message;
+  const sendButton = teamChatForm.querySelector('button[type="submit"]');
+  input.disabled = !teamId;
+  sendButton.disabled = !teamId;
+  teamChatStatus.textContent = teamId ? t('teamChatPrivate') : t('noTeamAssigned');
+  if (error) {
+    teamChatMessages.innerHTML = '<div class="team-chat-error">' + t('teamChatUnavailable') + '</div>';
+    return;
+  }
+  if (!teamId) {
+    teamChatMessages.innerHTML = '<div class="team-chat-empty">' + t('noTeamAssignedHint') + '</div>';
+    return;
+  }
+  if (!teamMessages.length) {
+    teamChatMessages.innerHTML = '<div class="team-chat-empty">' + t('noTeamMessages') + '</div>';
+    return;
+  }
+  teamChatMessages.innerHTML = teamMessages.map(function (message) {
+    const account = teamMessageAuthor(message);
+    const author = account ? account.login : t('unknownUser');
+    const color = account ? userColorForAccount(account) : fallbackUserColor(message.createdBy);
+    const own = String(message.createdBy) === String(currentUser && currentUser.id);
+    return '<article class="team-message' + (own ? ' own' : '') + '"><header><i style="--person-color:' + color + '"></i><strong>' + escapeHtml(author) + '</strong><time>' + escapeHtml(teamMessageTime(message.createdAt)) + '</time></header><p>' + escapeHtml(message.body) + '</p></article>';
+  }).join('');
+}
+async function hydrateTeamMessages(silent) {
+  if (!supabaseClient || !currentUser || !currentTeamId()) {
+    teamMessages = [];
+    renderTeamChat(false);
+    return false;
+  }
+  const response = await supabaseClient.from('team_messages').select('id, team_id, body, created_by, created_at').order('created_at', { ascending: false }).limit(100);
+  if (response.error) {
+    if (!silent) renderTeamChat(true);
+    return false;
+  }
+  const nextMessages = response.data.slice().reverse().map(function (row) { return { id: Number(row.id), teamId: row.team_id || '', body: row.body || '', createdBy: row.created_by || '', createdAt: row.created_at || '' }; });
+  const changed = JSON.stringify(nextMessages) !== JSON.stringify(teamMessages);
+  if (!changed) return true;
+  const nearBottom = teamChatMessages.scrollHeight - teamChatMessages.scrollTop - teamChatMessages.clientHeight < 90;
+  teamMessages = nextMessages;
+  renderTeamChat(false);
+  if (nearBottom || !silent) teamChatMessages.scrollTop = teamChatMessages.scrollHeight;
+  return true;
+}
+function startTeamChatPolling() {
+  clearInterval(teamChatPollTimer);
+  teamChatPollTimer = setInterval(function () {
+    const teamScreen = document.getElementById('team-screen');
+    if (teamScreen && !teamScreen.hidden) hydrateTeamMessages(true);
+  }, 4000);
+}
+function stopTeamChatPolling() {
+  clearInterval(teamChatPollTimer);
+  teamChatPollTimer = null;
+  teamMessages = [];
 }
 function renderTeams() {
   document.getElementById('teams-total').textContent = state.teams.length + plural(state.teams.length, t('teamOne'), t('teamFew'), t('teamMany'));
@@ -2186,6 +2266,7 @@ function render() {
   renderNotes();
   renderPeople();
   renderMyTeam();
+  renderTeamChat(false);
   renderTeams();
   renderAccounts();
   renderNotifications();
@@ -2361,6 +2442,7 @@ function showTab(tab) {
   document.getElementById('meetings-screen').hidden = tab !== 'meetings';
   document.querySelectorAll('.tab').forEach(function (button) { button.classList.toggle('active', button.dataset.tab === tab); });
   try { localStorage.setItem(tabStorageKey(), tab); } catch {}
+  if (tab === 'team') hydrateTeamMessages(false);
 }
 function openTask(id) {
   const task = state.tasks.find(function (item) { return item.id === Number(id); });
@@ -2862,6 +2944,7 @@ document.addEventListener('click', async function (event) {
   if (button.id === 'logout-button') {
     if (supabaseClient) await supabaseClient.auth.signOut();
     stopNotificationPolling();
+    stopTeamChatPolling();
     currentUser = null;
     setNotificationsOpen(false);
     showAuth();
@@ -3122,6 +3205,22 @@ meetingTeam.addEventListener('change', function () {
 });
 participantSearch.addEventListener('blur', function () {
   setTimeout(function () { participantSuggestions.hidden = true; }, 120);
+});
+teamChatForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const body = teamChatForm.elements.message.value.trim();
+  const teamId = currentTeamId();
+  if (!body || !teamId || !supabaseClient || !currentUser) return;
+  const button = teamChatForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  const response = await supabaseClient.from('team_messages').insert({ team_id: teamId, body: body, created_by: currentUser.id }).select('id, team_id, body, created_by, created_at').single();
+  button.disabled = false;
+  if (response.error) {
+    renderTeamChat(true);
+    return;
+  }
+  teamChatForm.reset();
+  await hydrateTeamMessages(false);
 });
 document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { setMobileMenu(false); if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
 document.addEventListener('pointerdown', unlockNotificationSound);
