@@ -116,6 +116,8 @@ Object.assign(translations.uk, { myColor: 'Мій колір', chooseMyColor: '�
 Object.assign(translations.en, { myColor: 'My colour', chooseMyColor: 'Choose my colour', busy: 'Busy', available: 'Available', participantBusy: 'This participant already has a meeting at this time' });
 Object.assign(translations.uk, { teamChatEyebrow: 'КОМАНДНИЙ ЧАТ', teamChat: 'Чат команди', teamChatPrivate: 'Лише для вашої команди', teamChatPlaceholder: 'Напишіть повідомлення команді…', sendMessage: 'Надіслати', noTeamMessages: 'Повідомлень ще немає. Почніть розмову.', teamChatUnavailable: 'Чат поки недоступний. Перевірте налаштування бази.', unknownUser: 'Користувач' });
 Object.assign(translations.en, { teamChatEyebrow: 'TEAM CHAT', teamChat: 'Team chat', teamChatPrivate: 'Your team only', teamChatPlaceholder: 'Write a message to your team…', sendMessage: 'Send', noTeamMessages: 'No messages yet. Start the conversation.', teamChatUnavailable: 'Chat is currently unavailable. Check the database setup.', unknownUser: 'User' });
+Object.assign(translations.uk, { notificationChatMention: 'Вас відмітили в чаті команди', chatMentionHint: 'Введіть @, щоб відмітити учасника' });
+Object.assign(translations.en, { notificationChatMention: 'You were mentioned in team chat', chatMentionHint: 'Type @ to mention a team member' });
 const USER_COLOR_PALETTE = ['#6757dc', '#2878d0', '#1693a5', '#1f9d72', '#c79418', '#e1772f', '#d64f78', '#8b5cc7'];
 const columns = [
   { id: 'todo', titleKey: 'plannedTasks' },
@@ -150,6 +152,7 @@ const teamChat = document.getElementById('team-chat');
 const teamChatMessages = document.getElementById('team-chat-messages');
 const teamChatForm = document.getElementById('team-chat-form');
 const teamChatStatus = document.getElementById('team-chat-status');
+const teamChatMentionSuggestions = document.getElementById('team-chat-mention-suggestions');
 const teamsList = document.getElementById('teams-list');
 const responsibleFilter = document.getElementById('responsible-filter');
 const taskSearch = document.getElementById('task-search');
@@ -321,7 +324,7 @@ function normalizeState(saved) {
     completedMeetingIds: Array.from(new Set((Array.isArray(source.completedMeetingIds) ? source.completedMeetingIds : []).map(String).filter(Boolean))),
     dismissedMeetingNoteIds: dismissedMeetingNoteIds,
     notifications: (Array.isArray(source.notifications) ? source.notifications : []).filter(function (notification) { return notification && notification.id && notification.recipientId; }).map(function (notification) {
-      const type = ['mention', 'status', 'meeting'].includes(notification.type) ? notification.type : 'status';
+      const type = ['mention', 'status', 'meeting', 'chat'].includes(notification.type) ? notification.type : 'status';
       return { id: String(notification.id), recipientId: String(notification.recipientId), type: type, taskId: Number(notification.taskId) || 0, eventId: Number(notification.eventId) || 0, taskTitle: String(notification.taskTitle || ''), fromUser: String(notification.fromUser || ''), createdAt: notification.createdAt || new Date().toISOString(), read: Boolean(notification.read) };
     }).slice(0, 160),
     activityLog: (Array.isArray(source.activityLog) ? source.activityLog : []).filter(function (item) { return item && item.id && item.type; }).map(function (item) {
@@ -673,6 +676,7 @@ function currentUserNotifications() {
 function notificationTitle(notification) {
   if (notification.type === 'mention') return t('notificationMention');
   if (notification.type === 'meeting') return t('notificationMeetingInvite');
+  if (notification.type === 'chat') return t('notificationChatMention');
   return t('notificationStatus');
 }
 function renderNotifications() {
@@ -687,7 +691,8 @@ function renderNotifications() {
   notificationsList.innerHTML = notifications.length ? notifications.slice(0, 30).map(function (notification) {
     const title = notificationTitle(notification);
     const author = notification.fromUser ? '<small>' + escapeHtml(notification.fromUser) + ' · ' + escapeHtml(dateLabel(notification.createdAt)) + '</small>' : '<small>' + escapeHtml(dateLabel(notification.createdAt)) + '</small>';
-    return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"><button type="button" class="notification-delete" data-delete-notification="' + escapeHtml(notification.id) + '" aria-label="' + escapeHtml(t('deleteNotification')) + '">×</button><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
+    const target = notification.type === 'chat' ? ' data-open-notification="team" data-notification-id="' + escapeHtml(notification.id) + '"' : '';
+    return '<article class="notification-item ' + (notification.read ? 'read' : 'unread') + '"' + target + '><button type="button" class="notification-delete" data-delete-notification="' + escapeHtml(notification.id) + '" aria-label="' + escapeHtml(t('deleteNotification')) + '">×</button><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(notification.taskTitle) + '</p>' + author + '</article>';
   }).join('') : '<p class="notifications-empty">' + t('noNotifications') + '</p>';
 }
 function renderAdminActivity() {
@@ -1581,6 +1586,62 @@ function renderMyTeam() {
 }
 function teamMessageAuthor(message) {
   return accounts.find(function (account) { return String(account.id) === String(message.createdBy || ''); }) || null;
+}
+function chatMentionContext() {
+  const input = teamChatForm && teamChatForm.elements.message;
+  if (!input) return null;
+  const caret = input.selectionStart;
+  const match = input.value.slice(0, caret).match(/(?:^|\s)@([^\s@]*)$/);
+  return match ? { query: match[1].toLocaleLowerCase(), start: caret - match[1].length - 1, end: caret } : null;
+}
+function renderChatMentionSuggestions() {
+  if (!teamChatMentionSuggestions) return;
+  const context = chatMentionContext();
+  if (!context || !currentTeamId()) {
+    teamChatMentionSuggestions.hidden = true;
+    teamChatMentionSuggestions.innerHTML = '';
+    return;
+  }
+  const members = teamMembersFor(currentTeamId()).filter(function (member) {
+    return !context.query || contactMatches(member, context.query);
+  }).slice(0, 7);
+  teamChatMentionSuggestions.innerHTML = members.length ? members.map(function (member) {
+    return '<button type="button" data-chat-mention="' + escapeHtml(member.name) + '"><i style="--person-color:' + colorForTeamMember(member) + '"></i><span><strong>' + escapeHtml(member.name) + '</strong><small>' + escapeHtml(member.email || member.role || '') + '</small></span></button>';
+  }).join('') : '<div class="team-chat-error">' + t('noMentionMatches') + '</div>';
+  teamChatMentionSuggestions.hidden = false;
+}
+function insertChatMention(name) {
+  const input = teamChatForm.elements.message;
+  const context = chatMentionContext();
+  if (!context) return;
+  input.setRangeText('@' + name + ' ', context.start, context.end, 'end');
+  teamChatMentionSuggestions.hidden = true;
+  input.focus();
+}
+function extractChatMentions(body) {
+  const text = String(body || '').toLocaleLowerCase();
+  return teamMembersFor(currentTeamId()).map(function (member) { return member.name; }).filter(function (name) {
+    const mention = '@' + name.toLocaleLowerCase();
+    let position = text.indexOf(mention);
+    while (position !== -1) {
+      const before = position === 0 ? '' : text[position - 1];
+      const after = text[position + mention.length] || '';
+      if ((!before || /\s/.test(before)) && (!after || /[\s.,!?:;)]/.test(after))) return true;
+      position = text.indexOf(mention, position + mention.length);
+    }
+    return false;
+  });
+}
+function addChatMentionNotifications(body) {
+  const mentions = extractChatMentions(body);
+  const recipients = Array.from(new Set(accountIdsForResponsibleNames(mentions))).filter(function (id) { return id !== String(currentUser.id); });
+  if (!recipients.length) return false;
+  const createdAt = new Date().toISOString();
+  const additions = recipients.map(function (recipientId, index) {
+    return { id: String(Date.now()) + '-chat-' + index + '-' + recipientId, recipientId: recipientId, type: 'chat', taskId: 0, eventId: 0, taskTitle: teamName(currentTeamId()), fromUser: currentUser.login || '', createdAt: createdAt, read: false };
+  });
+  state.notifications = additions.concat(state.notifications || []).slice(0, 160);
+  return true;
 }
 function teamMessageTime(value) {
   const date = new Date(value);
@@ -2861,6 +2922,17 @@ document.addEventListener('click', async function (event) {
     userColorPopover.hidden = true;
     userColorControl.setAttribute('aria-expanded', 'false');
   }
+  const notificationTarget = event.target.closest('[data-open-notification="team"]');
+  if (notificationTarget && !event.target.closest('[data-delete-notification]')) {
+    const notificationId = notificationTarget.dataset.notificationId;
+    state.notifications = (state.notifications || []).map(function (notification) { return notification.id === notificationId ? Object.assign({}, notification, { read: true }) : notification; });
+    saveState();
+    setNotificationsOpen(false);
+    showTab('team');
+    hydrateTeamMessages(false);
+    renderNotifications();
+    return;
+  }
   const card = event.target.closest('.task-card, .archive-card');
   if (card && !event.target.closest('button, select, a')) {
     if (card.dataset.swipeHandled) return;
@@ -3219,8 +3291,18 @@ teamChatForm.addEventListener('submit', async function (event) {
     renderTeamChat(true);
     return;
   }
+  if (addChatMentionNotifications(body)) saveState();
   teamChatForm.reset();
+  renderChatMentionSuggestions();
   await hydrateTeamMessages(false);
+});
+teamChatForm.elements.message.addEventListener('input', renderChatMentionSuggestions);
+teamChatForm.elements.message.addEventListener('focus', renderChatMentionSuggestions);
+teamChatForm.elements.message.addEventListener('blur', function () { setTimeout(function () { teamChatMentionSuggestions.hidden = true; }, 120); });
+teamChatMentionSuggestions.addEventListener('mousedown', function (event) { event.preventDefault(); });
+teamChatMentionSuggestions.addEventListener('click', function (event) {
+  const option = event.target.closest('[data-chat-mention]');
+  if (option) insertChatMention(option.dataset.chatMention);
 });
 document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { setMobileMenu(false); if (!taskDetail.hidden) closeTaskDetail(); if (!eventDetail.hidden) closeEventDetail(); if (!noteDetail.hidden) closeNoteDetail(); } });
 document.addEventListener('pointerdown', unlockNotificationSound);

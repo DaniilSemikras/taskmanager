@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="typography-scale.css?v=consistent-dialog-buttons-1">
   <link rel="stylesheet" href="team-presence.css?v=compact-empty-assignee-1">
   <link rel="stylesheet" href="responsive-header.css?v=sticky-header-1">
-  <link rel="stylesheet" href="team-chat.css?v=team-chat-1">
+  <link rel="stylesheet" href="team-chat.css?v=chat-mentions-1">
 </head>
 <body>
   <section class="auth-screen" id="auth-screen" hidden>
@@ -126,7 +126,7 @@
         <span class="task-count" id="my-team-total">0</span>
       </div>
       <section class="people-list team-members-list" id="my-team-members" aria-label="Моя команда"></section>
-      <section class="team-chat" id="team-chat"><header><div><p class="eyebrow" data-i18n="teamChatEyebrow">КОМАНДНИЙ ЧАТ</p><h2 data-i18n="teamChat">Чат команди</h2></div><span id="team-chat-status" data-i18n="teamChatPrivate">Лише для вашої команди</span></header><div class="team-chat-messages" id="team-chat-messages" aria-live="polite"></div><form class="team-chat-form" id="team-chat-form"><textarea name="message" rows="2" maxlength="2000" required data-i18n-placeholder="teamChatPlaceholder" placeholder="Напишіть повідомлення команді…"></textarea><button type="submit" data-i18n="sendMessage">Надіслати</button></form></section>
+      <section class="team-chat" id="team-chat"><header><div><p class="eyebrow" data-i18n="teamChatEyebrow">КОМАНДНИЙ ЧАТ</p><h2 data-i18n="teamChat">Чат команди</h2></div><span id="team-chat-status" data-i18n="teamChatPrivate">Лише для вашої команди</span></header><div class="team-chat-messages" id="team-chat-messages" aria-live="polite"></div><form class="team-chat-form" id="team-chat-form"><div class="team-chat-compose"><textarea name="message" rows="2" maxlength="2000" required data-i18n-placeholder="teamChatPlaceholder" placeholder="Напишіть повідомлення команді…"></textarea><div class="team-chat-mention-suggestions" id="team-chat-mention-suggestions" hidden></div></div><button type="submit" data-i18n="sendMessage">Надіслати</button></form></section>
     </section>
 
     <section class="screen" id="admin-screen" hidden>
@@ -195,7 +195,7 @@
     </form>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=private-team-chat-1"></script>
+  <script src="script.js?v=chat-mentions-1"></script>
   <script src="date-picker.js?v=default-today-1"></script>
   <script src="custom-select.js?v=rounded-selects-1"></script>
 </body>
