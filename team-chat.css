@@ -12,6 +12,8 @@
 .team-message header strong { overflow:hidden; color:#514b64; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
 .team-message header time { margin-left:auto; color:#9994a5; font-size:10px; font-variant-numeric:tabular-nums; }
 .team-message p { margin:0; color:#302c3e; font-size:14px; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; }
+.chat-mention { display:inline-block; padding:1px 6px; border:1px solid #cfc8ff; border-radius:999px; color:#5948c8; background:#eeebff; font-weight:850; white-space:nowrap; }
+.chat-mention.is-me { color:#fff; border-color:#6757dc; background:#6757dc; box-shadow:0 2px 7px rgba(103,87,220,.22); }
 .team-chat-form { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:10px; padding:14px; border-top:1px solid #e9e6ef; background:#fff; }
 .team-chat-compose { position:relative; width:100%; min-width:0; }
 .team-chat-form textarea { width:100%; min-height:48px; max-height:130px; box-sizing:border-box; resize:none; border-radius:12px; font-family:inherit; line-height:1.4; }
@@ -41,6 +43,8 @@ html[data-theme="dark"] .team-message { border-color:#403b4d; background:#292632
 html[data-theme="dark"] .team-message.own { border-color:#544a8a; background:#373252; }
 html[data-theme="dark"] .team-message header strong { color:#d9d4e5; }
 html[data-theme="dark"] .team-message p { color:#f0edf5; }
+html[data-theme="dark"] .chat-mention { color:#c9c1ff; border-color:#5b518f; background:#373151; }
+html[data-theme="dark"] .chat-mention.is-me { color:#fff; border-color:#8173eb; background:#6757dc; }
 
 @media (max-width:700px) {
   .team-chat { margin-top:16px; border-radius:15px; }

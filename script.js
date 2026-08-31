@@ -1643,6 +1643,23 @@ function addChatMentionNotifications(body) {
   state.notifications = additions.concat(state.notifications || []).slice(0, 160);
   return true;
 }
+function chatMessageMarkup(body) {
+  const text = String(body || '');
+  const names = teamMembersFor(currentTeamId()).map(function (member) { return member.name; }).filter(Boolean).sort(function (a, b) { return b.length - a.length; });
+  if (!names.length) return escapeHtml(text);
+  const alternatives = names.map(function (name) { return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+  const pattern = new RegExp('(^|\\s)(@(?:' + alternatives + '))(?=$|[\\s.,!?;:()])', 'giu');
+  const myNames = currentUserResponsibleNames().map(function (name) { return name.toLocaleLowerCase(); });
+  let result = '';
+  let offset = 0;
+  let match;
+  while ((match = pattern.exec(text))) {
+    const name = match[2].slice(1);
+    result += escapeHtml(text.slice(offset, match.index)) + escapeHtml(match[1]) + '<span class="chat-mention' + (myNames.includes(name.toLocaleLowerCase()) ? ' is-me' : '') + '">' + escapeHtml(match[2]) + '</span>';
+    offset = match.index + match[0].length;
+  }
+  return result + escapeHtml(text.slice(offset));
+}
 function teamMessageTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
@@ -1674,7 +1691,7 @@ function renderTeamChat(error) {
     const author = account ? account.login : t('unknownUser');
     const color = account ? userColorForAccount(account) : fallbackUserColor(message.createdBy);
     const own = String(message.createdBy) === String(currentUser && currentUser.id);
-    return '<article class="team-message' + (own ? ' own' : '') + '"><header><i style="--person-color:' + color + '"></i><strong>' + escapeHtml(author) + '</strong><time>' + escapeHtml(teamMessageTime(message.createdAt)) + '</time></header><p>' + escapeHtml(message.body) + '</p></article>';
+    return '<article class="team-message' + (own ? ' own' : '') + '"><header><i style="--person-color:' + color + '"></i><strong>' + escapeHtml(author) + '</strong><time>' + escapeHtml(teamMessageTime(message.createdAt)) + '</time></header><p>' + chatMessageMarkup(message.body) + '</p></article>';
   }).join('');
 }
 async function hydrateTeamMessages(silent) {
